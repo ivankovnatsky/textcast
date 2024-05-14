@@ -1,3 +1,4 @@
+import os
 import io
 from pathlib import Path
 from openai import OpenAI
@@ -23,26 +24,36 @@ def split_text(text, limit=TEXT_SEND_LIMIT):
 
 
 def process_article(text, filename, model, voice):
+    client = OpenAI()
     chunks = split_text(text)
 
     output_path = Path(filename)
-    if not output_path.suffix:
-        output_path = output_path.with_suffix(".mp3")
-
     output_format = output_path.suffix.lstrip(".")
 
     combined_audio = AudioSegment.empty()
+    success = True
 
     for i, chunk in enumerate(chunks, start=1):
         try:
-            client = OpenAI()
             response = client.audio.speech.create(model=model, voice=voice, input=chunk)
             part_audio = AudioSegment.from_file(
-                io.BytesIO(response.content), format="mp3"
+                io.BytesIO(response.content), format=output_format
             )
             combined_audio += part_audio
         except Exception as e:
             print(f"An error occurred for part {i}: {e}")
+            import traceback
 
-    combined_audio.export(output_path, format=output_format)
-    print(f"Combined audio saved to {output_path}")
+            traceback.print_exception(type(e), e, e.__traceback__)
+            if "429" in str(e):
+                print("Quota exceeded. Stopping further requests.")
+                success = False
+                break
+
+    if success and not combined_audio.empty():
+        combined_audio.export(output_path, format=output_format)
+        print(f"Combined audio saved to {output_path}")
+    else:
+        print("No audio generated due to errors or quota exceeded.")
+        if output_path.exists():
+            output_path.unlink()  # Ensure no partial files are left

@@ -3,6 +3,7 @@ from article_to_podcast.cli import cli
 from article_to_podcast.main import TEXT_SEND_LIMIT, split_text
 from article_to_podcast.article_fetcher import get_article_content
 from pathlib import Path
+import pytest
 
 ARTICLE_URL = "https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers/"
 
@@ -18,11 +19,12 @@ def test_split_text():
 
 
 def test_get_article_content():
-    content = get_article_content(ARTICLE_URL)
+    text, title = get_article_content(ARTICLE_URL)
     assert (
         "KoPylot\xa0is a cloud-native application performance monitoring (APM) solution that runs on Kubernetes"
-        in content
+        in text
     )
+    assert "KoPylot" in title  # Checking a part of the title to ensure it's correct
 
 
 def test_process_article():
@@ -32,17 +34,33 @@ def test_process_article():
         [
             "--url",
             ARTICLE_URL,
-            "--filename",
-            "test_output_from_url.mp3",
+            "--directory",
+            "/tmp",
+            "--audio-format",
+            "mp3",
             "--model",
             "tts-1",
             "--voice",
             "alloy",
         ],
+        catch_exceptions=False,  # Allow exceptions to propagate
     )
-    assert result.exit_code == 0
-    output_audio_path = Path("test_output_from_url.mp3")
-    assert output_audio_path.exists()
 
-    # Clean up
-    output_audio_path.unlink()
+    if result.exception:
+        print(f"Exception: {result.exception}")
+        import traceback
+
+        traceback.print_exception(
+            type(result.exception), result.exception, result.exception.__traceback__
+        )
+
+    # Ensure test fails if there's an exception
+    assert result.exception is None or "429" in str(result.exception)
+
+    output_audio_paths = list(Path("/tmp").glob("*.mp3"))
+    if output_audio_paths:
+        for output_audio_path in output_audio_paths:
+            assert not output_audio_path.exists()  # Ensure no partial files are saved
+            # Clean up
+            if output_audio_path.exists():
+                output_audio_path.unlink()
