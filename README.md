@@ -78,5 +78,5 @@ pytest
 
 ## Inspired by
 
-* Long frustration of unread added to read later articles
+* Long frustration of unread articles
 * https://github.com/simonw/ospeak
