@@ -7,15 +7,13 @@
 
 CLI tool for converting articles to podcasts using OpenAI's Text-to-Speech API.
 
-## Development
+## Usage
 
 If you're using Nix you can start running the tool by entering:
 
 ```console
 nix develop
 ```
-
-## Usage
 
 ```console
 python -m article_to_podcast --help                                                                                                                   
