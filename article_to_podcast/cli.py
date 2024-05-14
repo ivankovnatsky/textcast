@@ -2,19 +2,34 @@ import click
 from .main import process_article
 from .article_fetcher import get_article_content
 from pathlib import Path
+import re
+
+
+def format_filename(title, format):
+    # Replace special characters with dashes and convert to lowercase
+    formatted_title = re.sub(r"\W+", "-", title).strip("-").lower()
+    return f"{formatted_title}.{format}"
 
 
 @click.command()
-@click.option("--url", type=str, help="URL of the article to be fetched.")
 @click.option(
-    "--filename",
-    type=str,
+    "--url", type=str, required=True, help="URL of the article to be fetched."
+)
+@click.option(
+    "--directory",
+    type=click.Path(exists=True, file_okay=False, writable=True),
     required=True,
-    help="Path to the output audio file, including the filename and format.",
+    help="Directory where the output audio file will be saved. The filename will be derived from the article title.",
+)
+@click.option(
+    "--audio-format",
+    type=click.Choice(["mp3", "opus", "aac", "flac", "pcm"]),
+    default="mp3",
+    help="The audio format for the output file. Default is mp3.",
 )
 @click.option(
     "--model",
-    type=str,
+    type=click.Choice(["tts-1", "tts-1-hd"]),
     default="tts-1",
     help="The model to be used for text-to-speech conversion.",
 )
@@ -33,13 +48,11 @@ from pathlib import Path
     Experiment with different voices to find one that matches your desired tone and audience. The current voices are optimized for English.
     """,
 )
-def cli(url, filename, model, voice):
-    if url:
-        text = get_article_content(url)
-    else:
-        raise click.UsageError("You must provide --url")
-
-    process_article(text, filename, model, voice)
+def cli(url, directory, audio_format, model, voice):
+    text, title = get_article_content(url)
+    filename = format_filename(title, audio_format)
+    filepath = Path(directory) / filename
+    process_article(text, str(filepath), model, voice)
 
 
 if __name__ == "__main__":
