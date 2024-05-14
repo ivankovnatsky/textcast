@@ -74,6 +74,7 @@ pytest
 
 - [ ] Automatically fetch filename to save article from the article name
 - [ ] Remove redundant warnings in pytest
+- [ ] Make sure pytest shows quota errors
 
 ## Inspired by
 
