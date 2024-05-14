@@ -1,0 +1,36 @@
+[project]
+name = "article-to-podcast"
+version = "0.1"
+description = "CLI tool for converting articles to podcasts"
+readme = "README.md"
+authors = [{name = "Ivan Kovnatsky"}]
+license = {text = "MIT"}
+requires-python = ">=3.8"
+classifiers = [
+    "License :: OSI Approved :: MIT"
+]
+dependencies = [
+    "click",
+    "openai>=1.0",
+    "pydub",
+    "simpleaudio; sys_platform == 'darwin'",
+    "beautifulsoup4",
+    "requests",
+    "readability-lxml"
+]
+
+[project.urls]
+Homepage = "https://github.com/ivankovnatsky/article-to-podcast"
+Changelog = "https://github.com/ivankovnatsky/article-to-podcast/releases"
+Issues = "https://github.com/ivankovnatsky/article-to-podcast/issues"
+CI = "https://github.com/ivankovnatsky/article-to-podcast/actions"
+
+[project.entry-points.console_scripts]
+article-to-podcast = "article_to_podcast.cli:cli"
+
+[project.optional-dependencies]
+test = ["pytest", "cogapp"]
+
+[tool.ruff.lint]
+# Enable the isort rules.
+extend-select = ["I"]
