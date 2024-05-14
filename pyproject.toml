@@ -16,7 +16,8 @@ dependencies = [
     "simpleaudio; sys_platform == 'darwin'",
     "beautifulsoup4",
     "requests",
-    "readability-lxml"
+    "readability-lxml",
+    "lxml[html_clean]"
 ]
 
 [project.urls]
