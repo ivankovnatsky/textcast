@@ -1,7 +1,8 @@
 # Article to Podcast
 
+[![PyPI](https://img.shields.io/pypi/v/ospeak.svg)](https://pypi.org/project/article-to-podcast/)
 [![Changelog](https://img.shields.io/github/release/ivankovnatsky/article-to-podcast.svg)](https://github.com/ivankovnatsky/article-to-podcast/releases)
-[![Tests](https://github.com/ivankovnatsky/article-to-podcast/actions/workflows/test.yml/badge.svg)](https://github.com/ivankovnatsky/article-to-podcast/actions)
+[![Tests](https://github.com/ivankovnatsky/article-to-podcast/workflows/Test.yaml/badge.svg)](https://github.com/ivankovnatsky/article-to-podcast/actions?query=workflow%3ATest)
 [![License](https://img.shields.io/github/license/ivankovnatsky/article-to-podcast)](https://github.com/ivankovnatsky/article-to-podcast/blob/main/LICENSE.md)
 
 CLI tool for converting articles to podcasts using OpenAI's Text-to-Speech API.
