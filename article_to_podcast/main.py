@@ -50,7 +50,6 @@ def process_article(text, filename, model, voice):
     combined_audio = AudioSegment.empty()
     success = True
 
-    print("Processing text to audio..")
     for i, chunk in enumerate(chunks, start=1):
         try:
             response = client.audio.speech.create(model=model, voice=voice, input=chunk)
@@ -70,7 +69,7 @@ def process_article(text, filename, model, voice):
 
     if success and not combined_audio.empty():
         combined_audio.export(output_path, format=output_format)
-        print(f"Combined audio saved to {output_path}")
+        print(f"Audio saved to {output_path}")
     else:
         print("No audio generated due to errors.")
         if output_path.exists():
