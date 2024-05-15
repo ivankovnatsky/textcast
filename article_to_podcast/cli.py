@@ -48,11 +48,20 @@ def format_filename(title, format):
     Experiment with different voices to find one that matches your desired tone and audience. The current voices are optimized for English.
     """,
 )
-def cli(url, directory, audio_format, model, voice):
+@click.option(
+    "--shrink",
+    type=click.IntRange(0, 100),
+    default=100,
+    help="Percentage of the text to process. 0-100%. Default is 100%.",
+)
+def cli(url, directory, audio_format, model, voice, shrink):
     text, title = get_article_content(url)
-    filename = format_filename(title, audio_format)
-    filepath = Path(directory) / filename
-    process_article(text, str(filepath), model, voice)
+
+    if shrink < 100:
+        end_idx = len(text) * shrink // 100
+        text = text[:end_idx]  # Limit the text based on the percentage
+    filename = Path(directory) / f"{format_filename(title, audio_format)}"
+    process_article(text, filename, model, voice)
 
 
 if __name__ == "__main__":
