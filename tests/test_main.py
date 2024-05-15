@@ -3,7 +3,6 @@ from article_to_podcast.cli import cli
 from article_to_podcast.main import TEXT_SEND_LIMIT, split_text
 from article_to_podcast.article_fetcher import get_article_content
 from pathlib import Path
-import pytest
 
 ARTICLE_URL = "https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers/"
 
@@ -42,25 +41,17 @@ def test_process_article():
             "tts-1",
             "--voice",
             "alloy",
+            "--shrink",
+            "1",  # Use 5% of the text to reduce costs during testing
         ],
         catch_exceptions=False,  # Allow exceptions to propagate
     )
 
-    if result.exception:
-        print(f"Exception: {result.exception}")
-        import traceback
+    assert result.exit_code == 0
+    output_audio_path = list(Path("/tmp").glob("*.mp3"))[
+        0
+    ]  # Find the generated audio file
+    assert output_audio_path.exists()
 
-        traceback.print_exception(
-            type(result.exception), result.exception, result.exception.__traceback__
-        )
-
-    # Ensure test fails if there's an exception
-    assert result.exception is None or "429" in str(result.exception)
-
-    output_audio_paths = list(Path("/tmp").glob("*.mp3"))
-    if output_audio_paths:
-        for output_audio_path in output_audio_paths:
-            assert not output_audio_path.exists()  # Ensure no partial files are saved
-            # Clean up
-            if output_audio_path.exists():
-                output_audio_path.unlink()
+    # Clean up
+    # output_audio_path.unlink()
