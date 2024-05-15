@@ -73,6 +73,8 @@ def cli(url, file_url_list, directory, audio_format, model, voice, shrink):
         if shrink < 100:
             end_idx = len(text) * shrink // 100
             text = text[:end_idx]  # Limit the text based on the percentage
+
+        print(f"Processing article with `{title}` to audio ..")
         filename = Path(directory) / f"{format_filename(title, audio_format)}"
         process_article(text, filename, model, voice)
 
