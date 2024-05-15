@@ -18,7 +18,7 @@ def format_filename(title, format):
 @click.option(
     "--directory",
     type=click.Path(exists=True, file_okay=False, writable=True),
-    required=True,
+    default=".",
     help="Directory where the output audio file will be saved. The filename will be derived from the article title.",
 )
 @click.option(

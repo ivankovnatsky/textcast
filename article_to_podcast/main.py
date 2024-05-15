@@ -34,6 +34,7 @@ def process_article(text, filename, model, voice):
 
     for i, chunk in enumerate(chunks, start=1):
         try:
+            print("Processing text to audio..")
             response = client.audio.speech.create(model=model, voice=voice, input=chunk)
             part_audio = AudioSegment.from_file(
                 io.BytesIO(response.content), format=output_format
