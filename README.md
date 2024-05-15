@@ -9,15 +9,15 @@ CLI tool for converting articles to podcasts using OpenAI's Text-to-Speech API.
 
 ## Usage
 
-If you're using Nix you can start running the tool by entering:
+Install article-to-podcast with:
 
 ```console
-nix develop
+pipx install article-to-podcast
 ```
 
 ```console
-python -m article_to_podcast --help                                                                                                                   
-Usage: python -m article_to_podcast [OPTIONS]
+article-to-podcast --help                                                                                                                   
+Usage: article-to-podcast [OPTIONS]
 
 Options:
   --url TEXT                      URL of the article to be fetched.
@@ -47,11 +47,20 @@ Options:
 
 ```console
 export OPENAI_API_KEY="your-api-key"
-python \
-    -m article_to_podcast \
-    --directory . \
+article-to-podcast \
     --url 'https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers'
+```
 
+## Development
+
+If you're using Nix you can start running the tool by entering:
+
+```console
+nix develop
+```
+
+```console
+export OPENAI_API_KEY="your-api-key"
 python \
     -m article_to_podcast \
     --model tts-1-hd \

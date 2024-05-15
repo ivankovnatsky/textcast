@@ -15,14 +15,14 @@
         {
           devShells.default = mkShell {
             buildInputs = [
-              python311Packages.openai
+              ffmpeg
+              python311Packages.beautifulsoup4
               python311Packages.click
+              python311Packages.openai
               python311Packages.pydub
               python311Packages.pytest
-              python311Packages.requests
-              python311Packages.beautifulsoup4
               python311Packages.readability-lxml
-              ffmpeg
+              python311Packages.requests
             ];
             shellHook = ''
               $SHELL

@@ -54,6 +54,6 @@ def process_article(text, filename, model, voice):
         combined_audio.export(output_path, format=output_format)
         print(f"Combined audio saved to {output_path}")
     else:
-        print("No audio generated due to errors or quota exceeded.")
+        print("No audio generated due to errors.")
         if output_path.exists():
             output_path.unlink()  # Ensure no partial files are left
