@@ -9,7 +9,7 @@ CLI tool for converting articles to podcasts using OpenAI's Text-to-Speech API.
 
 ## Requirements
 
-You need to have ffmpeg install before running this CLI tool.
+You need to have ffmpeg installed before running this CLI tool.
 
 ## Usage
 
