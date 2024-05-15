@@ -22,12 +22,30 @@ def split_text(text, limit=TEXT_SEND_LIMIT):
     return chunks
 
 
+def generate_unique_filename(output_path):
+    base = output_path.stem
+    suffix = output_path.suffix
+    directory = output_path.parent
+
+    counter = 1
+    new_path = output_path
+    while new_path.exists():
+        new_path = directory / f"{base}_{counter}{suffix}"
+        counter += 1
+
+    return new_path
+
+
 def process_article(text, filename, model, voice):
     client = OpenAI()
     chunks = split_text(text)
 
     output_path = Path(filename)
     output_format = output_path.suffix.lstrip(".")
+
+    # Generate a unique filename if the file already exists
+    if output_path.exists():
+        output_path = generate_unique_filename(output_path)
 
     combined_audio = AudioSegment.empty()
     success = True

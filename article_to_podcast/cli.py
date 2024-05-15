@@ -12,8 +12,11 @@ def format_filename(title, format):
 
 
 @click.command()
+@click.option("--url", type=str, help="URL of the article to be fetched.")
 @click.option(
-    "--url", type=str, required=True, help="URL of the article to be fetched."
+    "--file-url-list",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help="Path to a file with URLs placed on every new line.",
 )
 @click.option(
     "--directory",
@@ -54,14 +57,24 @@ def format_filename(title, format):
     default=100,
     help="Percentage of the text to process. 0-100%. Default is 100%.",
 )
-def cli(url, directory, audio_format, model, voice, shrink):
-    text, title = get_article_content(url)
+def cli(url, file_url_list, directory, audio_format, model, voice, shrink):
+    if not url and not file_url_list:
+        raise click.UsageError("You must provide either --url or --file-url-list.")
 
-    if shrink < 100:
-        end_idx = len(text) * shrink // 100
-        text = text[:end_idx]  # Limit the text based on the percentage
-    filename = Path(directory) / f"{format_filename(title, audio_format)}"
-    process_article(text, filename, model, voice)
+    urls = []
+    if url:
+        urls.append(url)
+    if file_url_list:
+        with open(file_url_list, "r") as f:
+            urls.extend([line.strip() for line in f if line.strip()])
+
+    for url in urls:
+        text, title = get_article_content(url)
+        if shrink < 100:
+            end_idx = len(text) * shrink // 100
+            text = text[:end_idx]  # Limit the text based on the percentage
+        filename = Path(directory) / f"{format_filename(title, audio_format)}"
+        process_article(text, filename, model, voice)
 
 
 if __name__ == "__main__":
