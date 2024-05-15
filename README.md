@@ -84,7 +84,8 @@ pytest
 
 ## TODO
 
-- [ ] Automatically fetch filename to save article from the article name
+- [x] Automatically fetch filename to save article from the article name
+- [ ] Work around: "Enable cookies and javascript to continue" errors
 - [ ] Remove redundant warnings in pytest
 - [ ] Make sure pytest shows quota errors
 
