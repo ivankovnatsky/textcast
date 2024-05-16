@@ -16,15 +16,25 @@
           devShells.default = mkShell {
             buildInputs = [
               ffmpeg
-              python311Packages.beautifulsoup4
-              python311Packages.click
-              python311Packages.openai
-              python311Packages.pydub
-              python311Packages.pytest
-              python311Packages.readability-lxml
-              python311Packages.requests
+              (python311.withPackages (ps: with ps; [
+                beautifulsoup4
+                click
+                openai
+                playwright
+                pydub
+                pytest
+                readability-lxml
+                requests
+              ]))
             ];
             shellHook = ''
+              export PLAYWRIGHT_BROWSERS_PATH="$PWD/playwright-browsers"
+              if [[ ! -d "$PLAYWRIGHT_BROWSERS_PATH" ]]; then
+                echo "Installing Playwright browsers in $PLAYWRIGHT_BROWSERS_PATH"
+                playwright install chromium
+              else
+                echo "Playwright browsers already installed in $PLAYWRIGHT_BROWSERS_PATH"
+              fi
               $SHELL
             '';
           };

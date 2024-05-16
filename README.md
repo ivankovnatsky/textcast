@@ -11,6 +11,17 @@ CLI tool for converting articles to podcasts using OpenAI's Text-to-Speech API.
 
 You need to have ffmpeg installed before running this CLI tool.
 
+```console
+brew install ffmpeg
+```
+
+Since JS based articles can't be rendered with requests we're using playwright and chromium web driver to tackle that:
+
+```console
+pip install playwright
+playwright install chromium
+```
+
 ## Usage
 
 Install article-to-podcast with:
@@ -85,7 +96,8 @@ pytest
 ## TODO
 
 - [x] Automatically fetch filename to save article from the article name
-- [ ] Work around: "Enable cookies and javascript to continue" errors
+- [x] Work around: "Enable JavaScript and cookies to continue" errors
+- [ ] Add couple of seconds silences at the start or the end of the file
 - [ ] Replace print with logger
 - [ ] Remove redundant warnings in pytest
 - [ ] Make sure pytest shows quota errors

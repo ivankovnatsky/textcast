@@ -2,38 +2,8 @@ import io
 from pathlib import Path
 from openai import OpenAI
 from pydub import AudioSegment
-
-TEXT_SEND_LIMIT = 4096  # Constant for the text limit
-
-
-def split_text(text, limit=TEXT_SEND_LIMIT):
-    words = text.split()
-    chunks = []
-    current_chunk = words[0]
-
-    for word in words[1:]:
-        if len(current_chunk) + len(word) + 1 <= limit:
-            current_chunk += " " + word
-        else:
-            chunks.append(current_chunk)
-            current_chunk = word
-    chunks.append(current_chunk)
-
-    return chunks
-
-
-def generate_unique_filename(output_path):
-    base = output_path.stem
-    suffix = output_path.suffix
-    directory = output_path.parent
-
-    counter = 1
-    new_path = output_path
-    while new_path.exists():
-        new_path = directory / f"{base}_{counter}{suffix}"
-        counter += 1
-
-    return new_path
+from .chunks import split_text
+from .filename import generate_unique_filename
 
 
 def process_article(text, filename, model, voice):
