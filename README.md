@@ -90,10 +90,6 @@ pytest
 - [ ] Remove redundant warnings in pytest
 - [ ] Make sure pytest shows quota errors
 
-## Disclaimer
-
-Code is almost exclusively written by GPT-4 and GPT-4o models.
-
 ## Inspired by
 
 * Long frustration of unread articles
