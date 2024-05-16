@@ -10,14 +10,15 @@ classifiers = [
     "License :: OSI Approved :: MIT License"
 ]
 dependencies = [
-    "click",
-    "openai>=1.0",
-    "pydub",
-    "simpleaudio; sys_platform == 'darwin'",
     "beautifulsoup4",
-    "requests",
-    "readability-lxml",
+    "click",
     "lxml[html_clean]"
+    "openai>=1.0",
+    "playwright",
+    "pydub",
+    "readability-lxml",
+    "requests",
+    "simpleaudio; sys_platform == 'darwin'",
 ]
 
 [project.urls]

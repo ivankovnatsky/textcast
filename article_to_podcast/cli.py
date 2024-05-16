@@ -1,6 +1,6 @@
 import click
 from .main import process_article
-from .article_fetcher import get_article_content
+from .article import get_article_content
 from pathlib import Path
 import re
 
