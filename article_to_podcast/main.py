@@ -6,6 +6,9 @@ from .chunks import split_text
 from .filename import generate_unique_filename
 
 
+SILINCE_TIME_MS = 3000
+
+
 def process_article(text, filename, model, voice):
     client = OpenAI()
     chunks = split_text(text)
@@ -38,6 +41,10 @@ def process_article(text, filename, model, voice):
                 break
 
     if success and not combined_audio.empty():
+        # Add a silence at the start and end of audio file
+        silence = AudioSegment.silent(duration=SILINCE_TIME_MS)
+        combined_audio = silence + combined_audio + silence
+
         combined_audio.export(output_path, format=output_format)
         print(f"Audio saved to {output_path}")
     else:
