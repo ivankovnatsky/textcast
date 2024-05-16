@@ -103,6 +103,11 @@ pytest
 - [ ] Remove redundant warnings in pytest
 - [ ] Make sure pytest shows quota errors
 
+## Manual configurations
+
+- OPENAI_API_KEY secret was added to repository secrets
+- PYPI_TOKEN was added to release environment secrets
+
 ## Inspired by
 
 * Long frustration of unread articles
