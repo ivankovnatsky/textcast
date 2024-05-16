@@ -98,6 +98,7 @@ pytest
 - [x] Automatically fetch filename to save article from the article name
 - [x] Work around: "Enable JavaScript and cookies to continue" errors
 - [ ] Add couple of seconds silences at the start or the end of the file
+- [ ] Add dependency to publish workflow to wait for test
 - [ ] Replace print with logger
 - [ ] Remove redundant warnings in pytest
 - [ ] Make sure pytest shows quota errors
