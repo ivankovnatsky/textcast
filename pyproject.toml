@@ -12,7 +12,7 @@ classifiers = [
 dependencies = [
     "beautifulsoup4",
     "click",
-    "lxml[html_clean]"
+    "lxml[html_clean]",
     "openai>=1.0",
     "playwright",
     "pydub",
