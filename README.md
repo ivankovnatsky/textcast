@@ -95,6 +95,7 @@ pytest
 
 ## TODO
 
+- [ ] Handle redirects
 - [ ] Replace print with logger
 - [ ] Remove redundant warnings in pytest
 - [ ] Make sure pytest shows quota errors
