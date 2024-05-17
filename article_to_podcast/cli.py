@@ -1,7 +1,8 @@
 import click
 from .main import process_article
-from .article import get_article_content
+from .article import get_article_content, is_js_required
 from pathlib import Path
+from .common import RenderError
 import re
 
 
@@ -74,8 +75,17 @@ def cli(url, file_url_list, directory, audio_format, model, voice, shrink):
             end_idx = len(text) * shrink // 100
             text = text[:end_idx]  # Limit the text based on the percentage
 
-        print(f"Processing article with `{title}` to audio ..")
+        print(f"Processing article with `{title}` to audio..")
         filename = Path(directory) / f"{format_filename(title, audio_format)}"
+
+        if is_js_required(text):
+            raise RenderError(
+                """
+It seems like the page might not have rendered correctly, not 
+sending text to OpenAI to avoid additinal costs.
+"""
+            )
+
         process_article(text, filename, model, voice)
 
 

@@ -2,10 +2,7 @@ from bs4 import BeautifulSoup
 from readability import Document
 from playwright.sync_api import sync_playwright
 import requests
-
-
-class RenderError(Exception):
-    pass
+from .common import RenderError
 
 
 def is_js_required(content):
@@ -14,9 +11,8 @@ def is_js_required(content):
         "Enable JavaScript to run this app.",
         "Please enable JavaScript to view the page content.",
         "Enable JavaScript and cookies to continue",
-        # Add more phrases as needed
     ]
-    return any(phrase in content for phrase in phrases)
+    return any(phrase.lower() in content.lower() for phrase in phrases)
 
 
 def fetch_content_with_requests(url):
