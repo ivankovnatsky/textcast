@@ -54,12 +54,11 @@ def format_filename(title, format):
     """,
 )
 @click.option(
-    "--shrink",
-    type=click.IntRange(0, 100),
-    default=100,
-    help="Percentage of the text to process. 0-100%. Default is 100%.",
+    "--strip",
+    type=click.IntRange(5, 2000),
+    help="By what number of chars to strip the text to send to OpenAI.",
 )
-def cli(url, file_url_list, directory, audio_format, model, voice, shrink):
+def cli(url, file_url_list, directory, audio_format, model, voice, strip):
     if not url and not file_url_list:
         raise click.UsageError("You must provide either --url or --file-url-list.")
 
@@ -72,9 +71,10 @@ def cli(url, file_url_list, directory, audio_format, model, voice, shrink):
 
     for url in urls:
         text, title = get_article_content(url)
-        if shrink < 100:
-            end_idx = len(text) * shrink // 100
-            text = text[:end_idx]  # Limit the text based on the percentage
+
+        # Strip text by number of chars set
+        if strip:
+            text = text[:strip]
 
         # Create directory if it does not exist
         os.makedirs(directory, exist_ok=True)
