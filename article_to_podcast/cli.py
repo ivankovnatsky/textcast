@@ -1,3 +1,4 @@
+import os
 import click
 from .main import process_article
 from .article import get_article_content, is_js_required
@@ -21,7 +22,7 @@ def format_filename(title, format):
 )
 @click.option(
     "--directory",
-    type=click.Path(exists=True, file_okay=False, writable=True),
+    type=click.Path(exists=False, file_okay=False, writable=True),
     default=".",
     help="Directory where the output audio file will be saved. The filename will be derived from the article title.",
 )
@@ -75,6 +76,8 @@ def cli(url, file_url_list, directory, audio_format, model, voice, shrink):
             end_idx = len(text) * shrink // 100
             text = text[:end_idx]  # Limit the text based on the percentage
 
+        # Create directory if it does not exist
+        os.makedirs(directory, exist_ok=True)
         print(f"Processing article with `{title}` to audio..")
         filename = Path(directory) / f"{format_filename(title, audio_format)}"
 
