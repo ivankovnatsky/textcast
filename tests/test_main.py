@@ -99,7 +99,7 @@ def test_process_article_file_list(setup_article_file):
             "--voice",
             "alloy",
             "--shrink",
-            "1",  # Use 1% of the text to reduce costs during testing
+            "0.5",  # Use 0.5% of the text to reduce costs during testing
         ],
         catch_exceptions=False,  # Allow exceptions to propagate
     )
