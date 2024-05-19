@@ -95,7 +95,9 @@ pytest
 
 ## TODO
 
-- [ ] Create directory to save audio file to if it does not exist
+- [ ] Add elevenlabs.io support
+  - [ ] We can utilize at first 10k chars once a month I think
+- [ ] Minimize costs on tests
 - [ ] Send to device right away
 - [ ] Handle redirects
 - [ ] Replace print with logger
