@@ -32,14 +32,15 @@ pipx install article-to-podcast
 
 ```console
 article-to-podcast --help                                                                                                                   
-Usage: article-to-podcast [OPTIONS]
+Usage: python -m article_to_podcast [OPTIONS]
 
 Options:
   --url TEXT                      URL of the article to be fetched.
-                                  [required]
+  --file-url-list FILE            Path to a file with URLs placed on every new
+                                  line.
   --directory DIRECTORY           Directory where the output audio file will
                                   be saved. The filename will be derived from
-                                  the article title.  [required]
+                                  the article title.
   --audio-format [mp3|opus|aac|flac|pcm]
                                   The audio format for the output file.
                                   Default is mp3.
@@ -57,6 +58,8 @@ Options:
                                   voices to find one that matches your desired
                                   tone and audience. The current voices are
                                   optimized for English.
+  --strip INTEGER RANGE           By what number of chars to strip the text to
+                                  send to OpenAI.  [5<=x<=2000]
   --help                          Show this message and exit.
 ```
 
