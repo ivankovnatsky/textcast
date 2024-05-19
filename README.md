@@ -95,6 +95,8 @@ pytest
 
 ## TODO
 
+- [ ] Create directory to save audio file to if it does not exist
+- [ ] Send to device right away
 - [ ] Handle redirects
 - [ ] Replace print with logger
 - [ ] Remove redundant warnings in pytest
