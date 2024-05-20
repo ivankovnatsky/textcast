@@ -9,7 +9,7 @@ from .filename import generate_unique_filename
 SILINCE_TIME_MS = 3000
 
 
-def process_article(text, filename, model, voice):
+def process_article_openai(text, filename, model, voice):
     client = OpenAI()
     chunks = split_text(text)
 
