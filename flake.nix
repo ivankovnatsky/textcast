@@ -7,9 +7,18 @@
     flake-utils.lib.eachDefaultSystem
       (system:
         let
-          pkgs = import nixpkgs {
-            inherit system;
-          };
+          pkgs = import nixpkgs
+            {
+              inherit system;
+              overlays = [
+                (final: prev: {
+                  # TODO: Remove it, once this PR would be merged: https://github.com/NixOS/nixpkgs/pull/313087.
+                  elevenlabs = final.callPackage ./overlays/elevenlabs.nix {
+                    buildPythonPackage = final.python311.pkgs.buildPythonPackage;
+                  };
+                })
+              ];
+            };
         in
         with pkgs;
         {
@@ -18,6 +27,7 @@
               ffmpeg
               (python311.withPackages (ps: with ps; [
                 beautifulsoup4
+                elevenlabs
                 click
                 openai
                 playwright

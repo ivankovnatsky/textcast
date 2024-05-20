@@ -1,20 +1,55 @@
-import os
-import click
-from .main import process_article
-from .article import get_article_content, is_js_required
 from pathlib import Path
-from .common import RenderError
+import click
+import os
 import re
 
+from .article import get_article_content, is_js_required
+from .common import RenderError
+from .elevenlabs import process_article_elevenlabs
+from .openai import process_article_openai
 
 def format_filename(title, format):
     # Replace special characters with dashes and convert to lowercase
     formatted_title = re.sub(r"\W+", "-", title).strip("-").lower()
     return f"{formatted_title}.{format}"
 
+# Define models depending on the AI vendor
+def validate_models(ctx, param, value):
+    if value is None:
+        return value
+
+    vendor = ctx.params['vendor']
+    if vendor == 'elevenlabs':
+        choices = ["eleven_monolingual_v1"]
+    else:
+        choices = ["tts-1", "tts-1-hd"]
+
+    if value not in choices:
+        raise click.BadParameter(f"Invalid choice: {value}. Allowed choices: {choices}")
+    return value
+
+def validate_voice(ctx, param, value):
+    if value is None:
+        return value
+
+    vendor = ctx.params['voice']
+    if vendor == 'elevenlabs':
+        choices = ["Nicole"]
+    else:
+        choices = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
+
+    if value not in choices:
+        raise click.BadParameter(f"Invalid choice: {value}. Allowed choices: {choices}")
+    return value
 
 @click.command()
 @click.option("--url", type=str, help="URL of the article to be fetched.")
+@click.option(
+    "--vendor",
+    type=click.Choice(["openai", "elevenlabs"]),
+    default="openai",
+    help="Choose vendor to use to convert text to audio."
+)
 @click.option(
     "--file-url-list",
     type=click.Path(exists=True, dir_okay=False, readable=True),
@@ -27,30 +62,18 @@ def format_filename(title, format):
     help="Directory where the output audio file will be saved. The filename will be derived from the article title.",
 )
 @click.option(
-    "--audio-format",
-    type=click.Choice(["mp3", "opus", "aac", "flac", "pcm"]),
-    default="mp3",
-    help="The audio format for the output file. Default is mp3.",
-)
-@click.option(
     "--model",
-    type=click.Choice(["tts-1", "tts-1-hd"]),
-    default="tts-1",
+    callback=validate_models,
+    default=None,
     help="The model to be used for text-to-speech conversion.",
 )
 @click.option(
     "--voice",
-    type=click.Choice(["alloy", "echo", "fable", "onyx", "nova", "shimmer"]),
-    default="alloy",
+    callback=validate_voice,
+    default=None,
     help="""
-    The voice to be used for the text-to-speech conversion. Voice options:
-    alloy:   A balanced and neutral voice.
-    echo:    A more dynamic and engaging voice.
-    fable:   A narrative and storytelling voice.
-    onyx:    A deep and resonant voice.
-    nova:    A bright and energetic voice.
-    shimmer: A soft and soothing voice.
-    Experiment with different voices to find one that matches your desired tone and audience. The current voices are optimized for English.
+    OpenIA voices: alloy, echo, fable, onyx, nova, shimmer;
+    ElevenLabs voices: Nicole.
     """,
 )
 @click.option(
@@ -58,9 +81,23 @@ def format_filename(title, format):
     type=click.IntRange(5, 2000),
     help="By what number of chars to strip the text to send to OpenAI.",
 )
-def cli(url, file_url_list, directory, audio_format, model, voice, strip):
+@click.option(
+    "--audio-format",
+    type=click.Choice(["mp3", "opus", "aac", "flac", "pcm"]),
+    default="mp3",
+    help="The audio format for the output file. Default is mp3.",
+)
+def cli(vendor, url, file_url_list, directory, audio_format, model, voice, strip):
     if not url and not file_url_list:
         raise click.UsageError("You must provide either --url or --file-url-list.")
+
+    # Set model and voice based on the API vendor
+    if vendor == "elevenlabs":
+        model = model or "eleven_monolingual_v1"
+        voice = voice or "Nicole"
+    elif vendor == "openai":
+        model = model or "tts-1"
+        voice = voice or "alloy"
 
     urls = []
     if url:
@@ -89,8 +126,10 @@ sending text to OpenAI to avoid additinal costs.
 """
             )
 
-        process_article(text, filename, model, voice)
-
+        if vendor == "openai":
+            process_article_openai(text, filename, model, voice)
+        elif vendor == "elevenlabs":
+            process_article_elevenlabs(text, filename, model, voice)
 
 if __name__ == "__main__":
     cli()

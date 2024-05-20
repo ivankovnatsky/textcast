@@ -5,7 +5,7 @@
 [![Tests](https://github.com/ivankovnatsky/article-to-podcast/workflows/Test/badge.svg)](https://github.com/ivankovnatsky/article-to-podcast/actions?query=workflow%3ATest)
 [![License](https://img.shields.io/github/license/ivankovnatsky/article-to-podcast)](https://github.com/ivankovnatsky/article-to-podcast/blob/main/LICENSE.md)
 
-CLI tool for converting articles to podcasts using OpenAI's Text-to-Speech API.
+CLI tool for converting articles to podcasts using AI Text-to-Speech APIs.
 
 ## Requirements
 
@@ -67,6 +67,16 @@ Options:
 export OPENAI_API_KEY="your-api-key"
 article-to-podcast \
     --url 'https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers'
+```
+
+ElevenLabs:
+
+```console
+export ELEVEN_API_KEY="your-api-key"
+article-to-podcast \
+  --url 'https://incident.io/blog/psychological-safety-in-incident-management' \
+  --vendor elevenlabs \
+  --directory ~/Downloads/Podcasts
 ```
 
 ## Development

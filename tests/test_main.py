@@ -51,7 +51,7 @@ def test_get_article_content():
         (ARTICLE_URL_JS, 0),
     ],
 )
-def test_process_article(url, expected_exit_code):
+def test_process_article_openai(url, expected_exit_code):
     runner = CliRunner()
     result = runner.invoke(
         cli,
@@ -82,8 +82,34 @@ def test_process_article(url, expected_exit_code):
     # Clean up
     output_audio_path.unlink()
 
+def test_process_article():
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--url",
+            ARTICLE_URL_HTML,
+            "--vendor"
+            "elevenlabs"
+            "--directory",
+            "/tmp",
+            "--strip",
+            "5",  # Strip the text by # of chars to reduce costs during testing
+        ],
+        catch_exceptions=False,  # Allow exceptions to propagate
+    )
 
-def test_process_article_file_list(setup_article_file):
+    assert result.exit_code == 0
+
+    output_audio_path = next(
+        Path("/tmp").glob("*.mp3")
+    )  # Find the generated audio file
+    assert output_audio_path.exists()
+
+    # Clean up
+    output_audio_path.unlink()
+
+def test_process_article_openai_file_list(setup_article_file):
     runner = CliRunner()
     result = runner.invoke(
         cli,
