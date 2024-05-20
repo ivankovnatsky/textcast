@@ -31,6 +31,9 @@ CI = "https://github.com/ivankovnatsky/article-to-podcast/actions"
 [project.entry-points.console_scripts]
 article-to-podcast = "article_to_podcast.cli:cli"
 
+[tool.setuptools]
+packages = ["article_to_podcast"]
+
 [project.optional-dependencies]
 test = ["pytest", "cogapp"]
 
