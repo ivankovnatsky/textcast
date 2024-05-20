@@ -18,7 +18,11 @@ def validate_models(ctx, param, value):
     if value is None:
         return value
 
-    vendor = ctx.params['vendor']
+    try:
+        vendor = ctx.params['vendor']
+    except:
+        vendor = "openai"
+
     if vendor == 'elevenlabs':
         choices = ["eleven_monolingual_v1"]
     else:
@@ -32,7 +36,11 @@ def validate_voice(ctx, param, value):
     if value is None:
         return value
 
-    vendor = ctx.params['voice']
+    try:
+        vendor = ctx.params['vendor']
+    except:
+        vendor = "openai"
+
     if vendor == 'elevenlabs':
         choices = ["Nicole"]
     else:

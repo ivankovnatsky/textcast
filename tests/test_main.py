@@ -82,15 +82,15 @@ def test_process_article_openai(url, expected_exit_code):
     # Clean up
     output_audio_path.unlink()
 
-def test_process_article():
+def test_process_article_elevenlabs():
     runner = CliRunner()
     result = runner.invoke(
         cli,
         [
             "--url",
             ARTICLE_URL_HTML,
-            "--vendor"
-            "elevenlabs"
+            "--vendor",
+            "elevenlabs",
             "--directory",
             "/tmp",
             "--strip",
