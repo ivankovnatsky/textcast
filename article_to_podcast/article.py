@@ -5,27 +5,40 @@ import requests
 from .common import RenderError
 
 
-def is_js_required(content):
+def is_js_required(soup):
     """Check if the content indicates JS is required"""
-    phrases = [
-        "Enable JavaScript to run this app.",
-        "Please enable JavaScript to view the page content.",
-        "Enable JavaScript and cookies to continue",
+    # Check for elements that are often loaded by JavaScript
+    js_indicators = [
+        ("div", {"id": "app"}),
+        ("div", {"id": "root"}),
+        ("script", {}),
+        ("noscript", {}),
     ]
-    return any(phrase.lower() in content.lower() for phrase in phrases)
+
+    for tag_name, attr_dict in js_indicators:
+        tag_elements = soup.find_all(tag_name, attr_dict)
+        if tag_elements:
+            return True
+
+    return False
 
 
 def fetch_content_with_requests(url):
     try:
-        response = requests.get(url, timeout=10)  # Adjust timeout as needed
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
 
-        doc = Document(response.text)
-        soup = BeautifulSoup(doc.summary(), "html.parser")
+        soup = BeautifulSoup(
+            response.text, "html.parser"
+        )  # <-- Create soup from response.text
+        doc = Document(soup)  # <-- Pass the soup object to Document
+
         text = soup.get_text()
         title = doc.title()
 
-        if is_js_required(text):
+        print(f"soup type is {type(soup)}")
+        print(f"soup value is {soup}")
+        if is_js_required(soup):
             raise RenderError("JavaScript is required to load this page.")
 
         return text, title
@@ -62,8 +75,8 @@ def fetch_content_with_playwright(url):
 
 def get_article_content(url):
     try:
-        # Attempt to fetch and parse using requests
+        print("Attempting to fetch and parse using requests.")
         return fetch_content_with_requests(url)
     except RenderError:
-        # Fallback to Playwright if requests fail
+        print("Using Playwright to render the page.")
         return fetch_content_with_playwright(url)

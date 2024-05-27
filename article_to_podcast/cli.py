@@ -3,15 +3,17 @@ import click
 import os
 import re
 
-from .article import get_article_content, is_js_required
+from .article import get_article_content
 from .common import RenderError
 from .elevenlabs import process_article_elevenlabs
 from .openai import process_article_openai
+
 
 def format_filename(title, format):
     # Replace special characters with dashes and convert to lowercase
     formatted_title = re.sub(r"\W+", "-", title).strip("-").lower()
     return f"{formatted_title}.{format}"
+
 
 # Define models depending on the AI vendor
 def validate_models(ctx, param, value):
@@ -19,11 +21,11 @@ def validate_models(ctx, param, value):
         return value
 
     try:
-        vendor = ctx.params['vendor']
+        vendor = ctx.params["vendor"]
     except:
         vendor = "openai"
 
-    if vendor == 'elevenlabs':
+    if vendor == "elevenlabs":
         choices = ["eleven_monolingual_v1"]
     else:
         choices = ["tts-1", "tts-1-hd"]
@@ -32,16 +34,17 @@ def validate_models(ctx, param, value):
         raise click.BadParameter(f"Invalid choice: {value}. Allowed choices: {choices}")
     return value
 
+
 def validate_voice(ctx, param, value):
     if value is None:
         return value
 
     try:
-        vendor = ctx.params['vendor']
+        vendor = ctx.params["vendor"]
     except:
         vendor = "openai"
 
-    if vendor == 'elevenlabs':
+    if vendor == "elevenlabs":
         choices = ["Nicole"]
     else:
         choices = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
@@ -50,13 +53,14 @@ def validate_voice(ctx, param, value):
         raise click.BadParameter(f"Invalid choice: {value}. Allowed choices: {choices}")
     return value
 
+
 @click.command()
 @click.option("--url", type=str, help="URL of the article to be fetched.")
 @click.option(
     "--vendor",
     type=click.Choice(["openai", "elevenlabs"]),
     default="openai",
-    help="Choose vendor to use to convert text to audio."
+    help="Choose vendor to use to convert text to audio.",
 )
 @click.option(
     "--file-url-list",
@@ -126,18 +130,11 @@ def cli(vendor, url, file_url_list, directory, audio_format, model, voice, strip
         print(f"Processing article with `{title}` to audio..")
         filename = Path(directory) / f"{format_filename(title, audio_format)}"
 
-        if is_js_required(text):
-            raise RenderError(
-                """
-It seems like the page might not have rendered correctly, not 
-sending text to OpenAI to avoid additinal costs.
-"""
-            )
-
         if vendor == "openai":
             process_article_openai(text, filename, model, voice)
         elif vendor == "elevenlabs":
             process_article_elevenlabs(text, filename, model, voice)
+
 
 if __name__ == "__main__":
     cli()
