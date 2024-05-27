@@ -5,7 +5,9 @@
 [![Tests](https://github.com/ivankovnatsky/article-to-podcast/workflows/Test/badge.svg)](https://github.com/ivankovnatsky/article-to-podcast/actions?query=workflow%3ATest)
 [![License](https://img.shields.io/github/license/ivankovnatsky/article-to-podcast)](https://github.com/ivankovnatsky/article-to-podcast/blob/main/LICENSE.md)
 
-CLI tool for converting articles to podcasts using AI Text-to-Speech APIs.
+CLI tool for converting articles to podcasts using AI Text-to-Speech APIs. I
+have added ElevenLabs basic functionanlity, but it's very basic, and I still
+use OpenAI more for it's cheapnes
 
 ## Requirements
 
@@ -125,6 +127,7 @@ pytest
 
 - OPENAI_API_KEY secret was added to repository secrets
 - PYPI_TOKEN was added to release environment secrets
+- Elevenlabs test do not require api key for small size requests
 
 ## Inspired by
 
