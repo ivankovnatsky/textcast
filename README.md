@@ -110,15 +110,12 @@ pytest
 
 ## TODO
 
-- [ ] Add elevenlabs.io support
-  - [ ] We can utilize at first 10k chars once a month I think
 - [ ] Cloudflare blocks -- `attention-required-cloudflare.mp3`
 - [ ] Minimize costs on tests
 - [ ] Add ability to render images to text and send over to text to speech as well
 - [ ] Shorten filename created
 - [ ] Shorten article title printed to console
 - [ ] Send to device right away
-- [ ] Handle redirects
 - [ ] Replace print with logger
 - [ ] Remove redundant warnings in pytest
 - [ ] Make sure pytest shows quota errors
