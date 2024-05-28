@@ -110,7 +110,7 @@ pytest
 
 ## TODO
 
-- [ ] Cloudflare blocks -- `attention-required-cloudflare.mp3`
+- [ ] Bypass Cloudflare block
 - [ ] Minimize costs on tests
 - [ ] Add ability to render images to text and send over to text to speech as well
 - [ ] Shorten filename created
