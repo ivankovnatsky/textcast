@@ -1,13 +1,13 @@
-# Article to Podcast
+# audio-reads
 
-[![PyPI](https://img.shields.io/pypi/v/article-to-podcast.svg)](https://pypi.org/project/article-to-podcast/)
-[![Changelog](https://img.shields.io/github/release/ivankovnatsky/article-to-podcast.svg)](https://github.com/ivankovnatsky/article-to-podcast/releases)
-[![Tests](https://github.com/ivankovnatsky/article-to-podcast/workflows/Test/badge.svg)](https://github.com/ivankovnatsky/article-to-podcast/actions?query=workflow%3ATest)
-[![License](https://img.shields.io/github/license/ivankovnatsky/article-to-podcast)](https://github.com/ivankovnatsky/article-to-podcast/blob/main/LICENSE.md)
+[![PyPI](https://img.shields.io/pypi/v/audio-reads.svg)](https://pypi.org/project/audio-reads/)
+[![Changelog](https://img.shields.io/github/release/ivankovnatsky/audio-reads.svg)](https://github.com/ivankovnatsky/audio-reads/releases)
+[![Tests](https://github.com/ivankovnatsky/audio-reads/workflows/Test/badge.svg)](https://github.com/ivankovnatsky/audio-reads/actions?query=workflow%3ATest)
+[![License](https://img.shields.io/github/license/ivankovnatsky/audio-reads)](https://github.com/ivankovnatsky/audio-reads/blob/main/LICENSE.md)
 
 CLI tool for converting articles to podcasts using AI Text-to-Speech APIs. I
-have added ElevenLabs basic functionanlity, but it's very basic, and I still
-use OpenAI more for it's cheapnes
+have added ElevenLabs basic functionanlity, but it's very simple, and I still
+use OpenAI more for it's cheapness.
 
 ## Requirements
 
@@ -26,15 +26,15 @@ playwright install chromium
 
 ## Usage
 
-Install article-to-podcast with:
+Install audio-reads with:
 
 ```console
-pipx install article-to-podcast
+pipx install audio-reads
 ```
 
 ```console
-article-to-podcast --help                                                                                                                   
-Usage: python -m article_to_podcast [OPTIONS]
+audio-reads --help                                                                                                                   
+Usage: python -m audio_reads [OPTIONS]
 
 Options:
   --url TEXT                      URL of the article to be fetched.
@@ -67,7 +67,7 @@ Options:
 
 ```console
 export OPENAI_API_KEY="your-api-key"
-article-to-podcast \
+audio-reads \
     --url 'https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers'
 ```
 
@@ -75,7 +75,7 @@ ElevenLabs:
 
 ```console
 export ELEVEN_API_KEY="your-api-key"
-article-to-podcast \
+audio-reads \
   --url 'https://incident.io/blog/psychological-safety-in-incident-management' \
   --vendor elevenlabs \
   --directory ~/Downloads/Podcasts
@@ -92,7 +92,7 @@ nix develop
 ```console
 export OPENAI_API_KEY="your-api-key"
 python \
-    -m article_to_podcast \
+    -m audio_reads \
     --model tts-1-hd \
     --voice nova \
     --directory . \

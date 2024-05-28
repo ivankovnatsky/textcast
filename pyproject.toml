@@ -1,5 +1,5 @@
 [project]
-name = "article-to-podcast"
+name = "audio-reads"
 version = "0.1.13"
 description = "CLI tool for converting articles to podcasts"
 readme = "README.md"
@@ -23,16 +23,16 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ivankovnatsky/article-to-podcast"
-Changelog = "https://github.com/ivankovnatsky/article-to-podcast/releases"
-Issues = "https://github.com/ivankovnatsky/article-to-podcast/issues"
-CI = "https://github.com/ivankovnatsky/article-to-podcast/actions"
+Homepage = "https://github.com/ivankovnatsky/audio-reads"
+Changelog = "https://github.com/ivankovnatsky/audio-reads/releases"
+Issues = "https://github.com/ivankovnatsky/audio-reads/issues"
+CI = "https://github.com/ivankovnatsky/audio-reads/actions"
 
 [project.entry-points.console_scripts]
-article-to-podcast = "article_to_podcast.cli:cli"
+audio-reads = "audio_reads.cli:cli"
 
 [tool.setuptools]
-packages = ["article_to_podcast"]
+packages = ["audio_reads"]
 
 [project.optional-dependencies]
 test = ["pytest", "cogapp"]

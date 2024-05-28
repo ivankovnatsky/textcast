@@ -1,7 +1,7 @@
 from click.testing import CliRunner
-from article_to_podcast.cli import cli
-from article_to_podcast.chunks import TEXT_SEND_LIMIT, split_text
-from article_to_podcast.article import get_article_content
+from audio_reads.cli import cli
+from audio_reads.chunks import TEXT_SEND_LIMIT, split_text
+from audio_reads.article import get_article_content
 from pathlib import Path
 import pytest
 
@@ -82,6 +82,7 @@ def test_process_article_openai(url, expected_exit_code):
     # Clean up
     output_audio_path.unlink()
 
+
 def test_process_article_elevenlabs():
     runner = CliRunner()
     result = runner.invoke(
@@ -108,6 +109,7 @@ def test_process_article_elevenlabs():
 
     # Clean up
     output_audio_path.unlink()
+
 
 def test_process_article_openai_file_list(setup_article_file):
     runner = CliRunner()
