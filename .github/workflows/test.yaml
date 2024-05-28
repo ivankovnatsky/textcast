@@ -7,6 +7,8 @@ on:
   pull_request:
     branches:
       - main
+  release:
+    types: [created]
   workflow_call:
     inputs:
       run_tests:
@@ -19,8 +21,8 @@ permissions:
 
 jobs:
   test:
-    # Run tests unless it's a release event without explicit test run
-    if: github.event_name != 'release' || github.event.inputs.run_tests == 'true'
+    # Avoid running tests on main branch push if it's a tag
+    if: "!contains(github.ref, 'refs/tags/') || inputs.run_tests == 'true'"
     runs-on: ${{ matrix.os }}
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
