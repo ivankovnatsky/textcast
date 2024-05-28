@@ -1,27 +1,15 @@
 name: Test
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
   release:
     types: [created]
-  workflow_call:
-    inputs:
-      run_tests:
-        required: false
-        type: boolean
-        default: false
 
 permissions:
   contents: read
 
 jobs:
   test:
-    if: github.event.inputs.run_tests == 'true' || github.event_name == 'push' || github.event_name == 'pull_request'
     runs-on: ${{ matrix.os }}
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
