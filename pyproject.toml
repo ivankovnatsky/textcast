@@ -1,6 +1,6 @@
 [project]
 name = "audio-reads"
-version = "0.1.18"
+version = "0.1.19"
 description = "CLI tool for converting articles to podcasts"
 readme = "README.md"
 authors = [{name = "Ivan Kovnatsky"}]
