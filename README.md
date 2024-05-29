@@ -17,7 +17,8 @@ You need to have ffmpeg installed before running this CLI tool.
 brew install ffmpeg
 ```
 
-Since JS based articles can't be rendered with requests we're using playwright and chromium web driver to tackle that:
+Since JS based articles can't be rendered with requests we're using playwright
+and chromium web driver to tackle that:
 
 ```console
 pip install playwright
