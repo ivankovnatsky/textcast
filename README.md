@@ -33,35 +33,30 @@ pipx install audio-reads
 ```
 
 ```console
-audio-reads --help                                                                                                                   
+audio-reads --help
 Usage: python -m audio_reads [OPTIONS]
 
 Options:
   --url TEXT                      URL of the article to be fetched.
+  --vendor [openai|elevenlabs]    Choose vendor to use to convert text to
+                                  audio.
   --file-url-list FILE            Path to a file with URLs placed on every new
                                   line.
+  --file-text FILE                Path to a file with text to be sent over to
+                                  AI vendor. This is currently a workaround of
+                                  Cloudflare blocking.
   --directory DIRECTORY           Directory where the output audio file will
                                   be saved. The filename will be derived from
                                   the article title.
+  --model TEXT                    The model to be used for text-to-speech
+                                  conversion.
+  --voice TEXT                    OpenIA voices: alloy, echo, fable, onyx,
+                                  nova, shimmer; ElevenLabs voices: Nicole.
+  --strip INTEGER RANGE           By what number of chars to strip the text to
+                                  send to OpenAI.  [5<=x<=2000]
   --audio-format [mp3|opus|aac|flac|pcm]
                                   The audio format for the output file.
                                   Default is mp3.
-  --model [tts-1|tts-1-hd]        The model to be used for text-to-speech
-                                  conversion.
-  --voice [alloy|echo|fable|onyx|nova|shimmer]
-                                  The voice to be used for the text-to-speech
-                                  conversion. Voice options: alloy:   A
-                                  balanced and neutral voice. echo:    A more
-                                  dynamic and engaging voice. fable:   A
-                                  narrative and storytelling voice. onyx:    A
-                                  deep and resonant voice. nova:    A bright
-                                  and energetic voice. shimmer: A soft and
-                                  soothing voice. Experiment with different
-                                  voices to find one that matches your desired
-                                  tone and audience. The current voices are
-                                  optimized for English.
-  --strip INTEGER RANGE           By what number of chars to strip the text to
-                                  send to OpenAI.  [5<=x<=2000]
   --help                          Show this message and exit.
 ```
 
