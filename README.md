@@ -1,9 +1,9 @@
-# audio-reads
+# articast
 
-[![PyPI](https://img.shields.io/pypi/v/audio-reads.svg)](https://pypi.org/project/audio-reads/)
-[![Changelog](https://img.shields.io/github/release/ivankovnatsky/audio-reads.svg)](https://github.com/ivankovnatsky/audio-reads/releases)
-[![Tests](https://github.com/ivankovnatsky/audio-reads/workflows/Test/badge.svg)](https://github.com/ivankovnatsky/audio-reads/actions?query=workflow%3ATest)
-[![License](https://img.shields.io/github/license/ivankovnatsky/audio-reads)](https://github.com/ivankovnatsky/audio-reads/blob/main/LICENSE.md)
+[![PyPI](https://img.shields.io/pypi/v/articast.svg)](https://pypi.org/project/articast/)
+[![Changelog](https://img.shields.io/github/release/ivankovnatsky/articast.svg)](https://github.com/ivankovnatsky/articast/releases)
+[![Tests](https://github.com/ivankovnatsky/articast/workflows/Test/badge.svg)](https://github.com/ivankovnatsky/articast/actions?query=workflow%3ATest)
+[![License](https://img.shields.io/github/license/ivankovnatsky/articast)](https://github.com/ivankovnatsky/articast/blob/main/LICENSE.md)
 
 CLI tool for converting articles to podcasts using AI Text-to-Speech APIs. I
 have added ElevenLabs basic functionanlity, but it's very simple, and I still
@@ -27,15 +27,15 @@ playwright install chromium
 
 ## Usage
 
-Install audio-reads with:
+Install articast with:
 
 ```console
-pipx install audio-reads
+pipx install articast
 ```
 
 ```console
-audio-reads --help
-Usage: python -m audio_reads [OPTIONS]
+articast --help
+Usage: python -m articast [OPTIONS]
 
 Options:
   --url TEXT                      URL of the article to be fetched.
@@ -63,7 +63,7 @@ Options:
 
 ```console
 export OPENAI_API_KEY="your-api-key"
-audio-reads \
+articast \
     --url 'https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers'
 ```
 
@@ -71,7 +71,7 @@ ElevenLabs:
 
 ```console
 export ELEVEN_API_KEY="your-api-key"
-audio-reads \
+articast \
   --url 'https://incident.io/blog/psychological-safety-in-incident-management' \
   --vendor elevenlabs \
   --directory ~/Downloads/Podcasts
@@ -88,7 +88,7 @@ nix develop
 ```console
 export OPENAI_API_KEY="your-api-key"
 python \
-    -m audio_reads \
+    -m articast \
     --model tts-1-hd \
     --voice nova \
     --directory . \

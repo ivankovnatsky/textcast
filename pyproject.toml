@@ -1,5 +1,5 @@
 [project]
-name = "audio-reads"
+name = "articast"
 version = "0.1.21"
 description = "CLI tool for converting articles to podcasts"
 readme = "README.md"
@@ -23,16 +23,16 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ivankovnatsky/audio-reads"
-Changelog = "https://github.com/ivankovnatsky/audio-reads/releases"
-Issues = "https://github.com/ivankovnatsky/audio-reads/issues"
-CI = "https://github.com/ivankovnatsky/audio-reads/actions"
+Homepage = "https://github.com/ivankovnatsky/articast"
+Changelog = "https://github.com/ivankovnatsky/articast/releases"
+Issues = "https://github.com/ivankovnatsky/articast/issues"
+CI = "https://github.com/ivankovnatsky/articast/actions"
 
 [project.entry-points.console_scripts]
-audio-reads = "audio_reads.cli:cli"
+articast = "articast.cli:cli"
 
 [tool.setuptools]
-packages = ["audio_reads"]
+packages = ["articast"]
 
 [project.optional-dependencies]
 test = ["pytest", "cogapp"]
