@@ -43,5 +43,5 @@ jobs:
         playwright install chromium
     - name: Run tests
       run: |
-        pytest
+        pytest -v
         cog --check README.md

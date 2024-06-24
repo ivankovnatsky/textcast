@@ -5,6 +5,9 @@ from articast.article import get_article_content
 from pathlib import Path
 import pytest
 
+import sys
+import traceback
+
 ARTICLE_URL_HTML = "https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers/"
 ARTICLE_URL_JS = (
     "https://lab.scub.net/architecture-patterns-the-circuit-breaker-8f79280771f1"
@@ -15,10 +18,10 @@ ARTICLES_FILE_PATH = "/tmp/articles-file-list.txt"
 @pytest.fixture
 def setup_article_file():
     with open(ARTICLES_FILE_PATH, "w") as article_file_list:
-        for _ in range(2):
-            article_file_list.write(ARTICLE_URL_HTML + "\n")
+        article_file_list.write(ARTICLE_URL_HTML + "\n")
+        article_file_list.write(ARTICLE_URL_JS + "\n")
     yield ARTICLES_FILE_PATH
-    Path(ARTICLES_FILE_PATH).unlink()  # Clean up the file after the test
+    # Path(ARTICLES_FILE_PATH).unlink()  # Clean up the file after the test
 
 
 def test_split_text():
@@ -67,17 +70,37 @@ def test_process_article_openai(url, expected_exit_code):
             "--voice",
             "alloy",
             "--strip",
-            "5",  # Strip the text by # of chars to reduce costs during testing
+            "5",
+            "--yes",
         ],
-        catch_exceptions=False,  # Allow exceptions to propagate
+        catch_exceptions=False,
     )
+
+    print(f"\n--- Debug Output for URL: {url} ---")
+    print(f"CLI Output:\n{result.output}")
+    print(f"Exit Code: {result.exit_code}")
+
+    print("Contents of /tmp directory:")
+    print(list(Path("/tmp").glob("*")))
+
+    if result.exception:
+        print("Exception occurred during CLI execution:")
+        print(
+            traceback.format_exception(
+                type(result.exception), result.exception, result.exception.__traceback__
+            )
+        )
 
     assert result.exit_code == expected_exit_code
 
-    output_audio_path = next(
-        Path("/tmp").glob("*.mp3")
-    )  # Find the generated audio file
-    assert output_audio_path.exists()
+    try:
+        output_audio_path = next(Path("/tmp").glob("*.mp3"))
+        print(f"Found MP3 file: {output_audio_path}")
+    except StopIteration:
+        print("No MP3 file found in /tmp")
+        raise
+
+    print("--- End Debug Output ---\n")
 
     # Clean up
     output_audio_path.unlink()
@@ -96,6 +119,7 @@ def test_process_article_elevenlabs():
             "/tmp",
             "--strip",
             "5",  # Strip the text by # of chars to reduce costs during testing
+            "--yes",
         ],
         catch_exceptions=False,  # Allow exceptions to propagate
     )
@@ -128,9 +152,26 @@ def test_process_article_openai_file_list(setup_article_file):
             "alloy",
             "--strip",
             "5",  # Strip the text by # of chars to reduce costs during testing
+            "--yes",
         ],
         catch_exceptions=False,  # Allow exceptions to propagate
     )
+
+    print(f"CLI Output:\n{result.output}")
+    print(f"Exit Code: {result.exit_code}")
+
+    print("Contents of /tmp directory:")
+    print(list(Path("/tmp").glob("*")))
+
+    if result.exception:
+        print("Exception occurred during CLI execution:")
+        print(
+            traceback.format_exception(
+                type(result.exception), result.exception, result.exception.__traceback__
+            )
+        )
+
+    print("--- End Debug Output ---\n")
 
     assert result.exit_code == 0
 
