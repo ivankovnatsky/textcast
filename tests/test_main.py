@@ -1,7 +1,7 @@
 from click.testing import CliRunner
-from audio_reads.cli import cli
-from audio_reads.chunks import TEXT_SEND_LIMIT, split_text
-from audio_reads.article import get_article_content
+from articast.cli import cli
+from articast.chunks import TEXT_SEND_LIMIT, split_text
+from articast.article import get_article_content
 from pathlib import Path
 import pytest
 
