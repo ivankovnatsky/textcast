@@ -59,8 +59,18 @@ from .common import (
     default="mp3",
     help="The audio format for the output file. Default is mp3.",
 )
+@click.option("--yes", is_flag=True, help="Automatically answer yes to all prompts")
 def cli(
-    vendor, url, file_url_list, file_text, directory, audio_format, model, voice, strip
+    vendor,
+    url,
+    file_url_list,
+    file_text,
+    directory,
+    audio_format,
+    model,
+    voice,
+    strip,
+    yes,
 ):
     if not url and not file_url_list and not file_text:
         raise click.UsageError(
@@ -97,14 +107,14 @@ def cli(
             # I want to make sure that I would not send some dummy Cloudflare
             # blocking text to render an audio for me.
             print(f"Processing article with title: `{title}`..")
-            if click.confirm(
+            if yes or click.confirm(
                 "Do you want to proceed with converting this text to audio?"
             ):
                 process_text_to_audio(
                     text, title, vendor, directory, audio_format, model, voice, strip
                 )
             else:
-                print("Skipping this article.")
+                click.echo("Skipping this article.")
 
 
 if __name__ == "__main__":
