@@ -45,7 +45,8 @@
               else
                 echo "Playwright browsers already installed in $PLAYWRIGHT_BROWSERS_PATH"
               fi
-              $SHELL
+
+              export OPENAI_API_KEY=$(ks show openai-api-key)
             '';
           };
         }
