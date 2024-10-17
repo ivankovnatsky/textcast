@@ -95,6 +95,14 @@ python \
     --url 'https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers'
 ```
 
+### Lint
+
+I currently use these commands manually, maybe I will add some automation later on:
+
+```console
+autoflake --in-place --remove-all-unused-imports --expand-star-imports -r .
+```
+
 ## Testing
 
 If you used `nix develop` all necessary dependencies should have already 
@@ -119,8 +127,8 @@ pytest
 ## Manual configurations
 
 - OPENAI_API_KEY secret was added to repository secrets
+- ELEVEN_API_KEY secret was added to repository secrets
 - PYPI_TOKEN was added to release environment secrets
-- Elevenlabs test do not require api key for small size requests
 
 ## Inspired by
 
