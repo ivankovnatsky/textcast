@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 # * OpenIA limit in chars for one request is 4096.
 # * For ElevenLabs it's 2500 for non subscribed users and 5000 for
 # subscribed ones.
@@ -7,10 +11,10 @@ TEXT_SEND_LIMIT = 2500
 
 
 def split_text(text, limit=TEXT_SEND_LIMIT):
+    logger.debug(f"Splitting text with limit of {limit} characters")
     words = text.split()
     chunks = []
     current_chunk = words[0]
-
     for word in words[1:]:
         if len(current_chunk) + len(word) + 1 <= limit:
             current_chunk += " " + word
@@ -18,5 +22,5 @@ def split_text(text, limit=TEXT_SEND_LIMIT):
             chunks.append(current_chunk)
             current_chunk = word
     chunks.append(current_chunk)
-
+    logger.debug(f"Text split into {len(chunks)} chunks")
     return chunks

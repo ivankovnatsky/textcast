@@ -52,7 +52,7 @@ Options:
   --model TEXT                    The model to be used for text-to-speech
                                   conversion.
   --voice TEXT                    OpenIA voices: alloy, echo, fable, onyx,
-                                  nova, shimmer; ElevenLabs voices: Nicole.
+                                  nova, shimmer; ElevenLabs voices: Sarah.
   --strip INTEGER RANGE           By what number of chars to strip the text to
                                   send to OpenAI.  [5<=x<=2000]
   --audio-format [mp3|opus|aac|flac|pcm]

@@ -1,3 +1,5 @@
+import io
+import logging
 from click.testing import CliRunner
 from articast.cli import cli
 from articast.chunks import TEXT_SEND_LIMIT, split_text
@@ -5,10 +7,9 @@ from articast.article import get_article_content
 from pathlib import Path
 import pytest
 
-import sys
 import traceback
 
-ARTICLE_URL_HTML = "https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers/"
+ARTICLE_URL_HTML = "https://blog.alexewerlof.com/p/slo-elastic-datadog-grafana"
 ARTICLE_URL_JS = (
     "https://lab.scub.net/architecture-patterns-the-circuit-breaker-8f79280771f1"
 )
@@ -24,6 +25,17 @@ def setup_article_file():
     # Path(ARTICLES_FILE_PATH).unlink()  # Clean up the file after the test
 
 
+@pytest.fixture
+def capture_logging():
+    log_capture = io.StringIO()
+    handler = logging.StreamHandler(log_capture)
+    logger = logging.getLogger()
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+    yield log_capture
+    logger.removeHandler(handler)
+
+
 def test_split_text():
     text = "This is a test text. " * 300  # Creating a long text to ensure it gets split
     chunks = split_text(text)
@@ -36,15 +48,22 @@ def test_split_text():
         assert len(chunk) <= TEXT_SEND_LIMIT
 
 
-def test_get_article_content():
+def test_get_article_content(capture_logging):
     text, title = get_article_content(ARTICLE_URL_HTML)
 
-    # Check if a known phrase is in the text and title
+    # Check for a specific phrase you can see in the browser
     assert (
-        "KoPylot\xa0is a cloud-native application performance monitoring (APM) solution that runs on Kubernetes"
+        "Service Levels is how that data comes to life and turn into actionable information"
         in text
-    )
-    assert "KoPylot" in title  # Checking a part of the title to ensure it's correct
+    ), "Expected content not found in article text"
+
+    # Check for the expected title content
+    assert "Elastic vs Datadog vs Grafana" in title, "Expected title content not found"
+
+    # Check for debug logs
+    log_output = capture_logging.getvalue()
+    assert "Fetching content for URL:" in log_output
+    assert "Content fetched successfully" in log_output
 
 
 @pytest.mark.parametrize(
@@ -54,7 +73,7 @@ def test_get_article_content():
         (ARTICLE_URL_JS, 0),
     ],
 )
-def test_process_article_openai(url, expected_exit_code):
+def test_process_article_openai(url, expected_exit_code, capture_logging):
     runner = CliRunner()
     result = runner.invoke(
         cli,
@@ -72,6 +91,7 @@ def test_process_article_openai(url, expected_exit_code):
             "--strip",
             "5",
             "--yes",
+            "--debug",
         ],
         catch_exceptions=False,
     )
@@ -102,11 +122,18 @@ def test_process_article_openai(url, expected_exit_code):
 
     print("--- End Debug Output ---\n")
 
+    # Check for debug logs
+    log_output = capture_logging.getvalue()
+    assert "Starting OpenAI processing" in log_output
+    assert "Text split into" in log_output
+    assert "Processing chunk" in log_output
+    assert "Audio saved to" in log_output
+
     # Clean up
     output_audio_path.unlink()
 
 
-def test_process_article_elevenlabs():
+def test_process_article_elevenlabs(capture_logging):
     runner = CliRunner()
     result = runner.invoke(
         cli,
@@ -120,6 +147,7 @@ def test_process_article_elevenlabs():
             "--strip",
             "5",  # Strip the text by # of chars to reduce costs during testing
             "--yes",
+            "--debug",
         ],
         catch_exceptions=False,  # Allow exceptions to propagate
     )
@@ -131,11 +159,17 @@ def test_process_article_elevenlabs():
     )  # Find the generated audio file
     assert output_audio_path.exists()
 
+    # Check for debug logs
+    log_output = capture_logging.getvalue()
+    assert "Starting ElevenLabs processing" in log_output
+    assert "Generating audio with ElevenLabs" in log_output
+    assert "ElevenLabs processing completed successfully" in log_output
+
     # Clean up
     output_audio_path.unlink()
 
 
-def test_process_article_openai_file_list(setup_article_file):
+def test_process_article_openai_file_list(setup_article_file, capture_logging):
     runner = CliRunner()
     result = runner.invoke(
         cli,
@@ -153,6 +187,7 @@ def test_process_article_openai_file_list(setup_article_file):
             "--strip",
             "5",  # Strip the text by # of chars to reduce costs during testing
             "--yes",
+            "--debug",
         ],
         catch_exceptions=False,  # Allow exceptions to propagate
     )
@@ -178,6 +213,13 @@ def test_process_article_openai_file_list(setup_article_file):
     # Find the generated audio files
     output_audio_paths = list(Path("/tmp").glob("*.mp3"))
     assert len(output_audio_paths) == 2  # Ensure two audio files are created
+
+    # Check for debug logs
+    log_output = capture_logging.getvalue()
+    assert "Starting OpenAI processing" in log_output
+    assert "Text split into" in log_output
+    assert "Processing chunk" in log_output
+    assert "Audio saved to" in log_output
 
     for output_audio_path in output_audio_paths:
         assert output_audio_path.exists()
