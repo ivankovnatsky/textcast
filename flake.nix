@@ -26,6 +26,7 @@
             buildInputs = [
               ffmpeg
               (python311.withPackages (ps: with ps; [
+                # Code Deps
                 beautifulsoup4
                 elevenlabs
                 click
@@ -35,6 +36,9 @@
                 pytest
                 readability-lxml
                 requests
+
+                # Code Quality
+                autoflake
               ]))
             ];
             shellHook = ''
@@ -47,6 +51,7 @@
               fi
 
               export OPENAI_API_KEY=$(ks show openai-api-key)
+              export ELEVEN_API_KEY=$(ks show eleven-api-key)
             '';
           };
         }

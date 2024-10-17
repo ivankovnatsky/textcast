@@ -1,31 +1,46 @@
 import sys
 import os
+import logging
 from elevenlabs.client import ElevenLabs
 from elevenlabs import save
 
-ELEVEN_TEXT_LIMIT_NONSIGNED=500
+logger = logging.getLogger(__name__)
+
+ELEVEN_TEXT_LIMIT_NONSIGNED = 500
+
 
 def process_article_elevenlabs(text, filename, model, voice):
+    logger.info("Starting ElevenLabs processing")
+    logger.debug(f"Text length: {len(text)}, Model: {model}, Voice: {voice}")
+
     try:
-        api_key = os.environ['ELEVEN_API_KEY']
+        api_key = os.environ["ELEVEN_API_KEY"]
+        logger.debug("Using ElevenLabs API key from environment variable")
         client = ElevenLabs(api_key=api_key)
-    except:
-        print("Will try to use EleveLabs without API key.")
+    except KeyError:
+        logger.warning("ElevenLabs API key not found in environment variables")
+        logger.info("Attempting to use ElevenLabs without API key")
 
         if len(text) > ELEVEN_TEXT_LIMIT_NONSIGNED:
-            print(f"""
+            logger.error(
+                f"Text length ({len(text)} chars) exceeds non-signed account limit of {ELEVEN_TEXT_LIMIT_NONSIGNED} chars"
+            )
+            print(
+                f"""
 This request's text has {len(text)} characters and exceeds the character limit
-of 500 characters for non signed in accounts.
+of {ELEVEN_TEXT_LIMIT_NONSIGNED} characters for non signed in accounts.
 """
             )
             sys.exit(0)
         else:
+            logger.debug(
+                "Text length within non-signed account limit, proceeding without API key"
+            )
             client = ElevenLabs()
 
-    audio = client.generate(
-      text=text,
-      voice=voice,
-      model=model
-    )
+    logger.debug("Generating audio with ElevenLabs")
+    audio = client.generate(text=text, voice=voice, model=model)
 
+    logger.info(f"Saving audio to file: {filename}")
     save(audio, filename)
+    logger.info("ElevenLabs processing completed successfully")

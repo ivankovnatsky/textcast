@@ -1,5 +1,5 @@
 import click
-
+import logging
 from .article import get_article_content
 from .common import (
     generate_lowercase_string,
@@ -7,6 +7,8 @@ from .common import (
     validate_voice,
     process_text_to_audio,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @click.command()
@@ -45,7 +47,7 @@ from .common import (
     default=None,
     help="""
     OpenIA voices: alloy, echo, fable, onyx, nova, shimmer;
-    ElevenLabs voices: Nicole.
+    ElevenLabs voices: Sarah.
     """,
 )
 @click.option(
@@ -60,6 +62,7 @@ from .common import (
     help="The audio format for the output file. Default is mp3.",
 )
 @click.option("--yes", is_flag=True, help="Automatically answer yes to all prompts")
+@click.option("--debug", is_flag=True, help="Enable debug logging")
 def cli(
     vendor,
     url,
@@ -71,7 +74,17 @@ def cli(
     voice,
     strip,
     yes,
+    debug,
 ):
+    # Set up logging
+    log_level = logging.DEBUG if debug else logging.INFO
+    logging.basicConfig(
+        level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    logger = logging.getLogger(__name__)
+
+    logger.debug("Starting CLI with options: %s", locals())
+
     if not url and not file_url_list and not file_text:
         raise click.UsageError(
             "You must provide either --url, --file-url-list or --file-text."
@@ -80,16 +93,18 @@ def cli(
     # Set model and voice based on the API vendor
     if vendor == "elevenlabs":
         model = model or "eleven_monolingual_v1"
-        voice = voice or "Nicole"
+        voice = voice or "Sarah"
     elif vendor == "openai":
         model = model or "tts-1"
         voice = voice or "alloy"
 
+    logger.debug("Using vendor: %s, model: %s, voice: %s", vendor, model, voice)
+
     if file_text:
         with open(file_text, "r") as f:
             text = f.read()
-
         title = f"custom-text-podcast-{generate_lowercase_string()}"
+        logger.info(f"Processing custom text with title: {title}")
         process_text_to_audio(
             text, title, vendor, directory, audio_format, model, voice, strip
         )
@@ -102,19 +117,19 @@ def cli(
                 urls.extend([line.strip() for line in f if line.strip()])
 
         for url in urls:
+            logger.info(f"Fetching content from URL: {url}")
             text, title = get_article_content(url)
+            logger.info(f"Retrieved article with title: '{title}'")
 
-            # I want to make sure that I would not send some dummy Cloudflare
-            # blocking text to render an audio for me.
-            print(f"Processing article with title: `{title}`..")
             if yes or click.confirm(
-                "Do you want to proceed with converting this text to audio?"
+                f"Do you want to proceed with converting '{title}' to audio?"
             ):
+                logger.info(f"Processing article: '{title}'")
                 process_text_to_audio(
                     text, title, vendor, directory, audio_format, model, voice, strip
                 )
             else:
-                click.echo("Skipping this article.")
+                logger.info(f"Skipping article: '{title}'")
 
 
 if __name__ == "__main__":
