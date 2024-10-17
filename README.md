@@ -114,6 +114,14 @@ pytest
 
 ## TODO
 
+- [ ] Fix issue when elevenlabs api key is not exposed to publish workflow:
+  ```log
+  -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+  =========================== short test summary info ============================
+  FAILED tests/test_main.py::test_process_article_elevenlabs - elevenlabs.core.api_error.ApiError: status_code: 401, body: {'detail': {'status': 'invalid_api_key', 'message': 'Invalid API key'}}
+  =================== 1 failed, 5 passed, 1 warning in 24.14s ====================
+  Error: Process completed with exit code 1.
+  ```
 - [ ] Bypass Cloudflare block
 - [ ] Minimize costs on tests
 - [ ] Add ability to render images to text and send over to text to speech as well
