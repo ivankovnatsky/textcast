@@ -18,10 +18,28 @@ def is_js_required(soup):
         ("noscript", {}),
     ]
 
+    # Add text-based checks
+    js_required_texts = [
+        "enable javascript and cookies to proceed",
+        "enable javascript",
+        "enable cookies",
+        "javascript is required",
+        "just a moment",
+        "checking your browser",
+    ]
+
+    # Check for indicator elements
     for tag_name, attr_dict in js_indicators:
         tag_elements = soup.find_all(tag_name, attr_dict)
         if tag_elements:
             logger.debug(f"JS indicator found: {tag_name}")
+            return True
+
+    # Check for common JS requirement texts (case-insensitive)
+    page_text = soup.get_text().lower().strip()
+    for js_text in js_required_texts:
+        if js_text.lower() in page_text:
+            logger.debug(f"JS requirement text found: {js_text}")
             return True
 
     logger.debug("No JS indicators found")

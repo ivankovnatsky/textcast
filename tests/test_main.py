@@ -6,6 +6,7 @@ from articast.chunks import TEXT_SEND_LIMIT, split_text
 from articast.article import get_article_content
 from pathlib import Path
 import pytest
+import requests_mock
 
 import traceback
 
@@ -34,6 +35,12 @@ def capture_logging():
     logger.setLevel(logging.DEBUG)
     yield log_capture
     logger.removeHandler(handler)
+
+
+@pytest.fixture
+def mock_requests():
+    with requests_mock.Mocker() as m:
+        yield m
 
 
 def test_split_text():
@@ -271,3 +278,41 @@ def test_process_article_with_condense(capture_logging):
     output_audio_path = next(Path("/tmp").glob("*.mp3"))
     assert output_audio_path.exists()
     output_audio_path.unlink()
+
+
+def test_js_required_detection(mock_requests, capture_logging):
+    """Test that JS-required pages are detected and handled properly"""
+    js_required_html = """
+    <html>
+        <body>
+            <div>Enable Javascript and cookies to proceed</div>
+        </body>
+    </html>
+    """
+    
+    url = "https://example.com/js-required"
+    mock_requests.get(url, text=js_required_html)
+    
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--url",
+            url,
+            "--directory",
+            "/tmp",
+            "--audio-format",
+            "mp3",
+            "--speech-model",
+            "tts-1",
+            "--voice",
+            "alloy",
+            "--yes",
+            "--debug",
+        ],
+    )
+    
+    # Check that JS requirement was detected
+    assert "JavaScript may be required" in capture_logging.getvalue()
+    # Check that Playwright fallback was attempted
+    assert "Using Playwright to render the page" in capture_logging.getvalue()
