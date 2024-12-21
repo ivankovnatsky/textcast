@@ -49,8 +49,10 @@ Options:
   --directory DIRECTORY           Directory where the output audio file will
                                   be saved. The filename will be derived from
                                   the article title.
-  --model TEXT                    The model to be used for text-to-speech
+  --speech-model TEXT             The model to be used for text-to-speech
                                   conversion.
+  --text-model TEXT              The model to be used for text condensing
+                                  (e.g., gpt-4-turbo-preview, gpt-3.5-turbo).
   --voice TEXT                    OpenIA voices: alloy, echo, fable, onyx,
                                   nova, shimmer; ElevenLabs voices: Sarah.
   --strip INTEGER RANGE           By what number of chars to strip the text to
@@ -58,13 +60,25 @@ Options:
   --audio-format [mp3|opus|aac|flac|pcm]
                                   The audio format for the output file.
                                   Default is mp3.
+  --condense                      Condense the article before converting to
+                                  audio.
+  --condense-ratio FLOAT RANGE    Ratio to condense the text (0.2 = 20% of
+                                  original length).  [0.1<=x<=1.0]
   --help                          Show this message and exit.
 ```
+
+# Convert article with condensing (20% of original length)
 
 ```console
 export OPENAI_API_KEY="your-api-key"
 articast \
-    --url 'https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers'
+    --url 'https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers' \
+    --speech-model tts-1-hd \
+    --text-model gpt-4-turbo-preview \
+    --voice nova \
+    --condense \
+    --condense-ratio 0.2 \
+    --directory ~/Downloads/Podcasts
 ```
 
 ElevenLabs:
@@ -89,10 +103,13 @@ nix develop
 export OPENAI_API_KEY="your-api-key"
 python \
     -m articast \
-    --model tts-1-hd \
+    --speech-model tts-1-hd \
+    --text-model gpt-4-turbo-preview \
     --voice nova \
     --directory . \
-    --url 'https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers'
+    --url 'https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers' \
+    --condense \
+    --condense-ratio 0.2
 ```
 
 ### Lint

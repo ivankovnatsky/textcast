@@ -1,15 +1,16 @@
 import click
 import logging
-from .article import get_article_content
+from .processor import process_articles
 from .common import (
     generate_lowercase_string,
     validate_models,
     validate_voice,
     process_text_to_audio,
 )
+from .models import ProcessingResult
+from typing import List
 
 logger = logging.getLogger(__name__)
-
 
 @click.command()
 @click.option("--url", type=str, help="URL of the article to be fetched.")
@@ -36,10 +37,16 @@ logger = logging.getLogger(__name__)
     help="Directory where the output audio file will be saved. The filename will be derived from the article title.",
 )
 @click.option(
-    "--model",
+    "--speech-model",
     callback=validate_models,
     default=None,
-    help="The model to be used for text-to-speech conversion.",
+    help="The model to be used for text-to-speech conversion (e.g., tts-1, eleven_monolingual_v1)",
+)
+@click.option(
+    "--text-model",
+    type=str,
+    default="gpt-4-turbo-preview",
+    help="The model to be used for text condensing (e.g., gpt-4-turbo-preview, gpt-3.5-turbo)",
 )
 @click.option(
     "--voice",
@@ -63,6 +70,17 @@ logger = logging.getLogger(__name__)
 )
 @click.option("--yes", is_flag=True, help="Automatically answer yes to all prompts")
 @click.option("--debug", is_flag=True, help="Enable debug logging")
+@click.option(
+    "--condense",
+    is_flag=True,
+    help="Condense the article before converting to audio",
+)
+@click.option(
+    "--condense-ratio",
+    type=click.FloatRange(0.1, 1.0),
+    default=0.2,
+    help="Ratio to condense the text (0.2 = 20% of original length)",
+)
 def cli(
     vendor,
     url,
@@ -70,11 +88,14 @@ def cli(
     file_text,
     directory,
     audio_format,
-    model,
+    speech_model,
+    text_model,
     voice,
     strip,
     yes,
     debug,
+    condense,
+    condense_ratio,
 ):
     # Set up logging
     log_level = logging.DEBUG if debug else logging.INFO
@@ -92,21 +113,28 @@ def cli(
 
     # Set model and voice based on the API vendor
     if vendor == "elevenlabs":
-        model = model or "eleven_monolingual_v1"
+        speech_model = speech_model or "eleven_monolingual_v1"
         voice = voice or "Sarah"
     elif vendor == "openai":
-        model = model or "tts-1"
+        speech_model = speech_model or "tts-1"
         voice = voice or "alloy"
 
-    logger.debug("Using vendor: %s, model: %s, voice: %s", vendor, model, voice)
+    logger.debug(
+        "Using vendor: %s, speech_model: %s, voice: %s", vendor, speech_model, voice
+    )
+    if condense:
+        logger.debug("Using text_model: %s", text_model)
 
     if file_text:
         with open(file_text, "r") as f:
             text = f.read()
+        if condense:
+            logger.info("Condensing text...")
+            text = condense_text(text, text_model, condense_ratio)
         title = f"custom-text-podcast-{generate_lowercase_string()}"
         logger.info(f"Processing custom text with title: {title}")
         process_text_to_audio(
-            text, title, vendor, directory, audio_format, model, voice, strip
+            text, title, vendor, directory, audio_format, speech_model, voice, strip
         )
     else:
         urls = []
@@ -116,20 +144,22 @@ def cli(
             with open(file_url_list, "r") as f:
                 urls.extend([line.strip() for line in f if line.strip()])
 
-        for url in urls:
-            logger.info(f"Fetching content from URL: {url}")
-            text, title = get_article_content(url)
-            logger.info(f"Retrieved article with title: '{title}'")
-
-            if yes or click.confirm(
-                f"Do you want to proceed with converting '{title}' to audio?"
-            ):
-                logger.info(f"Processing article: '{title}'")
-                process_text_to_audio(
-                    text, title, vendor, directory, audio_format, model, voice, strip
-                )
-            else:
-                logger.info(f"Skipping article: '{title}'")
+        # Create kwargs dict explicitly instead of using locals()
+        kwargs = {
+            'vendor': vendor,
+            'directory': directory,
+            'audio_format': audio_format,
+            'speech_model': speech_model,
+            'text_model': text_model,
+            'voice': voice,
+            'strip': strip,
+            'yes': yes,
+            'debug': debug,
+            'condense': condense,
+            'condense_ratio': condense_ratio,
+        }
+        
+        results = process_articles(urls, **kwargs)
 
 
 if __name__ == "__main__":
