@@ -36,6 +36,7 @@
                 pytest
                 readability-lxml
                 requests
+                requests-mock
 
                 # Code Quality
                 autoflake

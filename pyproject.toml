@@ -35,7 +35,11 @@ articast = "articast.cli:cli"
 packages = ["articast"]
 
 [project.optional-dependencies]
-test = ["pytest", "cogapp"]
+test = [
+    "pytest",
+    "cogapp",
+    "requests-mock",
+]
 
 [tool.ruff.lint]
 # Enable the isort rules.
