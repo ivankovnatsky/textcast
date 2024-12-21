@@ -17,3 +17,9 @@ release:
 	@git commit -m "Update version to $(NEXT_RELEASE_VERSION)"
 	@git push
 	@gh release create v$(NEXT_RELEASE_VERSION) --generate-notes
+
+.PHONY: re-release
+re-release:
+	@gh release delete v$(LATEST_RELEASE) --yes
+	@git push origin :refs/tags/v$(LATEST_RELEASE)
+	@gh release create v$(LATEST_RELEASE) --generate-notes
