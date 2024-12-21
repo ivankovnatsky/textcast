@@ -67,7 +67,7 @@ Options:
   --help                          Show this message and exit.
 ```
 
-# Convert article with condensing (20% of original length)
+### OpenAI
 
 ```console
 export OPENAI_API_KEY="your-api-key"
@@ -81,7 +81,7 @@ articast \
     --directory ~/Downloads/Podcasts
 ```
 
-ElevenLabs:
+### ElevenLabs:
 
 ```console
 export ELEVEN_API_KEY="your-api-key"

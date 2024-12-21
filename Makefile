@@ -12,8 +12,8 @@ bump:
 	@echo "Update version to $(NEXT_RELEASE_VERSION)"
 	@sed -i '' "s/version = \".*\"/version = \"$(NEXT_RELEASE_VERSION)\"/" pyproject.toml
 
-.PHONY: update
-update:
+.PHONY: release
+release:
 	@git commit -m "Update version to $(NEXT_RELEASE_VERSION)"
 	@git push
 	@gh release create v$(NEXT_RELEASE_VERSION) --generate-notes
