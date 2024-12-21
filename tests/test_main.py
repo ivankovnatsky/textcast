@@ -22,7 +22,7 @@ def setup_article_file():
         article_file_list.write(ARTICLE_URL_HTML + "\n")
         article_file_list.write(ARTICLE_URL_JS + "\n")
     yield ARTICLES_FILE_PATH
-    # Path(ARTICLES_FILE_PATH).unlink()  # Clean up the file after the test
+    Path(ARTICLES_FILE_PATH).unlink()  # Clean up the file after the test
 
 
 @pytest.fixture
@@ -84,7 +84,7 @@ def test_process_article_openai(url, expected_exit_code, capture_logging):
             "/tmp",
             "--audio-format",
             "mp3",
-            "--model",
+            "--speech-model",
             "tts-1",
             "--voice",
             "alloy",
@@ -180,7 +180,7 @@ def test_process_article_openai_file_list(setup_article_file, capture_logging):
             "/tmp",
             "--audio-format",
             "mp3",
-            "--model",
+            "--speech-model",
             "tts-1",
             "--voice",
             "alloy",
@@ -225,3 +225,49 @@ def test_process_article_openai_file_list(setup_article_file, capture_logging):
         assert output_audio_path.exists()
         # Clean up
         output_audio_path.unlink()
+
+
+# Add new test for condensing feature
+def test_process_article_with_condense(capture_logging):
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--url",
+            ARTICLE_URL_HTML,
+            "--directory",
+            "/tmp",
+            "--audio-format",
+            "mp3",
+            "--speech-model",
+            "tts-1",
+            "--text-model",
+            "gpt-4-turbo-preview",
+            "--voice",
+            "alloy",
+            "--strip",
+            "5",
+            "--condense",
+            "--condense-ratio",
+            "0.5",
+            "--yes",
+            "--debug",
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+
+    # Check for debug logs related to condensing
+    log_output = capture_logging.getvalue()
+    assert "Starting OpenAI processing" in log_output
+    assert "Condensing article..." in log_output
+    assert "Using text_model: gpt-4-turbo-preview" in log_output
+    assert "Text split into" in log_output
+    assert "Processing chunk" in log_output
+    assert "Audio saved to" in log_output
+
+    # Clean up
+    output_audio_path = next(Path("/tmp").glob("*.mp3"))
+    assert output_audio_path.exists()
+    output_audio_path.unlink()
