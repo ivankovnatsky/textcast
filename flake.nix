@@ -50,6 +50,8 @@
 
                 # Code Quality
                 autoflake
+                pytest-asyncio
+                pytest-mock
               ]))
               playwright-test
             ];

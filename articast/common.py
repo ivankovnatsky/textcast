@@ -7,6 +7,8 @@ import logging
 from pathlib import Path
 from .elevenlabs import process_article_elevenlabs
 from .openai import process_article_openai
+import asyncio
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -65,29 +67,50 @@ def generate_lowercase_string():
     return result
 
 
-def process_text_to_audio(
-    text, title, vendor, directory, audio_format, model, voice, strip
-):
-    logger.info(f"Processing text to audio for title: {title}")
-    logger.debug(
-        f"Vendor: {vendor}, Format: {audio_format}, Model: {model}, Voice: {voice}"
-    )
+def sanitize_filename(title: str) -> str:
+    """Convert title to a safe filename"""
+    # Remove or replace invalid characters
+    safe_title = re.sub(r'[^\w\s-]', '', title)
+    # Replace whitespace with hyphens
+    safe_title = re.sub(r'[-\s]+', '-', safe_title).strip('-')
+    # Convert to lowercase
+    return safe_title.lower()
 
-    if strip:
-        logger.debug(f"Stripping text to {strip} characters")
-        text = text[:strip]
 
-    os.makedirs(directory, exist_ok=True)
-    logger.debug(f"Ensuring directory exists: {directory}")
+async def process_text_to_audio(
+    text: str,
+    title: str,
+    directory: str,
+    vendor: str = 'openai',
+    model: Optional[str] = None,
+    voice: Optional[str] = None,
+    audio_format: str = 'mp3',
+    strip: bool = False,
+    **kwargs
+) -> None:
+    """Process text to audio file"""
+    try:
+        # Create output directory if it doesn't exist
+        output_dir = Path(directory)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
-    filename = Path(directory) / f"{format_filename(title, audio_format)}"
-    logger.debug(f"Output filename: {filename}")
+        # Generate safe filename from title
+        safe_title = sanitize_filename(title)
+        output_path = output_dir / f"{safe_title}.{audio_format}"
 
-    if vendor == "openai":
-        logger.info("Processing with OpenAI")
-        process_article_openai(text, filename, model, voice)
-    elif vendor == "elevenlabs":
-        logger.info("Processing with ElevenLabs")
-        process_article_elevenlabs(text, filename, model, voice)
+        # Skip if file already exists
+        if output_path.exists():
+            logger.warning(f"Output file already exists: {output_path}")
+            return
 
-    logger.info(f"Audio processing complete for {title}")
+        # Process based on vendor
+        if vendor == 'elevenlabs':
+            await process_article_elevenlabs(text, output_path, model, voice)
+        else:
+            await process_article_openai(text, output_path, model, voice)
+
+        logger.info(f"Saved audio to: {output_path}")
+
+    except Exception as e:
+        logger.error(f"Failed to process audio: {str(e)}")
+        raise

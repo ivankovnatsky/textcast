@@ -5,7 +5,7 @@ from playwright.async_api import async_playwright
 import requests
 import logging
 from .errors import ProcessingError, RenderError
-from typing import Tuple
+from typing import Tuple, Optional
 from .constants import DEFAULT_TIMEOUT, PREVIEW_LENGTH, SUSPICIOUS_TEXTS
 import asyncio
 
@@ -206,40 +206,47 @@ def fetch_content_with_playwright_sync(url: str) -> Tuple[str, str]:
                     logger.warning(f"Failed to close browser: {e}")
 
 
-def get_article_content(url: str) -> Tuple[str, str, str]:
-    """Get article content from URL"""
+async def get_content_with_playwright(url: str) -> Tuple[str, str]:
+    """Get article content using Playwright for JavaScript-heavy sites"""
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        try:
+            page = await browser.new_page()
+            await page.goto(url, wait_until='networkidle')
+            content = await page.content()
+            
+            # Use readability on the rendered HTML
+            doc = Document(content)
+            title = doc.title()
+            text = BeautifulSoup(doc.summary(), 'html.parser').get_text()
+            
+            return text.strip(), title.strip(), 'playwright'
+        finally:
+            await browser.close()
+
+
+async def get_article_content(url: str) -> Tuple[str, str, str]:
+    """
+    Extract article content from a URL.
+    Returns: (text, title, method)
+    """
     logger.info(f"Fetching content for URL: {url}")
     
     try:
-        logger.debug("Attempting to fetch and parse using requests")
-        text, title, js_required = fetch_content_with_requests(url)
+        # Try simple request first
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
         
-        # Check for suspicious content patterns
-        text_lower = text.lower()
-        for suspicious in SUSPICIOUS_TEXTS:
-            if suspicious in text_lower:
-                logger.warning(f"Suspicious content detected: '{suspicious}'")
-                raise ProcessingError(f"Suspicious content detected: '{suspicious}'. Article may not have loaded properly.")
+        doc = Document(response.text)
+        title = doc.title()
+        text = BeautifulSoup(doc.summary(), 'html.parser').get_text()
         
-        if js_required:
+        if len(text.strip()) < 100:  # Arbitrary threshold
             logger.info("JavaScript may be required. Falling back to Playwright")
             raise ProcessingError("JavaScript may be required")
+            
+        return text.strip(), title.strip(), 'requests'
         
-        logger.debug(f"Content extracted using requests ({len(text)} chars):\n---\n{text[:PREVIEW_LENGTH]}...\n---")
-        logger.info("Content fetched successfully using requests")
-        return text, title, "requests"
-        
-    except (RenderError, ProcessingError) as e:
-        logger.warning(f"Request method failed: {e}. Using Playwright to render the page")
-        text, title = fetch_content_with_playwright_sync(url)
-        
-        # Check for suspicious content patterns again after Playwright
-        text_lower = text.lower()
-        for suspicious in SUSPICIOUS_TEXTS:
-            if suspicious in text_lower:
-                logger.warning(f"Suspicious content detected: '{suspicious}'")
-                raise ProcessingError(f"Suspicious content detected: '{suspicious}'. Article may not have loaded properly.")
-        
-        logger.debug(f"Content extracted using playwright ({len(text)} chars):\n---\n{text[:PREVIEW_LENGTH]}...\n---")
-        logger.info("Content fetched successfully using Playwright")
-        return text, title, "playwright"
+    except Exception as e:
+        logger.warning(f"Request method failed: {str(e)}. Using Playwright to render the page")
+        return await get_content_with_playwright(url)
