@@ -160,6 +160,21 @@ def cli(
         }
         
         results = process_articles(urls, **kwargs)
+        
+        # Remove successfully processed URLs from the file
+        if file_url_list and results:
+            successful_urls = {result.url for result in results if result.success}
+            if successful_urls:
+                with open(file_url_list, "r") as f:
+                    lines = f.readlines()
+                
+                with open(file_url_list, "w") as f:
+                    for line in lines:
+                        url = line.strip()
+                        if url not in successful_urls:
+                            f.write(line)
+                
+                logger.info(f"Removed {len(successful_urls)} successfully processed URLs from {file_url_list}")
 
 
 if __name__ == "__main__":

@@ -115,3 +115,52 @@ def test_process_article_with_condense(capture_logging):
     output_audio_path = next(Path("/tmp").glob("*.mp3"))
     assert output_audio_path.exists()
     output_audio_path.unlink()
+
+
+def test_process_article_removes_successful_urls(setup_article_file, capture_logging):
+    # Clean up existing MP3 files first
+    for f in Path("/tmp").glob("*.mp3"):
+        f.unlink()
+
+    # Create test file with two valid URLs
+    test_urls = [ARTICLE_URL_HTML, ARTICLE_URL_HTML + "?second"]
+    with open(setup_article_file, "w") as f:
+        f.write("\n".join(test_urls))
+
+    runner = CliRunner()
+    result = runner.invoke(
+        cli,
+        [
+            "--file-url-list",
+            setup_article_file,
+            "--directory",
+            "/tmp",
+            "--audio-format",
+            "mp3",
+            "--speech-model",
+            "tts-1",
+            "--voice",
+            "alloy",
+            "--strip",
+            "5",  # Strip the text by # of chars to reduce costs during testing
+            "--yes",
+            "--debug",
+        ],
+        catch_exceptions=False,
+    )
+
+    assert result.exit_code == 0
+
+    # Verify that the URLs were removed from the file
+    with open(setup_article_file, "r") as f:
+        remaining_urls = [line.strip() for line in f if line.strip()]
+    
+    assert len(remaining_urls) == 0, f"Expected all URLs to be removed, but found: {remaining_urls}"
+
+    # Check for debug logs
+    log_output = capture_logging.getvalue()
+    assert "Removed 2 successfully processed URLs" in log_output
+
+    # Clean up generated audio files
+    for f in Path("/tmp").glob("*.mp3"):
+        f.unlink()
