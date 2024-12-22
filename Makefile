@@ -3,17 +3,13 @@ NEXT_RELEASE_VERSION := $(shell echo $(LATEST_RELEASE) | awk -F. '{$$NF = $$NF +
 
 .PHONY: bump
 bump:
-	@if [ "$(shell awk -F'"' '/^version = / {print $$2}' pyproject.toml)" = "$(LATEST_RELEASE)" ]; then \
-		echo "Version out of sync. Expected $(NEXT_RELEASE_VERSION), found $(shell awk -F'"' '/^version = / {print $$2}' pyproject.toml)"; \
-		echo "Syncing version to $(NEXT_RELEASE_VERSION)"; \
-		sed -i '' "s/version = \".*\"/version = \"$(NEXT_RELEASE_VERSION)\"/" pyproject.toml; \
-		exit 1; \
-	fi
-	@echo "Update version to $(NEXT_RELEASE_VERSION)"
-	@sed -i '' "s/version = \".*\"/version = \"$(NEXT_RELEASE_VERSION)\"/" pyproject.toml
+	@echo "Updating version to $(NEXT_RELEASE_VERSION)"
+	@sed 's/version = ".*"/version = "$(NEXT_RELEASE_VERSION)"/' pyproject.toml > pyproject.toml.tmp
+	@mv pyproject.toml.tmp pyproject.toml
 
 .PHONY: release
 release:
+	@git add .
 	@git commit -m "Update version to $(NEXT_RELEASE_VERSION)"
 	@git push
 	@gh release create v$(NEXT_RELEASE_VERSION) --generate-notes
@@ -21,5 +17,5 @@ release:
 .PHONY: re-release
 re-release:
 	@gh release delete v$(LATEST_RELEASE) --yes
-	@git push origin :refs/tags/v$(LATEST_RELEASE)
+	@git push
 	@gh release create v$(LATEST_RELEASE) --generate-notes
