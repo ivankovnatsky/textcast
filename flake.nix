@@ -1,7 +1,7 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/062ca2a9370a27a35c524dc82d540e6e9824b652";
-    flake-utils.url = "github:numtide/flake-utils/b1d9ab70662946ef0850d488da1c9019f3a9752a";
+    nixpkgs.url = "github:NixOS/nixpkgs/ef3f103a7a8a05e03bc6c1131d36a2f085c73942";
+    flake-utils.url = "github:numtide/flake-utils/11707dc2f618dd54ca8739b309ec4fc024de578b";
   };
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem
@@ -11,21 +11,31 @@
             {
               inherit system;
               overlays = [
-                (final: prev: {
-                  # TODO: Remove it, once this PR would be merged: https://github.com/NixOS/nixpkgs/pull/313087.
-                  elevenlabs = final.callPackage ./overlays/elevenlabs.nix {
-                    buildPythonPackage = final.python311.pkgs.buildPythonPackage;
-                  };
-                })
+                (final: prev: { })
               ];
             };
+
+          # Create a custom browsers-mac derivation that only installs Chromium
+          playwright-browsers-chromium = pkgs.stdenv.mkDerivation {
+            pname = "playwright-browsers-chromium";
+            version = pkgs.playwright-test.version;
+
+            dontUnpack = true;
+            nativeBuildInputs = [ pkgs.cacert ];
+
+            installPhase = ''
+              export PLAYWRIGHT_BROWSERS_PATH=$out
+              ${pkgs.playwright-test}/bin/playwright install chromium
+              rm -r $out/.links
+            '';
+          };
         in
         with pkgs;
         {
           devShells.default = mkShell {
             buildInputs = [
               ffmpeg
-              (python311.withPackages (ps: with ps; [
+              (python312.withPackages (ps: with ps; [
                 # Code Deps
                 beautifulsoup4
                 elevenlabs
@@ -41,15 +51,10 @@
                 # Code Quality
                 autoflake
               ]))
+              playwright-test
             ];
             shellHook = ''
-              export PLAYWRIGHT_BROWSERS_PATH="$PWD/playwright-browsers"
-              if [[ ! -d "$PLAYWRIGHT_BROWSERS_PATH" ]]; then
-                echo "Installing Playwright browsers in $PLAYWRIGHT_BROWSERS_PATH"
-                playwright install chromium
-              else
-                echo "Playwright browsers already installed in $PLAYWRIGHT_BROWSERS_PATH"
-              fi
+              export PLAYWRIGHT_BROWSERS_PATH="${playwright-browsers-chromium}"
 
               export OPENAI_API_KEY=$(ks show openai-api-key)
               export ELEVEN_API_KEY=$(ks show eleven-api-key)
