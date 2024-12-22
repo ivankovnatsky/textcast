@@ -19,3 +19,12 @@ re-release:
 	@gh release delete v$(NEXT_RELEASE_VERSION) || true
 	@git push
 	@gh release create v$(NEXT_RELEASE_VERSION) --generate-notes
+
+.PHONY: cast
+cast:
+	@python -m articast \
+		--directory ~/Library/Mobile\ Documents/com~apple~CloudDocs/Podcasts/Audio \
+		--file-url-list ~/Library/Mobile\ Documents/com~apple~CloudDocs/Podcasts/Articles/list.txt \
+		--condense \
+		--condense-ratio 0.4 \
+		--yes
