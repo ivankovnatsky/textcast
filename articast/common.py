@@ -57,10 +57,6 @@ def validate_voice(ctx, param, value):
     return value
 
 
-class RenderError(Exception):
-    pass
-
-
 def generate_lowercase_string():
     length = 10
     letters = string.ascii_lowercase
