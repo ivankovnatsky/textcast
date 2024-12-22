@@ -16,6 +16,6 @@ release:
 
 .PHONY: re-release
 re-release:
-	@gh release delete v$(LATEST_RELEASE) --yes
+	@gh release delete v$(NEXT_RELEASE_VERSION)
 	@git push
 	@gh release create v$(NEXT_RELEASE_VERSION) --generate-notes
