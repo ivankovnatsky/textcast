@@ -81,6 +81,12 @@ logger = logging.getLogger(__name__)
     default=0.2,
     help="Ratio to condense the text (0.2 = 20% of original length)",
 )
+@click.option(
+    '--concurrency',
+    default=1,
+    help='Number of articles to process concurrently (default: 1)',
+    type=int
+)
 def cli(
     vendor,
     url,
@@ -96,71 +102,113 @@ def cli(
     debug,
     condense,
     condense_ratio,
+    concurrency,
 ):
-    # Set up logging
-    log_level = logging.DEBUG if debug else logging.INFO
-    logging.basicConfig(
-        level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    logger = logging.getLogger(__name__)
-
-    logger.debug("Starting CLI with options: %s", locals())
-
-    if not url and not file_url_list and not file_text:
-        raise click.UsageError(
-            "You must provide either --url, --file-url-list or --file-text."
+    """Process articles and convert them to audio."""
+    try:
+        # Set up logging
+        log_level = logging.DEBUG if debug else logging.INFO
+        logging.basicConfig(
+            level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         )
+        logger = logging.getLogger(__name__)
 
-    # Set model and voice based on the API vendor
-    if vendor == "elevenlabs":
-        speech_model = speech_model or "eleven_monolingual_v1"
-        voice = voice or "Sarah"
-    elif vendor == "openai":
-        speech_model = speech_model or "tts-1"
-        voice = voice or "alloy"
+        logger.debug("Starting CLI with options: %s", locals())
 
-    logger.debug(
-        "Using vendor: %s, speech_model: %s, voice: %s", vendor, speech_model, voice
-    )
-    if condense:
-        logger.debug("Using text_model: %s", text_model)
+        if not url and not file_url_list and not file_text:
+            raise click.UsageError(
+                "You must provide either --url, --file-url-list or --file-text."
+            )
 
-    if file_text:
-        with open(file_text, "r") as f:
-            text = f.read()
+        # Set model and voice based on the API vendor
+        if vendor == "elevenlabs":
+            speech_model = speech_model or "eleven_monolingual_v1"
+            voice = voice or "Sarah"
+        elif vendor == "openai":
+            speech_model = speech_model or "tts-1"
+            voice = voice or "alloy"
+
+        logger.debug(
+            "Using vendor: %s, speech_model: %s, voice: %s", vendor, speech_model, voice
+        )
         if condense:
-            logger.info("Condensing text...")
-            text = condense_text(text, text_model, condense_ratio)
-        title = f"custom-text-podcast-{generate_lowercase_string()}"
-        logger.info(f"Processing custom text with title: {title}")
-        process_text_to_audio(
-            text, title, vendor, directory, audio_format, speech_model, voice, strip
-        )
-    else:
-        urls = []
-        if url:
-            urls.append(url)
-        if file_url_list:
-            with open(file_url_list, "r") as f:
-                urls.extend([line.strip() for line in f if line.strip()])
+            logger.debug("Using text_model: %s", text_model)
 
-        # Create kwargs dict explicitly instead of using locals()
-        kwargs = {
-            'vendor': vendor,
-            'directory': directory,
-            'audio_format': audio_format,
-            'speech_model': speech_model,
-            'text_model': text_model,
-            'voice': voice,
-            'strip': strip,
-            'yes': yes,
-            'debug': debug,
-            'condense': condense,
-            'condense_ratio': condense_ratio,
-        }
-        
-        results = process_articles(urls, **kwargs)
+        if file_text:
+            with open(file_text, "r") as f:
+                text = f.read()
+            if condense:
+                logger.info("Condensing text...")
+                text = condense_text(text, text_model, condense_ratio)
+            title = f"custom-text-podcast-{generate_lowercase_string()}"
+            logger.info(f"Processing custom text with title: {title}")
+            process_text_to_audio(
+                text, title, vendor, directory, audio_format, speech_model, voice, strip
+            )
+        else:
+            urls = []
+            if url:
+                urls.append(url)
+            if file_url_list:
+                with open(file_url_list, "r") as f:
+                    urls.extend([line.strip() for line in f if line.strip()])
 
+            # Create kwargs dict explicitly instead of using locals()
+            kwargs = {
+                'vendor': vendor,
+                'directory': directory,
+                'audio_format': audio_format,
+                'speech_model': speech_model,
+                'text_model': text_model,
+                'voice': voice,
+                'strip': strip,
+                'yes': yes,
+                'debug': debug,
+                'condense': condense,
+                'condense_ratio': condense_ratio,
+                'concurrency': concurrency,
+            }
+            
+            results = process_articles(
+                urls,
+                concurrency=concurrency,
+                **{k: v for k, v in kwargs.items() if k != 'concurrency'}
+            )
+
+            # Display results
+            successful = 0
+            failed = 0
+            skipped = 0
+
+            for result in results:
+                if result.get('success'):
+                    successful += 1
+                    click.echo(f"✓ Successfully processed: {result['url']}")
+                elif result.get('skipped'):
+                    skipped += 1
+                    click.echo(f"- Skipped: {result['url']} ({result.get('error', 'No error message')})")
+                else:
+                    failed += 1
+                    click.echo(f"✗ Failed: {result['url']} ({result.get('error', 'No error message')})")
+
+            # Summary
+            click.echo("\nSummary:")
+            click.echo(f"Successfully processed: {successful}")
+            if failed > 0:
+                click.echo(f"Failed to process: {failed}")
+            if skipped > 0:
+                click.echo(f"Skipped: {skipped}")
+
+            # Don't exit with error if some articles were processed successfully
+            if successful == 0 and (failed > 0 or skipped > 0):
+                click.echo("\nNo articles were processed successfully.", err=True)
+                return 1
+            
+            return 0
+
+    except Exception as e:
+        click.echo(f"Error: {str(e)}", err=True)
+        return 1
 
 if __name__ == "__main__":
     cli()

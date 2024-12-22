@@ -2,7 +2,7 @@ import logging
 from urllib.parse import urlparse
 from typing import Optional, Tuple
 import requests
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ FILTERED_DOMAINS = {
     "npmjs.com",
 }
 
-def get_final_url(url: str, max_redirects: int = 5) -> Optional[Tuple[str, bool]]:
+async def get_final_url(url: str, max_redirects: int = 5) -> Optional[Tuple[str, bool]]:
     """
     Follow HTTP redirects and return the final URL.
     
@@ -49,14 +49,14 @@ def get_final_url(url: str, max_redirects: int = 5) -> Optional[Tuple[str, bool]
         logger.warning(f"Failed to check HTTP redirects for {url}: {str(e)}")
         return None
 
-def get_final_url_with_browser(url: str) -> Optional[Tuple[str, bool]]:
+async def get_final_url_with_browser(url: str) -> Optional[Tuple[str, bool]]:
     """Follow all redirects including JavaScript using a browser"""
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
         try:
-            page = browser.new_page()
+            page = await browser.new_page()
             initial_url = url
-            response = page.goto(url, wait_until='networkidle')
+            response = await page.goto(url, wait_until='networkidle')
             final_url = page.url
             was_redirected = initial_url != final_url
             return final_url, was_redirected
@@ -64,21 +64,21 @@ def get_final_url_with_browser(url: str) -> Optional[Tuple[str, bool]]:
             logger.warning(f"Failed to check browser redirects for {url}: {str(e)}")
             return None
         finally:
-            browser.close()
+            await browser.close()
 
 def is_filtered_domain(url: str) -> bool:
     """Check if the domain is in the filtered list"""
     domain = urlparse(url).netloc.lower()
     return any(filtered in domain for filtered in FILTERED_DOMAINS)
 
-def filter_url(url: str) -> bool:
+async def filter_url(url: str) -> bool:
     """Check URL with both HTTP and browser-based redirect detection"""
     if is_filtered_domain(url):
         logger.warning(f"Skipping filtered domain: {url}")
         return False
     
     # Try HTTP redirects first (faster)
-    http_redirect = get_final_url(url)
+    http_redirect = await get_final_url(url)
     if http_redirect:
         final_url, was_redirected = http_redirect
         if was_redirected and is_filtered_domain(final_url):
@@ -86,7 +86,7 @@ def filter_url(url: str) -> bool:
             return False
     
     # If no HTTP redirect found, try browser-based check
-    browser_redirect = get_final_url_with_browser(url)
+    browser_redirect = await get_final_url_with_browser(url)
     if browser_redirect:
         final_url, was_redirected = browser_redirect
         if was_redirected and is_filtered_domain(final_url):

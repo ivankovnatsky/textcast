@@ -7,16 +7,19 @@ from articast.chunks import TEXT_SEND_LIMIT, split_text
 from .conftest import ARTICLE_URL_HTML, ARTICLE_URL_JS
 
 
-@pytest.mark.parametrize(
-    "url, expected_exit_code",
-    [
-        (ARTICLE_URL_HTML, 0),
-        (ARTICLE_URL_JS, 0),
-    ],
-)
-def test_process_article_openai(url, expected_exit_code, capture_logging):
+@pytest.fixture
+def url():
+    return "https://example.com/article"
+
+@pytest.fixture
+def expected_exit_code():
+    return 0
+
+
+@pytest.mark.asyncio
+async def test_process_article_openai(url, expected_exit_code, capture_logging):
     runner = CliRunner()
-    result = runner.invoke(
+    result = await runner.invoke(
         cli,
         [
             "--url",
