@@ -18,4 +18,4 @@ release:
 re-release:
 	@gh release delete v$(LATEST_RELEASE) --yes
 	@git push
-	@gh release create v$(LATEST_RELEASE) --generate-notes
+	@gh release create v$(NEXT_RELEASE_VERSION) --generate-notes
