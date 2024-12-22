@@ -131,7 +131,12 @@ def fetch_content_with_playwright_sync(url: str) -> Tuple[str, str]:
         try:
             browser = p.chromium.launch(
                 headless=True,
-                args=['--no-sandbox', '--disable-setuid-sandbox']
+                args=[
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-dev-shm-usage',  # Helps with memory issues
+                    '--disable-gpu',  # Reduces issues in containerized environments
+                ],
             )
             
             # Add common browser settings
@@ -139,23 +144,34 @@ def fetch_content_with_playwright_sync(url: str) -> Tuple[str, str]:
                 user_agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 viewport={'width': 1280, 'height': 720},
                 java_script_enabled=True,
-                bypass_csp=True  # Bypass Content Security Policy
+                bypass_csp=True,  # Bypass Content Security Policy
+                ignore_https_errors=True,  # Handle SSL issues
             )
             
             page = context.new_page()
             
+            # Increase timeouts
+            page.set_default_timeout(30000)  # 30 seconds
+            page.set_default_navigation_timeout(30000)
+            
             logger.debug(f"Navigating to URL: {url}")
-            # Wait for network idle and longer timeout
-            page.goto(
+            response = page.goto(
                 url, 
                 wait_until='networkidle', 
-                timeout=DEFAULT_TIMEOUT
+                timeout=30000
             )
             
-            logger.debug("Waiting for body selector")
-            page.wait_for_selector('body', timeout=DEFAULT_TIMEOUT)
+            if not response:
+                raise RenderError("Failed to get response from page")
             
-            # Wait a bit for dynamic content
+            if response.status >= 400:
+                raise RenderError(f"HTTP error {response.status}")
+            
+            logger.debug("Waiting for body selector")
+            page.wait_for_selector('body', timeout=30000)
+            
+            # Wait for dynamic content and scrolling
+            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
             page.wait_for_timeout(2000)  # 2 seconds
             
             logger.debug("Getting page content")
@@ -171,14 +187,23 @@ def fetch_content_with_playwright_sync(url: str) -> Tuple[str, str]:
             text = soup.get_text(separator=' ', strip=True)
             title = doc.title()
             
+            # Clean up
+            page.close()
+            context.close()
+            browser.close()
+            
             return text, title
             
         except Exception as e:
+            logger.error(f"Error while rendering page: {str(e)}")
             raise RenderError(f"Failed to render with Playwright: {e}")
         
         finally:
             if 'browser' in locals():
-                browser.close()
+                try:
+                    browser.close()
+                except Exception as e:
+                    logger.warning(f"Failed to close browser: {e}")
 
 
 def get_article_content(url: str) -> Tuple[str, str, str]:
