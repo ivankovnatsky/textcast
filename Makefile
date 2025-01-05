@@ -24,7 +24,7 @@ re-release:
 cast:
 	@python -m articast \
 		--directory ~/Library/Mobile\ Documents/com~apple~CloudDocs/Podcasts/Audio \
-		--file-url-list ~/Library/Mobile\ Documents/com~apple~CloudDocs/Podcasts/Articles/list.txt \
+		--file-url-list ~/Library/Mobile\ Documents/com~apple~CloudDocs/Podcasts/Articles/Articles.txt \
 		--condense \
 		--condense-ratio 0.4 \
 		--yes
