@@ -56,8 +56,8 @@
             shellHook = ''
               export PLAYWRIGHT_BROWSERS_PATH="${playwright-browsers-chromium}"
 
-              export OPENAI_API_KEY=$(ks show openai-api-key)
-              export ELEVEN_API_KEY=$(ks show eleven-api-key)
+              export OPENAI_API_KEY=$(pass openai-api-key)
+              export ELEVEN_API_KEY=$(pass eleven-api-key)
             '';
           };
         }
