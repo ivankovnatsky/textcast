@@ -16,7 +16,7 @@ release:
 
 .PHONY: re-release
 re-release:
-	@gh release delete v$(NEXT_RELEASE_VERSION) || true
+	@gh release delete v$(NEXT_RELEASE_VERSION) --cleanup-tag || true
 	@git push
 	@gh release create v$(NEXT_RELEASE_VERSION) --generate-notes
 

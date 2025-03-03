@@ -129,6 +129,11 @@ been installed, so you can just run:
 pytest
 ```
 
+## TODO
+
+- [ ] Still bugs with cloudflare blocking, we need to just ignore these text and not spend money on sending them to AI
+- [ ] In last batch of processed casts there lots of duplicated items, need to understand where that happens
+
 ## Manual configurations
 
 - OPENAI_API_KEY secret was added to repository secrets
