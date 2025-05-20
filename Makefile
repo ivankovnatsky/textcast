@@ -23,8 +23,8 @@ re-release:
 .PHONY: cast
 cast:
 	@python -m articast \
-		--directory ~/Library/Mobile\ Documents/com~apple~CloudDocs/Podcasts/Audio \
-		--file-url-list ~/Library/Mobile\ Documents/com~apple~CloudDocs/Podcasts/Articles/Articles.txt \
+		--directory /storage/Data/Drive/Articast/Audio \
+		--file-url-list /storage/Data/Drive/Articast/Articles/Articles.txt \
 		--condense \
 		--condense-ratio 0.4 \
 		--yes
