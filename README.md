@@ -133,6 +133,7 @@ pytest
 
 - [ ] Still bugs with cloudflare blocking, we need to just ignore these text and not spend money on sending them to AI
 - [ ] In last batch of processed casts there lots of duplicated items, need to understand where that happens
+- [ ] Add audiobookshelf integration
 
 ## Manual configurations
 
