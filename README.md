@@ -132,7 +132,13 @@ pytest
 ## TODO
 
 - [ ] Still bugs with cloudflare blocking, we need to just ignore these text and not spend money on sending them to AI
+- [ ] Add ability to use local whisper model
+- [ ] Add ability to just transcribe without condensing
 - [ ] In last batch of processed casts there lots of duplicated items, need to understand where that happens
+- [ ] Add agentic capabilities: add a prompt to ai beforenahd to check dor context before transcribing
+- [ ] Save the context db to be able to highlight some tpoics from last listening sessions or some new and value ale knowlesge listened in new articles
+- [ ] Remove gh from skipped
+- [ ] Add more thorougt check on the transcribed text to verify if it does not contain a blocked page deacription, anti-bot or something
 - [ ] Add audiobookshelf integration
 
 ## Manual configurations
