@@ -139,7 +139,6 @@ pytest
 - [ ] Save the context db to be able to highlight some tpoics from last listening sessions or some new and value ale knowlesge listened in new articles
 - [ ] Remove gh from skipped
 - [ ] Add more thorougt check on the transcribed text to verify if it does not contain a blocked page deacription, anti-bot or something
-- [ ] Add audiobookshelf integration
 
 ## Manual configurations
 

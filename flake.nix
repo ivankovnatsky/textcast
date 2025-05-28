@@ -40,6 +40,7 @@
             (python312.withPackages pythonPackages)
             playwright-test
             playwright-driver.browsers
+            gh
           ];
           
           shellHook = ''
@@ -48,6 +49,8 @@
             
             export OPENAI_API_KEY=$(cat .secrets/openai-api-key)
             export ELEVEN_API_KEY=$(cat .secrets/eleven-api-key)
+            export ABS_API_KEY=$(cat .secrets/abs-api-key)
+            export ABS_URL=$(cat .secrets/abs-url)
           '';
         };
       }
@@ -74,6 +77,7 @@
               ffmpeg
               (python312.withPackages pythonPackages)
               playwright-test
+              gh
             ];
             
             shellHook = ''
@@ -82,6 +86,8 @@
               
               export OPENAI_API_KEY=$(cat .secrets/openai-api-key)
               export ELEVEN_API_KEY=$(cat .secrets/eleven-api-key)
+              export ABS_API_KEY=$(cat .secrets/abs-api-key)
+              export ABS_URL=$(cat .secrets/abs-url)
             '';
           };
       })

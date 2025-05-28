@@ -7,6 +7,7 @@ import logging
 from pathlib import Path
 from .elevenlabs import process_article_elevenlabs
 from .openai import process_article_openai
+from .audiobookshelf import upload_to_audiobookshelf
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,8 @@ def generate_lowercase_string():
 
 
 def process_text_to_audio(
-    text, title, vendor, directory, audio_format, model, voice, strip
+    text, title, vendor, directory, audio_format, model, voice, strip,
+    abs_url=None, abs_pod_lib_id=None, abs_pod_folder_id=None
 ):
     logger.info(f"Processing text to audio for title: {title}")
     logger.debug(
@@ -91,3 +93,16 @@ def process_text_to_audio(
         process_article_elevenlabs(text, filename, model, voice)
 
     logger.info(f"Audio processing complete for {title}")
+
+    # Upload to Audiobookshelf if parameters are provided
+    if abs_url and abs_pod_lib_id and abs_pod_folder_id:
+        logger.info("Uploading to Audiobookshelf...")
+        success = upload_to_audiobookshelf(
+            filename, abs_url, abs_pod_lib_id, abs_pod_folder_id, title
+        )
+        if success:
+            logger.info("Successfully uploaded to Audiobookshelf!")
+        else:
+            logger.warning("Failed to upload to Audiobookshelf, but audio file was created successfully")
+    else:
+        logger.debug("Audiobookshelf parameters not provided, skipping upload")

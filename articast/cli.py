@@ -7,6 +7,7 @@ from .common import (
     validate_voice,
     process_text_to_audio,
 )
+from .condense import condense_text
 from .models import ProcessingResult
 from typing import List
 
@@ -81,6 +82,21 @@ logger = logging.getLogger(__name__)
     default=0.2,
     help="Ratio to condense the text (0.2 = 20% of original length)",
 )
+@click.option(
+    "--abs-url",
+    type=str,
+    help="Audiobookshelf server URL for uploading audio files",
+)
+@click.option(
+    "--abs-pod-lib-id",
+    type=str,
+    help="Audiobookshelf podcast library ID",
+)
+@click.option(
+    "--abs-pod-folder-id",
+    type=str,
+    help="Audiobookshelf podcast folder ID",
+)
 def cli(
     vendor,
     url,
@@ -96,6 +112,9 @@ def cli(
     debug,
     condense,
     condense_ratio,
+    abs_url,
+    abs_pod_lib_id,
+    abs_pod_folder_id,
 ):
     # Set up logging
     log_level = logging.DEBUG if debug else logging.INFO
@@ -109,6 +128,24 @@ def cli(
     if not url and not file_url_list and not file_text:
         raise click.UsageError(
             "You must provide either --url, --file-url-list or --file-text."
+        )
+
+    # Validate Audiobookshelf arguments - all or none must be provided
+    abs_args = [abs_url, abs_pod_lib_id, abs_pod_folder_id]
+    abs_provided = [arg for arg in abs_args if arg is not None]
+    
+    if abs_provided and len(abs_provided) != 3:
+        missing_args = []
+        if not abs_url:
+            missing_args.append("--abs-url")
+        if not abs_pod_lib_id:
+            missing_args.append("--abs-pod-lib-id")
+        if not abs_pod_folder_id:
+            missing_args.append("--abs-pod-folder-id")
+        
+        raise click.UsageError(
+            f"When using Audiobookshelf integration, all three arguments must be provided: "
+            f"--abs-url, --abs-pod-lib-id, --abs-pod-folder-id. Missing: {', '.join(missing_args)}"
         )
 
     # Set model and voice based on the API vendor
@@ -134,7 +171,8 @@ def cli(
         title = f"custom-text-podcast-{generate_lowercase_string()}"
         logger.info(f"Processing custom text with title: {title}")
         process_text_to_audio(
-            text, title, vendor, directory, audio_format, speech_model, voice, strip
+            text, title, vendor, directory, audio_format, speech_model, voice, strip,
+            abs_url, abs_pod_lib_id, abs_pod_folder_id
         )
     else:
         urls = []
@@ -157,6 +195,9 @@ def cli(
             'debug': debug,
             'condense': condense,
             'condense_ratio': condense_ratio,
+            'abs_url': abs_url,
+            'abs_pod_lib_id': abs_pod_lib_id,
+            'abs_pod_folder_id': abs_pod_folder_id,
         }
         
         results = process_articles(urls, **kwargs)
