@@ -80,7 +80,10 @@ def process_articles(urls: List[str], **kwargs) -> List[ProcessingResult]:
                 audio_format=kwargs['audio_format'],
                 model=kwargs['speech_model'],
                 voice=kwargs['voice'],
-                strip=kwargs['strip']
+                strip=kwargs['strip'],
+                abs_url=kwargs.get('abs_url'),
+                abs_pod_lib_id=kwargs.get('abs_pod_lib_id'),
+                abs_pod_folder_id=kwargs.get('abs_pod_folder_id')
             )
             
             results.append(ProcessingResult(url=url, success=True))
