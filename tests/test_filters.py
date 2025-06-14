@@ -11,8 +11,8 @@ from .conftest import (
 
 def test_filter_domains():
     """Test direct domain filtering"""
-    assert not filter_url("https://github.com/user/repo")
-    assert not filter_url("https://youtube.com/watch?v=123")
+    assert not filter_url("https://youtube.com/watch?v=example123")
+    assert not filter_url("https://youtu.be/example123")
     assert filter_url("https://medium.com/article")
     assert filter_url(ARTICLE_URL_HTML)
     assert filter_url(ARTICLE_URL_JS)
@@ -21,15 +21,15 @@ def test_filter_domains():
 def test_redirect_handling(mock_requests, capture_logging):
     """Test handling of redirects to filtered domains"""
     redirect_url = "https://example.com/redirect"
-    final_url = "https://github.com/user/repo"
+    final_url = "https://youtube.com/watch?v=example123"
 
     # Mock HEAD requests for both URLs
     mock_requests.head(redirect_url, headers={"Location": final_url}, status_code=302)
-    mock_requests.head(final_url, text="<html>GitHub content</html>", status_code=200)
+    mock_requests.head(final_url, text="<html>YouTube content</html>", status_code=200)
 
     # Mock GET requests for both URLs (in case they're needed)
     mock_requests.get(redirect_url, headers={"Location": final_url}, status_code=302)
-    mock_requests.get(final_url, text="<html>GitHub content</html>", status_code=200)
+    mock_requests.get(final_url, text="<html>YouTube content</html>", status_code=200)
 
     runner = CliRunner()
     runner.invoke(
@@ -51,7 +51,7 @@ def test_redirect_handling(mock_requests, capture_logging):
 @patch("articast.filter_urls.get_final_url_with_browser")
 def test_js_redirect_handling(mock_browser_redirect, capture_logging):
     """Test handling of JavaScript-based redirects"""
-    mock_browser_redirect.return_value = ("https://github.com/user/repo", True)
+    mock_browser_redirect.return_value = ("https://youtube.com/watch?v=example123", True)
 
     runner = CliRunner()
     runner.invoke(

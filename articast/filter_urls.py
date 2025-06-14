@@ -10,10 +10,6 @@ FILTERED_DOMAINS = {
     # Video platforms
     "youtube.com",
     "youtu.be",
-    # Code repositories
-    "github.com",
-    "raw.githubusercontent.com",
-    "gist.github.com",
     # Package repositories
     "pypi.org",
     "npmjs.com",
