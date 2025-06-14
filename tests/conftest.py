@@ -9,7 +9,7 @@ ARTICLE_URL_HTML = "https://blog.alexewerlof.com/p/slo-elastic-datadog-grafana"
 ARTICLE_URL_JS = "https://willgallego.com/2024/03/24/srecon24-americas-recap/"
 ARTICLES_FILE_PATH = "/tmp/articles-file-list.txt"
 GITHUB_REDIRECT_URL = "https://example.com/redirect"
-FILTERED_URL = "https://github.com/user/repo"
+FILTERED_URL = "https://youtube.com/watch?v=example123"
 
 
 @pytest.fixture
