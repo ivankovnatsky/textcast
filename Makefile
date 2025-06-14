@@ -1,3 +1,7 @@
+.PHONY: dev
+dev:
+	nix develop --extra-experimental-features flakes --extra-experimental-features nix-command
+
 .PHONY: bump
 bump:
 	$(eval LATEST_RELEASE := $(shell gh release list -L 1 | awk '{print $$1}' | sed 's/v//'))
