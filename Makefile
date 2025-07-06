@@ -30,11 +30,21 @@ re-release:
 .PHONY: cast
 cast:
 	@python -m articast \
-		--directory /storage/Data/Drive/Articast/Audio \
-		--file-url-list /storage/Data/Drive/Articast/Articles/Articles.txt \
+		--directory /Volumes/Storage/Data/Articast/Audio \
+		--file-url-list /Volumes/Storage/Data/Articast/Articles/Articles.txt \
 		--condense \
 		--condense-ratio 0.5 \
 		--yes \
 		--abs-url "$$ABS_URL" \
 		--abs-pod-lib-id "db54da2c-dc16-4fdb-8dd4-5375ae98f738" \
 		--abs-pod-folder-id "c9d67ffa-8e94-41f6-b22d-3924cf9ff511"
+
+watch-cast:
+	while true; do \
+		watchman-make \
+			--pattern \
+				'/Volumes/Storage/Data/Articast/Articles/Articles.txt' \
+			--target cast; \
+		echo "watchman-make exited, restarting..."; \
+		sleep 1; \
+	done

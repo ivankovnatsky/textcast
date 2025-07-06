@@ -9,6 +9,7 @@ from .common import process_text_to_audio
 from .errors import ProcessingError
 from .constants import MIN_CONTENT_LENGTH, SUSPICIOUS_TEXTS
 from dataclasses import dataclass
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -87,6 +88,22 @@ def process_articles(urls: List[str], **kwargs) -> List[ProcessingResult]:
             )
             
             results.append(ProcessingResult(url=url, success=True))
+            
+            # Remove successfully processed URL from the file immediately
+            file_url_list = kwargs.get('file_url_list')
+            if file_url_list and os.path.exists(file_url_list):
+                try:
+                    with open(file_url_list, "r") as f:
+                        lines = f.readlines()
+                    
+                    with open(file_url_list, "w") as f:
+                        for line in lines:
+                            if line.strip() != url:
+                                f.write(line)
+                    
+                    logger.info(f"Removed successfully processed URL from {file_url_list}: {url}")
+                except Exception as e:
+                    logger.error(f"Failed to update URL file after processing {url}: {str(e)}")
             
         except Exception as e:
             logger.error(f"Failed to process {url}: {str(e)}")
