@@ -39,11 +39,13 @@ cast:
 		--abs-pod-lib-id "db54da2c-dc16-4fdb-8dd4-5375ae98f738" \
 		--abs-pod-folder-id "c9d67ffa-8e94-41f6-b22d-3924cf9ff511"
 
+.PHONY: watch-cast
 watch-cast:
 	while true; do \
 		watchman-make \
-			--pattern \
-				'/Volumes/Storage/Data/Articast/Articles/Articles.txt' \
+			--root /Volumes/Storage/Data/Articast/Articles \
+			--pattern "Articles.txt" \
+			--make "cd $(shell pwd) && nix develop --command make" \
 			--target cast; \
 		echo "watchman-make exited, restarting..."; \
 		sleep 1; \
