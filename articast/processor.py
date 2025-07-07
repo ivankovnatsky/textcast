@@ -46,6 +46,31 @@ def process_articles(urls: List[str], **kwargs) -> List[ProcessingResult]:
                     skipped=True,
                     error="URL filtered: non-article content"
                 ))
+                
+                # Move filtered URL to failed file
+                file_url_list = kwargs.get('file_url_list')
+                if file_url_list and os.path.exists(file_url_list):
+                    try:
+                        # Determine failed file path
+                        failed_file = os.path.join(os.path.dirname(file_url_list), "Failed.txt")
+                        
+                        # Add to failed file with reason
+                        with open(failed_file, "a") as f:
+                            f.write(f"{url} # Filtered: non-article content\n")
+                        
+                        # Remove from original file
+                        with open(file_url_list, "r") as f:
+                            lines = f.readlines()
+                        
+                        with open(file_url_list, "w") as f:
+                            for line in lines:
+                                if line.strip() != url:
+                                    f.write(line)
+                        
+                        logger.info(f"Moved filtered URL to {failed_file}: {url}")
+                    except Exception as file_e:
+                        logger.error(f"Failed to move filtered URL to failed file: {str(file_e)}")
+                
                 continue
                 
             logger.info(f"Fetching content from URL: {url}")
@@ -64,6 +89,23 @@ def process_articles(urls: List[str], **kwargs) -> List[ProcessingResult]:
 
             if not kwargs.get('yes') and not click.confirm(f"Do you want to proceed with converting '{title}' to audio?", default=False):
                 results.append(ProcessingResult(url=url, success=False, skipped=True, error="Skipped by user"))
+                
+                # Remove skipped URL from original file (user chose not to process)
+                file_url_list = kwargs.get('file_url_list')
+                if file_url_list and os.path.exists(file_url_list):
+                    try:
+                        with open(file_url_list, "r") as f:
+                            lines = f.readlines()
+                        
+                        with open(file_url_list, "w") as f:
+                            for line in lines:
+                                if line.strip() != url:
+                                    f.write(line)
+                        
+                        logger.info(f"Removed user-skipped URL from {file_url_list}: {url}")
+                    except Exception as file_e:
+                        logger.error(f"Failed to remove user-skipped URL: {str(file_e)}")
+                
                 continue
 
             logger.info(f"Processing article: '{title}' (extracted using {method})")
@@ -108,6 +150,31 @@ def process_articles(urls: List[str], **kwargs) -> List[ProcessingResult]:
         except Exception as e:
             logger.error(f"Failed to process {url}: {str(e)}")
             results.append(ProcessingResult(url=url, success=False, error=str(e)))
+            
+            # Move failed URL to failed file
+            file_url_list = kwargs.get('file_url_list')
+            if file_url_list and os.path.exists(file_url_list):
+                try:
+                    # Determine failed file path
+                    failed_file = os.path.join(os.path.dirname(file_url_list), "Failed.txt")
+                    
+                    # Add to failed file
+                    with open(failed_file, "a") as f:
+                        f.write(f"{url}\n")
+                    
+                    # Remove from original file
+                    with open(file_url_list, "r") as f:
+                        lines = f.readlines()
+                    
+                    with open(file_url_list, "w") as f:
+                        for line in lines:
+                            if line.strip() != url:
+                                f.write(line)
+                    
+                    logger.info(f"Moved failed URL to {failed_file}: {url}")
+                except Exception as file_e:
+                    logger.error(f"Failed to move failed URL to failed file: {str(file_e)}")
+            
             continue
     
     # Update summary to include skipped count

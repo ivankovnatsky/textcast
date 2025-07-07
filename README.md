@@ -132,6 +132,7 @@ pytest
 ## TODO
 
 - [ ] Still bugs with cloudflare blocking, we need to just ignore these text and not spend money on sending them to AI
+- [ ] Move failed articles to a separate file
 - [ ] Add ability to use local whisper model
 - [ ] Add ability to just transcribe without condensing
 - [ ] In last batch of processed casts there lots of duplicated items, need to understand where that happens
