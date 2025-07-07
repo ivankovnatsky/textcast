@@ -102,6 +102,12 @@ def process_text_to_audio(
         )
         if success:
             logger.info("Successfully uploaded to Audiobookshelf!")
+            # Clean up local audio file after successful upload
+            try:
+                os.remove(filename)
+                logger.info(f"Deleted local audio file: {filename}")
+            except Exception as e:
+                logger.warning(f"Failed to delete local audio file {filename}: {str(e)}")
         else:
             logger.warning("Failed to upload to Audiobookshelf, but audio file was created successfully")
     else:
