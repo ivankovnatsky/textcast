@@ -1,0 +1,15 @@
+name: articast
+
+windows:
+  - editor:
+      layout: even-horizontal
+      panes:
+        - nvim
+  - shell:
+      layout: even-horizontal
+      panes:
+        - 
+  - claude:
+      layout: even-horizontal
+      panes:
+        - claude code
