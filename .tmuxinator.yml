@@ -8,8 +8,8 @@ windows:
   - shell:
       layout: even-horizontal
       panes:
-        - 
+        -
   - claude:
       layout: even-horizontal
       panes:
-        - claude code
+        - claude
