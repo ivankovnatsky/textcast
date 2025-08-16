@@ -1,11 +1,11 @@
-# articast
+# textcast
 
-[![PyPI](https://img.shields.io/pypi/v/articast.svg)](https://pypi.org/project/articast/)
-[![Changelog](https://img.shields.io/github/release/ivankovnatsky/articast.svg)](https://github.com/ivankovnatsky/articast/releases)
-[![Tests](https://github.com/ivankovnatsky/articast/workflows/Test/badge.svg)](https://github.com/ivankovnatsky/articast/actions?query=workflow%3ATest)
-[![License](https://img.shields.io/github/license/ivankovnatsky/articast)](https://github.com/ivankovnatsky/articast/blob/main/LICENSE.md)
+[![PyPI](https://img.shields.io/pypi/v/textcast.svg)](https://pypi.org/project/textcast/)
+[![Changelog](https://img.shields.io/github/release/ivankovnatsky/textcast.svg)](https://github.com/ivankovnatsky/textcast/releases)
+[![Tests](https://github.com/ivankovnatsky/textcast/workflows/Test/badge.svg)](https://github.com/ivankovnatsky/textcast/actions?query=workflow%3ATest)
+[![License](https://img.shields.io/github/license/ivankovnatsky/textcast)](https://github.com/ivankovnatsky/textcast/blob/main/LICENSE.md)
 
-CLI tool for converting articles to podcasts using AI Text-to-Speech APIs. I
+CLI tool for converting text (articles, web content, documents) to audio using AI Text-to-Speech APIs. I
 have added ElevenLabs basic functionanlity, but it's very simple, and I still
 use OpenAI more for it's cheapness.
 
@@ -27,15 +27,15 @@ playwright install chromium
 
 ## Usage
 
-Install articast with:
+Install textcast with:
 
 ```console
-pipx install articast
+pipx install textcast
 ```
 
 ```console
-articast --help
-Usage: python -m articast [OPTIONS]
+textcast --help
+Usage: python -m textcast [OPTIONS]
 
 Options:
   --url TEXT                      URL of the article to be fetched.
@@ -71,7 +71,7 @@ Options:
 
 ```console
 export OPENAI_API_KEY="your-api-key"
-articast \
+textcast \
     --url 'https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers' \
     --speech-model tts-1-hd \
     --text-model gpt-4-turbo-preview \
@@ -85,7 +85,7 @@ articast \
 
 ```console
 export ELEVEN_API_KEY="your-api-key"
-articast \
+textcast \
   --url 'https://incident.io/blog/psychological-safety-in-incident-management' \
   --vendor elevenlabs \
   --directory ~/Downloads/Podcasts
@@ -102,7 +102,7 @@ nix develop
 ```console
 export OPENAI_API_KEY="your-api-key"
 python \
-    -m articast \
+    -m textcast \
     --speech-model tts-1-hd \
     --text-model gpt-4-turbo-preview \
     --voice nova \
@@ -132,12 +132,12 @@ pytest
 ## TODO
 
 - [ ] Still bugs with cloudflare blocking, we need to just ignore these text and not spend money on sending them to AI
-- [ ] Move failed articles to a separate file
+- [ ] Move failed texts to a separate file
 - [ ] Add ability to use local whisper model
 - [ ] Add ability to just transcribe without condensing
 - [ ] In last batch of processed casts there lots of duplicated items, need to understand where that happens
 - [ ] Add agentic capabilities: add a prompt to ai beforenahd to check dor context before transcribing
-- [ ] Save the context db to be able to highlight some tpoics from last listening sessions or some new and value ale knowlesge listened in new articles
+- [ ] Save the context db to be able to highlight some topics from last listening sessions or some new and valuable knowledge listened in new texts
 - [ ] Remove gh from skipped
 - [ ] Add more thorougt check on the transcribed text to verify if it does not contain a blocked page deacription, anti-bot or something
 
@@ -149,5 +149,5 @@ pytest
 
 ## Inspired by
 
-* Long frustration of unread articles
+* Long frustration of unread articles and text content
 * https://github.com/simonw/ospeak

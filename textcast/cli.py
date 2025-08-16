@@ -1,6 +1,6 @@
 import click
 import logging
-from .processor import process_articles
+from .processor import process_texts
 from .common import (
     generate_lowercase_string,
     validate_models,
@@ -14,7 +14,7 @@ from typing import List
 logger = logging.getLogger(__name__)
 
 @click.command()
-@click.option("--url", type=str, help="URL of the article to be fetched.")
+@click.option("--url", type=str, help="URL of the text content to be fetched.")
 @click.option(
     "--vendor",
     type=click.Choice(["openai", "elevenlabs"]),
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
     "--directory",
     type=click.Path(exists=False, file_okay=False, writable=True),
     default=".",
-    help="Directory where the output audio file will be saved. The filename will be derived from the article title.",
+    help="Directory where the output audio file will be saved. The filename will be derived from the text title.",
 )
 @click.option(
     "--speech-model",
@@ -74,7 +74,7 @@ logger = logging.getLogger(__name__)
 @click.option(
     "--condense",
     is_flag=True,
-    help="Condense the article before converting to audio",
+    help="Condense the text before converting to audio",
 )
 @click.option(
     "--condense-ratio",
@@ -198,10 +198,10 @@ def cli(
             'abs_url': abs_url,
             'abs_pod_lib_id': abs_pod_lib_id,
             'abs_pod_folder_id': abs_pod_folder_id,
-            'file_url_list': file_url_list,  # Pass the file_url_list to process_articles
+            'file_url_list': file_url_list,  # Pass the file_url_list to process_texts
         }
         
-        results = process_articles(urls, **kwargs)
+        results = process_texts(urls, **kwargs)
 
 
 if __name__ == "__main__":

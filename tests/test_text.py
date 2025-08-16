@@ -1,11 +1,11 @@
 from click.testing import CliRunner
-from articast.cli import cli
-from articast.article import get_article_content
+from textcast.cli import cli
+from textcast.text import get_text_content
 from .conftest import ARTICLE_URL_HTML
 
 
-def test_get_article_content(capture_logging):
-    text, title, method = get_article_content(ARTICLE_URL_HTML)
+def test_get_text_content(capture_logging):
+    text, title, method = get_text_content(ARTICLE_URL_HTML)
 
     # Check for a specific phrase you can see in the browser
     assert (

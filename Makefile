@@ -29,9 +29,9 @@ re-release:
 
 .PHONY: cast
 cast:
-	@python -m articast \
-		--directory /Volumes/Storage/Data/Articast/Audio \
-		--file-url-list /Volumes/Storage/Data/Articast/Articles/Articles.txt \
+	@python -m textcast \
+		--directory /Volumes/Storage/Data/Textcast/Audio \
+		--file-url-list /Volumes/Storage/Data/Textcast/Texts/Texts.txt \
 		--condense \
 		--condense-ratio 0.5 \
 		--yes \
@@ -43,8 +43,8 @@ cast:
 watch-cast:
 	while true; do \
 		watchman-make \
-			--root /Volumes/Storage/Data/Articast/Articles \
-			--pattern "Articles.txt" \
+			--root /Volumes/Storage/Data/Textcast/Texts \
+			--pattern "Texts.txt" \
 			--make "cd $(shell pwd) && nix develop --command make" \
 			--target cast; \
 		echo "watchman-make exited, restarting..."; \

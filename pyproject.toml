@@ -1,7 +1,7 @@
 [project]
-name = "articast"
+name = "textcast"
 version = "0.1.27"
-description = "CLI tool for converting articles to podcasts"
+description = "CLI tool for converting text to audio using TTS APIs"
 readme = "README.md"
 authors = [{name = "Ivan Kovnatsky"}]
 license = {text = "MIT"}
@@ -23,16 +23,16 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ivankovnatsky/articast"
-Changelog = "https://github.com/ivankovnatsky/articast/releases"
-Issues = "https://github.com/ivankovnatsky/articast/issues"
-CI = "https://github.com/ivankovnatsky/articast/actions"
+Homepage = "https://github.com/ivankovnatsky/textcast"
+Changelog = "https://github.com/ivankovnatsky/textcast/releases"
+Issues = "https://github.com/ivankovnatsky/textcast/issues"
+CI = "https://github.com/ivankovnatsky/textcast/actions"
 
 [project.entry-points.console_scripts]
-articast = "articast.cli:cli"
+textcast = "textcast.cli:cli"
 
 [tool.setuptools]
-packages = ["articast"]
+packages = ["textcast"]
 
 [project.optional-dependencies]
 test = [

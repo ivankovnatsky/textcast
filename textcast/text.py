@@ -206,8 +206,8 @@ def fetch_content_with_playwright_sync(url: str) -> Tuple[str, str]:
                     logger.warning(f"Failed to close browser: {e}")
 
 
-def get_article_content(url: str) -> Tuple[str, str, str]:
-    """Get article content from URL"""
+def get_text_content(url: str) -> Tuple[str, str, str]:
+    """Get text content from URL"""
     logger.info(f"Fetching content for URL: {url}")
     
     try:
@@ -219,7 +219,7 @@ def get_article_content(url: str) -> Tuple[str, str, str]:
         for suspicious in SUSPICIOUS_TEXTS:
             if suspicious in text_lower:
                 logger.warning(f"Suspicious content detected: '{suspicious}'")
-                raise ProcessingError(f"Suspicious content detected: '{suspicious}'. Article may not have loaded properly.")
+                raise ProcessingError(f"Suspicious content detected: '{suspicious}'. Text may not have loaded properly.")
         
         if js_required:
             logger.info("JavaScript may be required. Falling back to Playwright")
@@ -238,7 +238,7 @@ def get_article_content(url: str) -> Tuple[str, str, str]:
         for suspicious in SUSPICIOUS_TEXTS:
             if suspicious in text_lower:
                 logger.warning(f"Suspicious content detected: '{suspicious}'")
-                raise ProcessingError(f"Suspicious content detected: '{suspicious}'. Article may not have loaded properly.")
+                raise ProcessingError(f"Suspicious content detected: '{suspicious}'. Text may not have loaded properly.")
         
         logger.debug(f"Content extracted using playwright ({len(text)} chars):\n---\n{text[:PREVIEW_LENGTH]}...\n---")
         logger.info("Content fetched successfully using Playwright")

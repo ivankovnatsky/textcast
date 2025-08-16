@@ -1,7 +1,7 @@
 import traceback
 from pathlib import Path
 from click.testing import CliRunner
-from articast.cli import cli
+from textcast.cli import cli
 from .conftest import ARTICLE_URL_HTML
 
 
