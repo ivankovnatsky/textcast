@@ -2,8 +2,8 @@ import pytest
 import traceback
 from pathlib import Path
 from click.testing import CliRunner
-from articast.cli import cli
-from articast.chunks import TEXT_SEND_LIMIT, split_text
+from textcast.cli import cli
+from textcast.chunks import TEXT_SEND_LIMIT, split_text
 from .conftest import ARTICLE_URL_HTML, ARTICLE_URL_JS
 
 

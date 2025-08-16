@@ -3,7 +3,7 @@ import click
 from typing import List, Optional
 from .models import ProcessingResult
 from .filter_urls import filter_url
-from .article import get_article_content
+from .text import get_text_content
 from .condense import condense_text
 from .common import process_text_to_audio
 from .errors import ProcessingError
@@ -23,16 +23,16 @@ class ProcessingResult:
     title: Optional[str] = None
     method: Optional[str] = None
 
-def process_articles(urls: List[str], **kwargs) -> List[ProcessingResult]:
+def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
     """
-    Process a list of article URLs, converting them to audio.
+    Process a list of text URLs, converting them to audio.
     
     Args:
         urls: List of URLs to process
         **kwargs: Additional arguments from CLI (condense, text_model, condense_ratio, etc.)
     
     Returns:
-        List[ProcessingResult]: Results of processing each article
+        List[ProcessingResult]: Results of processing each text
     """
     results = []
     
@@ -44,7 +44,7 @@ def process_articles(urls: List[str], **kwargs) -> List[ProcessingResult]:
                     url=url,
                     success=False,
                     skipped=True,
-                    error="URL filtered: non-article content"
+                    error="URL filtered: non-text content"
                 ))
                 
                 # Move filtered URL to failed file
@@ -56,7 +56,7 @@ def process_articles(urls: List[str], **kwargs) -> List[ProcessingResult]:
                         
                         # Add to failed file with reason
                         with open(failed_file, "a") as f:
-                            f.write(f"{url} # Filtered: non-article content\n")
+                            f.write(f"{url} # Filtered: non-text content\n")
                         
                         # Remove from original file
                         with open(file_url_list, "r") as f:
@@ -74,7 +74,7 @@ def process_articles(urls: List[str], **kwargs) -> List[ProcessingResult]:
                 continue
                 
             logger.info(f"Fetching content from URL: {url}")
-            text, title, method = get_article_content(url)
+            text, title, method = get_text_content(url)
             
             logger.debug(f"Content extracted using {method} ({len(text)} chars):\n---\n{text}\n---")
             
@@ -82,10 +82,10 @@ def process_articles(urls: List[str], **kwargs) -> List[ProcessingResult]:
             text_lower = text.lower()
             for suspicious in SUSPICIOUS_TEXTS:
                 if suspicious in text_lower:
-                    raise ProcessingError(f"Suspicious content detected: '{suspicious}'. Article may not have loaded properly.")
+                    raise ProcessingError(f"Suspicious content detected: '{suspicious}'. Text may not have loaded properly.")
             
             if len(text) < MIN_CONTENT_LENGTH:
-                raise ProcessingError(f"Content too short ({len(text)} chars). Article may not have loaded properly.")
+                raise ProcessingError(f"Content too short ({len(text)} chars). Text may not have loaded properly.")
 
             if not kwargs.get('yes') and not click.confirm(f"Do you want to proceed with converting '{title}' to audio?", default=False):
                 results.append(ProcessingResult(url=url, success=False, skipped=True, error="Skipped by user"))
@@ -108,10 +108,10 @@ def process_articles(urls: List[str], **kwargs) -> List[ProcessingResult]:
                 
                 continue
 
-            logger.info(f"Processing article: '{title}' (extracted using {method})")
+            logger.info(f"Processing text: '{title}' (extracted using {method})")
             
             if kwargs.get('condense'):
-                logger.info("Condensing article...")
+                logger.info("Condensing text...")
                 text = condense_text(text, kwargs['text_model'], kwargs['condense_ratio'])
 
             # Process the text to audio
@@ -188,12 +188,12 @@ def process_articles(urls: List[str], **kwargs) -> List[ProcessingResult]:
     logger.info(f"Skipped: {skipped}")
     
     if failed > 0 or skipped > 0:
-        logger.info("Failed articles:")
+        logger.info("Failed texts:")
         for result in results:
             if not result.success and not result.skipped:
                 logger.info(f"- {result.url}: {result.error}")
                 
-        logger.info("Skipped articles:")
+        logger.info("Skipped texts:")
         for result in results:
             if result.skipped:
                 logger.info(f"- {result.url}: {result.error}")
