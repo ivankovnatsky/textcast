@@ -9,6 +9,7 @@ from .common import (
 )
 from .condense import condense_text
 from .models import ProcessingResult
+from .aggregator import detect_and_expand_aggregator
 from typing import List
 
 logger = logging.getLogger(__name__)
@@ -97,6 +98,17 @@ logger = logging.getLogger(__name__)
     type=str,
     help="Audiobookshelf podcast folder ID",
 )
+@click.option(
+    "--aggregator",
+    is_flag=True,
+    help="Process URL as an aggregator page containing multiple article links",
+)
+@click.option(
+    "--auto-detect-aggregator",
+    is_flag=True,
+    default=True,
+    help="Automatically detect and process aggregator pages (default: True)",
+)
 def cli(
     vendor,
     url,
@@ -115,6 +127,8 @@ def cli(
     abs_url,
     abs_pod_lib_id,
     abs_pod_folder_id,
+    aggregator,
+    auto_detect_aggregator,
 ):
     # Set up logging
     log_level = logging.DEBUG if debug else logging.INFO
@@ -176,11 +190,50 @@ def cli(
         )
     else:
         urls = []
+        aggregator_source = None  # Track if URLs came from an aggregator
+
         if url:
-            urls.append(url)
+            # Check if URL is an aggregator
+            if aggregator or (auto_detect_aggregator and url):
+                is_aggregator, article_urls = detect_and_expand_aggregator(url)
+                if is_aggregator:
+                    if article_urls:
+                        logger.info(f"Detected aggregator with {len(article_urls)} articles")
+                        if not yes:
+                            click.echo(f"\nFound {len(article_urls)} articles in aggregator page:")
+                            for idx, article_url in enumerate(article_urls[:10], 1):
+                                click.echo(f"  {idx}. {article_url}")
+                            if len(article_urls) > 10:
+                                click.echo(f"  ... and {len(article_urls) - 10} more")
+                            if not click.confirm("\nDo you want to process all these articles?", default=True):
+                                logger.info("User cancelled aggregator processing")
+                                return
+                        urls.extend(article_urls)
+                        aggregator_source = url  # Remember the aggregator source
+                    else:
+                        logger.warning("Failed to extract articles from aggregator, treating as regular URL")
+                        urls.append(url)
+                else:
+                    urls.append(url)
+            else:
+                urls.append(url)
+
         if file_url_list:
             with open(file_url_list, "r") as f:
-                urls.extend([line.strip() for line in f if line.strip()])
+                file_urls = [line.strip() for line in f if line.strip()]
+
+                # Check each URL in the file for aggregators
+                for file_url in file_urls:
+                    if aggregator or auto_detect_aggregator:
+                        is_aggregator, article_urls = detect_and_expand_aggregator(file_url)
+                        if is_aggregator and article_urls:
+                            logger.info(f"Expanded aggregator URL {file_url} to {len(article_urls)} articles")
+                            urls.extend(article_urls)
+                            aggregator_source = file_url  # Remember the aggregator source
+                        else:
+                            urls.append(file_url)
+                    else:
+                        urls.append(file_url)
 
         # Create kwargs dict explicitly instead of using locals()
         kwargs = {
@@ -199,6 +252,7 @@ def cli(
             'abs_pod_lib_id': abs_pod_lib_id,
             'abs_pod_folder_id': abs_pod_folder_id,
             'file_url_list': file_url_list,  # Pass the file_url_list to process_texts
+            'aggregator_source': aggregator_source,  # Pass aggregator source if any
         }
         
         results = process_texts(urls, **kwargs)
