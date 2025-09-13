@@ -26,15 +26,16 @@ class ProcessingResult:
 def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
     """
     Process a list of text URLs, converting them to audio.
-    
+
     Args:
         urls: List of URLs to process
         **kwargs: Additional arguments from CLI (condense, text_model, condense_ratio, etc.)
-    
+
     Returns:
         List[ProcessingResult]: Results of processing each text
     """
     results = []
+    aggregator_source = kwargs.get('aggregator_source')
     
     for url in urls:
         try:
@@ -133,17 +134,26 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
             
             # Remove successfully processed URL from the file immediately
             file_url_list = kwargs.get('file_url_list')
+            aggregator_source = kwargs.get('aggregator_source')
+
             if file_url_list and os.path.exists(file_url_list):
                 try:
                     with open(file_url_list, "r") as f:
                         lines = f.readlines()
-                    
-                    with open(file_url_list, "w") as f:
-                        for line in lines:
-                            if line.strip() != url:
-                                f.write(line)
-                    
-                    logger.info(f"Removed successfully processed URL from {file_url_list}: {url}")
+
+                    # If this came from an aggregator, we need to remove the aggregator URL
+                    # only when all articles are processed (this is handled elsewhere)
+                    # For now, just log appropriately
+                    if aggregator_source:
+                        # Don't remove individual article URLs, they weren't in the file
+                        logger.info(f"Processed article from aggregator {aggregator_source}: {url}")
+                    else:
+                        # Remove the URL from the file (it was directly in the file)
+                        with open(file_url_list, "w") as f:
+                            for line in lines:
+                                if line.strip() != url:
+                                    f.write(line)
+                        logger.info(f"Removed successfully processed URL from {file_url_list}: {url}")
                 except Exception as e:
                     logger.error(f"Failed to update URL file after processing {url}: {str(e)}")
             
@@ -176,7 +186,26 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
                     logger.error(f"Failed to move failed URL to failed file: {str(file_e)}")
             
             continue
-    
+
+    # Remove aggregator URL from file after all articles are processed
+    if aggregator_source:
+        file_url_list = kwargs.get('file_url_list')
+        if file_url_list and os.path.exists(file_url_list):
+            try:
+                with open(file_url_list, "r") as f:
+                    lines = f.readlines()
+
+                with open(file_url_list, "w") as f:
+                    for line in lines:
+                        if line.strip() != aggregator_source:
+                            f.write(line)
+
+                # Count successful articles from this aggregator
+                successful_from_aggregator = sum(1 for r in results if r.success)
+                logger.info(f"Removed aggregator URL from {file_url_list} after processing {successful_from_aggregator} articles: {aggregator_source}")
+            except Exception as e:
+                logger.error(f"Failed to remove aggregator URL from file: {str(e)}")
+
     # Update summary to include skipped count
     successful = sum(1 for r in results if r.success)
     failed = sum(1 for r in results if not r.success and not r.skipped)
