@@ -13,13 +13,16 @@ dependencies = [
     "beautifulsoup4",
     "click",
     "elevenlabs",
+    "feedparser",
     "lxml[html_clean]",
     "openai>=1.0",
     "playwright",
     "pydub",
+    "PyYAML",
     "readability-lxml",
     "requests",
     "simpleaudio; sys_platform == 'darwin'",
+    "watchdog",
 ]
 
 [project.urls]
@@ -29,7 +32,7 @@ Issues = "https://github.com/ivankovnatsky/textcast/issues"
 CI = "https://github.com/ivankovnatsky/textcast/actions"
 
 [project.entry-points.console_scripts]
-textcast = "textcast.cli:cli"
+textcast = "textcast.cli:main"
 
 [tool.setuptools]
 packages = ["textcast"]

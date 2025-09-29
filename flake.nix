@@ -17,17 +17,23 @@
         
         # Common Python packages for both platforms
         pythonPackages = ps: with ps; [
-          # Code Deps
+          # Core Dependencies
           beautifulsoup4
-          elevenlabs
           click
+          elevenlabs
+          feedparser
+          lxml
           openai
           playwright
           pydub
-          pytest
+          pyyaml
           readability-lxml
           requests
+          watchdog
+          # Development & Testing
+          pytest
           requests-mock
+          cogapp
           # Code Quality
           autoflake
         ];
