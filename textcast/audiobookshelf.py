@@ -23,6 +23,7 @@ class AudiobookshelfClient:
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
 
+
     def make_request(self, method: str, endpoint: str, data=None, files=None):
         """Make an HTTP request to the Audiobookshelf API."""
         url = f"{self.base_url}{endpoint}"

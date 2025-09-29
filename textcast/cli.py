@@ -258,5 +258,21 @@ def cli(
         results = process_texts(urls, **kwargs)
 
 
+# Import and register service commands
+from .service_cli import service
+
+# Create main group
+@click.group()
+def main():
+    """Textcast - Convert text content to audio."""
+    pass
+
+# Add existing CLI as a subcommand
+main.add_command(cli, name="process")
+
+# Add service commands
+main.add_command(service)
+
+
 if __name__ == "__main__":
-    cli()
+    main()
