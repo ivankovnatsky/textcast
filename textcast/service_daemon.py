@@ -122,32 +122,46 @@ class TextcastService:
                         import time
 
                         def delayed_upload():
-                            # Wait 2 seconds to ensure file is completely written
-                            time.sleep(2)
+                            # FIXME: Wait 20 seconds to ensure file is completely written
+                            # TODO: Consider implementing a file watcher that waits for file to be written
+                            # or some other neat fix instead of hard-coded delay
+                            time.sleep(20)
 
                             # Check if file still exists before processing
                             if file_path.exists():
-                                # Check if file is not currently being processed by another event
-                                file_key = str(file_path)
-                                current_time = time.time()
-
-                                # Skip if this file was recently processed (within 10 seconds)
-                                if (file_key in self.pending_files and
-                                    current_time - self.pending_files[file_key] < 10):
-                                    logger.debug(f"Skipping {file_path.name} - recently processed")
-                                    return
-
-                                # Mark file as being processed
-                                self.pending_files[file_key] = current_time
-
+                                # Check file stability - ensure it hasn't been modified in the last 10 seconds
                                 try:
+                                    file_mtime = file_path.stat().st_mtime
+                                    current_time = time.time()
+
+                                    if current_time - file_mtime < 10:
+                                        logger.debug(f"File {file_path.name} was recently modified, waiting for stability")
+                                        return
+
+                                    # Check if file is not currently being processed by another event
+                                    file_key = str(file_path)
+
+                                    # Skip if this file was recently processed (within 10 seconds)
+                                    if (file_key in self.pending_files and
+                                        current_time - self.pending_files[file_key] < 10):
+                                        logger.debug(f"Skipping {file_path.name} - recently processed")
+                                        return
+
+                                    # Mark file as being processed
+                                    self.pending_files[file_key] = current_time
+
+                                    logger.info(f"File {file_path.name} is stable, proceeding with upload")
                                     self.service._upload_to_audiobookshelf(file_path, self.source)
-                                finally:
+
                                     # Clean up old entries to prevent memory leaks
                                     old_entries = [k for k, v in self.pending_files.items()
                                                  if current_time - v > 60]
                                     for k in old_entries:
                                         del self.pending_files[k]
+
+                                except OSError as e:
+                                    logger.debug(f"Error checking file {file_path.name}: {e}")
+                                    return
                             else:
                                 logger.debug(f"File {file_path.name} no longer exists, skipping upload")
 
