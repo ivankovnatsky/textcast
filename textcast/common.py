@@ -75,12 +75,12 @@ def process_text_to_audio(
         f"Vendor: {vendor}, Format: {audio_format}, Model: {model}, Voice: {voice}"
     )
     logger.info(f"Text length: {len(text)} characters")
-    logger.info(f"Text content being sent for audio conversion:\n{'-' * 50}\n{text}\n{'-' * 50}")
+    logger.debug(f"Text content being sent for audio conversion:\n{'-' * 50}\n{text}\n{'-' * 50}")
 
     if strip:
         logger.debug(f"Stripping text to {strip} characters")
         text = text[:strip]
-        logger.info(f"Text after stripping (length: {len(text)}):\n{'-' * 50}\n{text}\n{'-' * 50}")
+        logger.debug(f"Text after stripping (length: {len(text)}):\n{'-' * 50}\n{text}\n{'-' * 50}")
 
     os.makedirs(directory, exist_ok=True)
     logger.debug(f"Ensuring directory exists: {directory}")
