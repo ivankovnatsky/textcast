@@ -50,3 +50,15 @@ watch-cast:
 		echo "watchman-make exited, restarting..."; \
 		sleep 1; \
 	done
+
+.PHONY: service
+service:
+	@nix develop --command python -m textcast service daemon --foreground
+
+.PHONY: service-no-watch
+service-no-watch:
+	@nix develop --command python -m textcast service daemon --foreground --no-watch
+
+.PHONY: service-debug
+service-debug:
+	@nix develop --command python -m textcast service --debug daemon --foreground
