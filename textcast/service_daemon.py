@@ -430,11 +430,14 @@ class TextcastService:
                 logger.info(f"Successfully uploaded {file_path.name} to Audiobookshelf")
 
                 # Delete the file after successful upload
-                try:
-                    file_path.unlink()
-                    logger.info(f"Deleted uploaded file: {file_path.name}")
-                except Exception as e:
-                    logger.warning(f"Failed to delete uploaded file {file_path.name}: {e}")
+                if file_path.exists():
+                    try:
+                        file_path.unlink()
+                        logger.info(f"Deleted uploaded file: {file_path.name}")
+                    except Exception as e:
+                        logger.warning(f"Failed to delete uploaded file {file_path.name}: {e}")
+                else:
+                    logger.debug(f"File {file_path.name} already deleted (likely by another handler)")
             else:
                 logger.error(f"Failed to upload {file_path.name} to Audiobookshelf")
 
