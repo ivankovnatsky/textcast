@@ -531,7 +531,6 @@ class TextcastService:
             return
 
         try:
-
             watch_path = Path(source.watch_dir)
             existing_files = []
 
