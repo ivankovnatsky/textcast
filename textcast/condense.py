@@ -1,7 +1,9 @@
-from openai import OpenAI
 import logging
 
+from openai import OpenAI
+
 logger = logging.getLogger(__name__)
+
 
 def condense_text(text: str, text_model: str, condense_ratio: float) -> str:
     """
@@ -39,12 +41,16 @@ The result should be approximately {int(condense_ratio * 100)}% of the original 
         condensed_text = response.choices[0].message.content
 
         if not condensed_text or not condensed_text.strip():
-            logger.warning("Model returned empty or whitespace-only condensed text, using original")
+            logger.warning(
+                "Model returned empty or whitespace-only condensed text, using original"
+            )
             return text
 
         logger.debug(f"Condensed text length: {len(condensed_text)} characters")
         actual_ratio = len(condensed_text) / len(text) if len(text) > 0 else 0
-        logger.debug(f"Actual condensing ratio: {actual_ratio:.2f} ({int(actual_ratio * 100)}%)")
+        logger.debug(
+            f"Actual condensing ratio: {actual_ratio:.2f} ({int(actual_ratio * 100)}%)"
+        )
 
         return condensed_text
 

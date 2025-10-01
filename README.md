@@ -122,7 +122,7 @@ autoflake --in-place --remove-all-unused-imports --expand-star-imports -r .
 
 ## Testing
 
-If you used `nix develop` all necessary dependencies should have already 
+If you used `nix develop` all necessary dependencies should have already
 been installed, so you can just run:
 
 ```console
@@ -149,5 +149,5 @@ pytest
 
 ## Inspired by
 
-* Long frustration of unread articles and text content
-* https://github.com/simonw/ospeak
+- Long frustration of unread articles and text content
+- https://github.com/simonw/ospeak

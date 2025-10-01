@@ -1,7 +1,8 @@
-import pytest
 import io
 import logging
 from pathlib import Path
+
+import pytest
 import requests_mock
 
 # Constants

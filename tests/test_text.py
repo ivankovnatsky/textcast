@@ -1,6 +1,8 @@
 from click.testing import CliRunner
+
 from textcast.cli import cli
 from textcast.text import get_text_content
+
 from .conftest import ARTICLE_URL_HTML
 
 
@@ -58,7 +60,9 @@ def test_js_required_detection(mock_requests, capture_logging):
     )
 
     # Check that JS requirement was detected
-    assert "Suspicious content detected: 'enable javascript'" in capture_logging.getvalue()
+    assert (
+        "Suspicious content detected: 'enable javascript'" in capture_logging.getvalue()
+    )
     # Check that Playwright fallback was attempted
     assert "Using Playwright to render the page" in capture_logging.getvalue()
 

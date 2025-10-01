@@ -1,7 +1,10 @@
 import traceback
 from pathlib import Path
+
 from click.testing import CliRunner
+
 from textcast.cli import cli
+
 from .conftest import ARTICLE_URL_HTML
 
 
@@ -154,8 +157,10 @@ def test_process_article_removes_successful_urls(setup_article_file, capture_log
     # Verify that the URLs were removed from the file
     with open(setup_article_file, "r") as f:
         remaining_urls = [line.strip() for line in f if line.strip()]
-    
-    assert len(remaining_urls) == 0, f"Expected all URLs to be removed, but found: {remaining_urls}"
+
+    assert len(remaining_urls) == 0, (
+        f"Expected all URLs to be removed, but found: {remaining_urls}"
+    )
 
     # Check for debug logs
     log_output = capture_logging.getvalue()

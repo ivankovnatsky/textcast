@@ -23,7 +23,6 @@ class AudiobookshelfClient:
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
 
-
     def make_request(self, method: str, endpoint: str, data=None, files=None):
         """Make an HTTP request to the Audiobookshelf API."""
         url = f"{self.base_url}{endpoint}"
@@ -97,7 +96,9 @@ class AudiobookshelfClient:
             error_message = e.read().decode("utf-8")
             try:
                 error_data = json.loads(error_message)
-                logger.error(f"Audiobookshelf API error: {error_data.get('error', error_message)}")
+                logger.error(
+                    f"Audiobookshelf API error: {error_data.get('error', error_message)}"
+                )
             except json.JSONDecodeError:
                 logger.error(f"Audiobookshelf HTTP Error: {e.code} - {error_message}")
             raise Exception(f"Audiobookshelf upload failed: {e.code} - {error_message}")
@@ -108,7 +109,13 @@ class AudiobookshelfClient:
             logger.error(f"Audiobookshelf Error: {str(e)}")
             raise
 
-    def upload_file(self, file_path: Path, library_id: str, folder_id: str, title: Optional[str] = None):
+    def upload_file(
+        self,
+        file_path: Path,
+        library_id: str,
+        folder_id: str,
+        title: Optional[str] = None,
+    ):
         """Upload a file to a specific library.
 
         Args:
@@ -132,7 +139,7 @@ class AudiobookshelfClient:
         # File will be uploaded as "0" parameter
         files = {str(file_path): file_path.name}
 
-        logger.info(f"Uploading to Audiobookshelf:")
+        logger.info("Uploading to Audiobookshelf:")
         logger.info(f"  URL: {self.base_url}")
         logger.info(f"  Library ID: {library_id}")
         logger.info(f"  Folder ID: {folder_id}")
@@ -144,22 +151,22 @@ class AudiobookshelfClient:
 
 
 def upload_to_audiobookshelf(
-    file_path: Path, 
-    abs_url: str, 
-    abs_pod_lib_id: str, 
-    abs_pod_folder_id: str, 
-    title: Optional[str] = None
+    file_path: Path,
+    abs_url: str,
+    abs_pod_lib_id: str,
+    abs_pod_folder_id: str,
+    title: Optional[str] = None,
 ) -> bool:
     """
     Upload an audio file to Audiobookshelf.
-    
+
     Args:
         file_path: Path to the audio file
         abs_url: Audiobookshelf server URL
         abs_pod_lib_id: Podcast library ID
         abs_pod_folder_id: Podcast folder ID
         title: Optional title for the upload
-        
+
     Returns:
         bool: True if upload was successful, False otherwise
     """
@@ -172,8 +179,10 @@ def upload_to_audiobookshelf(
 
         # Create client and upload
         client = AudiobookshelfClient(api_key, abs_url)
-        response = client.upload_file(file_path, abs_pod_lib_id, abs_pod_folder_id, title)
-        
+        response = client.upload_file(
+            file_path, abs_pod_lib_id, abs_pod_folder_id, title
+        )
+
         if response:
             logger.info("Successfully uploaded to Audiobookshelf!")
             logger.debug(f"Response: {response}")
@@ -181,7 +190,7 @@ def upload_to_audiobookshelf(
         else:
             logger.error("Upload to Audiobookshelf failed - no response")
             return False
-            
+
     except Exception as e:
         logger.error(f"Failed to upload to Audiobookshelf: {str(e)}")
-        return False 
+        return False
