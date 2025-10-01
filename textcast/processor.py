@@ -10,7 +10,6 @@ from .condense import condense_text
 from .constants import MIN_CONTENT_LENGTH, SUSPICIOUS_TEXTS
 from .errors import ProcessingError
 from .filter_urls import filter_url
-from .models import ProcessingResult
 from .text import get_text_content
 
 logger = logging.getLogger(__name__)

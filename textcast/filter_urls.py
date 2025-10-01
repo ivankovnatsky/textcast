@@ -51,7 +51,7 @@ def get_final_url_with_browser(url: str) -> Optional[Tuple[str, bool]]:
         try:
             page = browser.new_page()
             initial_url = url
-            response = page.goto(url, wait_until="networkidle")
+            page.goto(url, wait_until="networkidle")
             final_url = page.url
             was_redirected = initial_url != final_url
             return final_url, was_redirected
