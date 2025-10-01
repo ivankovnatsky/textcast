@@ -210,7 +210,6 @@ def test_source(ctx, source_name):
         elif source.type == "upload":
             watch_dir = Path(source.watch_dir) if source.watch_dir else None
             if watch_dir and watch_dir.exists():
-
                 all_files = []
                 for pattern in source.file_patterns:
                     files = list(watch_dir.rglob(pattern))
