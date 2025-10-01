@@ -12,7 +12,7 @@ sources:
   # RSS feed monitoring (newsletters, blogs, etc.)
   - type: rss
     name: sreweekly
-    enabled: false # Disabled until duplicate processing bug is fixed
+    enabled: false # Disabled until implemented
     url: https://sreweekly.com/feed
     check_duplicates: true
     processing_strategy: condense # Override global strategy for this source
@@ -20,7 +20,7 @@ sources:
   # YouTube channel monitoring
   - type: youtube
     name: serhii_sternenko
-    enabled: false # Disabled until duplicate processing bug is fixed
+    enabled: false # Disabled until implemented
     # Use the modern YouTube handle (recommended)
     channel_handle: "@STERNENKO"
     # Alternative methods:
