@@ -5,7 +5,6 @@
 check_interval: 5m # Check external sources - REQUIRED time unit: 30s, 5m, 1h, 2d (no bare numbers)
 log_level: DEBUG # DEBUG, INFO, WARNING, ERROR
 log_file: /Volumes/Storage/Data/.textcast/logs/textcast-service.log # Optional: log to file
-# Note: File sources are monitored by file watchers (immediate response to changes)
 
 # Content sources to monitor
 sources:
@@ -30,6 +29,7 @@ sources:
     check_duplicates: true
 
   # Process URLs from existing files (legacy textcast workflow)
+  # Note: File sources are monitored by file watchers (immediate response to changes)
   - type: file
     name: textcast_manual
     enabled: true
