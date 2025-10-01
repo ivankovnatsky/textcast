@@ -50,6 +50,7 @@
             # Formatting tools
             treefmt
             nodePackages.prettier
+            nixfmt-rfc-style
             ruff
           ];
           
@@ -91,6 +92,7 @@
               # Formatting tools
               treefmt
               nodePackages.prettier
+              nixfmt-rfc-style
               ruff
             ];
             

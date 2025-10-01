@@ -8,6 +8,10 @@ command = "ruff"
 options = ["check", "--fix"]
 includes = ["*.py"]
 
+[formatter.nix]
+command = "nixfmt"
+includes = ["*.nix"]
+
 [formatter.prettier]
 command = "prettier"
 options = ["--write"]
