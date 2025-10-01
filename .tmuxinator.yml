@@ -1,6 +1,10 @@
 name: textcast
 
 windows:
+  - service:
+      layout: even-horizontal
+      panes:
+        - make service
   - editor:
       layout: even-horizontal
       panes:
