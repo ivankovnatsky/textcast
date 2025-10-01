@@ -74,8 +74,8 @@ def fetch_content_with_requests(url):
         raise RenderError(f"Parsing failed: {e}")
 
 
-async def fetch_content_with_playwright(url: str) -> Tuple[str, str]:
-    """Fetch content using Playwright"""
+async def fetch_content_with_playwright(playwright, url: str) -> Tuple[str, str]:
+    """Fetch content using Playwright (async - currently unused)"""
     logger.debug(f"Starting fetch_content_with_playwright for URL: {url}")
     browser = None
     try:

@@ -11,6 +11,7 @@ from .common import (
 )
 from .condense import condense_text
 from .processor import process_texts
+from .service_cli import service
 
 logger = logging.getLogger(__name__)
 
@@ -281,10 +282,6 @@ def cli(
         }
 
         results = process_texts(urls, **kwargs)
-
-
-# Import and register service commands
-from .service_cli import service
 
 
 # Create main group

@@ -28,7 +28,7 @@ def validate_models(ctx, param, value):
         return value
     try:
         vendor = ctx.params["vendor"]
-    except:
+    except KeyError:
         vendor = "openai"
     logger.debug(f"Vendor for model validation: {vendor}")
     if vendor == "elevenlabs":
@@ -47,7 +47,7 @@ def validate_voice(ctx, param, value):
         return value
     try:
         vendor = ctx.params["vendor"]
-    except:
+    except KeyError:
         vendor = "openai"
     logger.debug(f"Vendor for voice validation: {vendor}")
     if vendor == "elevenlabs":
