@@ -3,6 +3,7 @@ Service configuration for textcast daemon mode.
 """
 
 import os
+import platform
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -131,10 +132,7 @@ def get_default_config_path() -> Path:
     """Get the default configuration file path."""
     home = Path.home()
 
-    if os.path.exists("/etc/nixos"):
-        # Linux/NixOS
-        return home / ".config" / "textcast-service" / "config.yaml"
-    else:
+    if platform.system() == "Darwin":
         # macOS
         return (
             home
@@ -143,6 +141,9 @@ def get_default_config_path() -> Path:
             / "textcast-service"
             / "config.yaml"
         )
+    else:
+        # Linux and other Unix-like systems
+        return home / ".config" / "textcast-service" / "config.yaml"
 
 
 def load_config(config_path: Optional[str] = None) -> ServiceConfig:
