@@ -1,18 +1,19 @@
-import click
 import logging
-from .processor import process_texts
+
+import click
+
+from .aggregator import detect_and_expand_aggregator
 from .common import (
     generate_lowercase_string,
+    process_text_to_audio,
     validate_models,
     validate_voice,
-    process_text_to_audio,
 )
 from .condense import condense_text
-from .models import ProcessingResult
-from .aggregator import detect_and_expand_aggregator
-from typing import List
+from .processor import process_texts
 
 logger = logging.getLogger(__name__)
+
 
 @click.command()
 @click.option("--url", type=str, help="URL of the text content to be fetched.")
@@ -147,7 +148,7 @@ def cli(
     # Validate Audiobookshelf arguments - all or none must be provided
     abs_args = [abs_url, abs_pod_lib_id, abs_pod_folder_id]
     abs_provided = [arg for arg in abs_args if arg is not None]
-    
+
     if abs_provided and len(abs_provided) != 3:
         missing_args = []
         if not abs_url:
@@ -156,7 +157,7 @@ def cli(
             missing_args.append("--abs-pod-lib-id")
         if not abs_pod_folder_id:
             missing_args.append("--abs-pod-folder-id")
-        
+
         raise click.UsageError(
             f"When using Audiobookshelf integration, all three arguments must be provided: "
             f"--abs-url, --abs-pod-lib-id, --abs-pod-folder-id. Missing: {', '.join(missing_args)}"
@@ -185,8 +186,17 @@ def cli(
         title = f"custom-text-podcast-{generate_lowercase_string()}"
         logger.info(f"Processing custom text with title: {title}")
         process_text_to_audio(
-            text, title, vendor, directory, audio_format, speech_model, voice, strip,
-            abs_url, abs_pod_lib_id, abs_pod_folder_id
+            text,
+            title,
+            vendor,
+            directory,
+            audio_format,
+            speech_model,
+            voice,
+            strip,
+            abs_url,
+            abs_pod_lib_id,
+            abs_pod_folder_id,
         )
     else:
         urls = []
@@ -198,20 +208,29 @@ def cli(
                 is_aggregator, article_urls = detect_and_expand_aggregator(url)
                 if is_aggregator:
                     if article_urls:
-                        logger.info(f"Detected aggregator with {len(article_urls)} articles")
+                        logger.info(
+                            f"Detected aggregator with {len(article_urls)} articles"
+                        )
                         if not yes:
-                            click.echo(f"\nFound {len(article_urls)} articles in aggregator page:")
+                            click.echo(
+                                f"\nFound {len(article_urls)} articles in aggregator page:"
+                            )
                             for idx, article_url in enumerate(article_urls[:10], 1):
                                 click.echo(f"  {idx}. {article_url}")
                             if len(article_urls) > 10:
                                 click.echo(f"  ... and {len(article_urls) - 10} more")
-                            if not click.confirm("\nDo you want to process all these articles?", default=True):
+                            if not click.confirm(
+                                "\nDo you want to process all these articles?",
+                                default=True,
+                            ):
                                 logger.info("User cancelled aggregator processing")
                                 return
                         urls.extend(article_urls)
                         aggregator_source = url  # Remember the aggregator source
                     else:
-                        logger.warning("Failed to extract articles from aggregator, treating as regular URL")
+                        logger.warning(
+                            "Failed to extract articles from aggregator, treating as regular URL"
+                        )
                         urls.append(url)
                 else:
                     urls.append(url)
@@ -225,11 +244,17 @@ def cli(
                 # Check each URL in the file for aggregators
                 for file_url in file_urls:
                     if aggregator or auto_detect_aggregator:
-                        is_aggregator, article_urls = detect_and_expand_aggregator(file_url)
+                        is_aggregator, article_urls = detect_and_expand_aggregator(
+                            file_url
+                        )
                         if is_aggregator and article_urls:
-                            logger.info(f"Expanded aggregator URL {file_url} to {len(article_urls)} articles")
+                            logger.info(
+                                f"Expanded aggregator URL {file_url} to {len(article_urls)} articles"
+                            )
                             urls.extend(article_urls)
-                            aggregator_source = file_url  # Remember the aggregator source
+                            aggregator_source = (
+                                file_url  # Remember the aggregator source
+                            )
                         else:
                             urls.append(file_url)
                     else:
@@ -237,35 +262,37 @@ def cli(
 
         # Create kwargs dict explicitly instead of using locals()
         kwargs = {
-            'vendor': vendor,
-            'directory': directory,
-            'audio_format': audio_format,
-            'speech_model': speech_model,
-            'text_model': text_model,
-            'voice': voice,
-            'strip': strip,
-            'yes': yes,
-            'debug': debug,
-            'condense': condense,
-            'condense_ratio': condense_ratio,
-            'abs_url': abs_url,
-            'abs_pod_lib_id': abs_pod_lib_id,
-            'abs_pod_folder_id': abs_pod_folder_id,
-            'file_url_list': file_url_list,  # Pass the file_url_list to process_texts
-            'aggregator_source': aggregator_source,  # Pass aggregator source if any
+            "vendor": vendor,
+            "directory": directory,
+            "audio_format": audio_format,
+            "speech_model": speech_model,
+            "text_model": text_model,
+            "voice": voice,
+            "strip": strip,
+            "yes": yes,
+            "debug": debug,
+            "condense": condense,
+            "condense_ratio": condense_ratio,
+            "abs_url": abs_url,
+            "abs_pod_lib_id": abs_pod_lib_id,
+            "abs_pod_folder_id": abs_pod_folder_id,
+            "file_url_list": file_url_list,  # Pass the file_url_list to process_texts
+            "aggregator_source": aggregator_source,  # Pass aggregator source if any
         }
-        
+
         results = process_texts(urls, **kwargs)
 
 
 # Import and register service commands
 from .service_cli import service
 
+
 # Create main group
 @click.group()
 def main():
     """Textcast - Convert text content to audio."""
     pass
+
 
 # Add existing CLI as a subcommand
 main.add_command(cli, name="process")

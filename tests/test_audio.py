@@ -1,9 +1,12 @@
-import pytest
 import traceback
 from pathlib import Path
+
+import pytest
 from click.testing import CliRunner
-from textcast.cli import cli
+
 from textcast.chunks import TEXT_SEND_LIMIT, split_text
+from textcast.cli import cli
+
 from .conftest import ARTICLE_URL_HTML, ARTICLE_URL_JS
 
 

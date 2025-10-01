@@ -1,9 +1,11 @@
 import logging
 import re
-from typing import List, Tuple, Optional, Dict, Any
+from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urljoin, urlparse
-from bs4 import BeautifulSoup
+
 import requests
+from bs4 import BeautifulSoup
+
 from .errors import ProcessingError
 
 logger = logging.getLogger(__name__)
@@ -11,20 +13,21 @@ logger = logging.getLogger(__name__)
 # Aggregator site configurations
 # Each site can have specific rules for extracting article links
 AGGREGATOR_CONFIGS: Dict[str, Dict[str, Any]] = {
-    'sreweekly.com': {
-        'name': 'SRE Weekly',
-        'link_selector': 'a[target="_blank"]',  # Only links with target="_blank"
-        'exclude_patterns': [
-            r'wp-content',  # WordPress assets
-            r'sreweekly\.com',  # Internal links
+    "sreweekly.com": {
+        "name": "SRE Weekly",
+        "link_selector": 'a[target="_blank"]',  # Only links with target="_blank"
+        "exclude_patterns": [
+            r"wp-content",  # WordPress assets
+            r"sreweekly\.com",  # Internal links
         ],
     },
 }
 
 # Known aggregator URL patterns for auto-detection
 AGGREGATOR_PATTERNS = [
-    r'sreweekly\.com',
+    r"sreweekly\.com",
 ]
+
 
 def get_aggregator_config(url: str) -> Optional[Dict[str, Any]]:
     """
@@ -46,6 +49,7 @@ def get_aggregator_config(url: str) -> Optional[Dict[str, Any]]:
 
     return None
 
+
 def is_aggregator_url(url: str) -> bool:
     """
     Detect if a URL is likely an aggregator page containing multiple article links.
@@ -66,6 +70,7 @@ def is_aggregator_url(url: str) -> bool:
 
     return False
 
+
 def extract_article_urls(url: str, html_content: str) -> List[str]:
     """
     Extract article URLs from an aggregator page.
@@ -77,7 +82,7 @@ def extract_article_urls(url: str, html_content: str) -> List[str]:
     Returns:
         List[str]: List of extracted article URLs
     """
-    soup = BeautifulSoup(html_content, 'html.parser')
+    soup = BeautifulSoup(html_content, "html.parser")
     article_urls = []
     seen_urls = set()
 
@@ -89,8 +94,8 @@ def extract_article_urls(url: str, html_content: str) -> List[str]:
     exclude_patterns = []
 
     if config:
-        link_selector = config.get('link_selector', link_selector)
-        exclude_patterns = config.get('exclude_patterns', [])
+        link_selector = config.get("link_selector", link_selector)
+        exclude_patterns = config.get("exclude_patterns", [])
         logger.debug(f"Using config for {config['name']}")
     else:
         logger.debug("Using default link extraction")
@@ -100,12 +105,16 @@ def extract_article_urls(url: str, html_content: str) -> List[str]:
     logger.debug(f"Found {len(links_to_process)} links with selector '{link_selector}'")
 
     for link in links_to_process:
-        href = link.get('href', '')
+        href = link.get("href", "")
         if not href:
             continue
 
         # Skip anchors, mailto, and javascript links
-        if href.startswith('#') or href.startswith('mailto:') or href.startswith('javascript:'):
+        if (
+            href.startswith("#")
+            or href.startswith("mailto:")
+            or href.startswith("javascript:")
+        ):
             continue
 
         # Convert relative URLs to absolute
@@ -113,11 +122,13 @@ def extract_article_urls(url: str, html_content: str) -> List[str]:
         parsed = urlparse(absolute_url)
 
         # Skip non-HTTP(S) URLs
-        if parsed.scheme not in ['http', 'https']:
+        if parsed.scheme not in ["http", "https"]:
             continue
 
         # Apply site-specific exclusion patterns
-        if any(re.search(pattern, absolute_url.lower()) for pattern in exclude_patterns):
+        if any(
+            re.search(pattern, absolute_url.lower()) for pattern in exclude_patterns
+        ):
             continue
 
         # Check if we've seen this URL already
@@ -128,6 +139,7 @@ def extract_article_urls(url: str, html_content: str) -> List[str]:
 
     logger.info(f"Extracted {len(article_urls)} unique article URLs from aggregator")
     return article_urls
+
 
 def process_aggregator_url(url: str) -> List[str]:
     """
@@ -160,7 +172,7 @@ def process_aggregator_url(url: str) -> List[str]:
             with sync_playwright() as p:
                 browser = p.chromium.launch(headless=True)
                 page = browser.new_page()
-                page.goto(url, wait_until='networkidle', timeout=30000)
+                page.goto(url, wait_until="networkidle", timeout=30000)
                 html_content = page.content()
                 browser.close()
         except Exception as e:
@@ -174,6 +186,7 @@ def process_aggregator_url(url: str) -> List[str]:
         raise ProcessingError("No article URLs found in aggregator page")
 
     return article_urls
+
 
 def detect_and_expand_aggregator(url: str) -> Tuple[bool, Optional[List[str]]]:
     """

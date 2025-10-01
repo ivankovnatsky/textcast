@@ -1,11 +1,14 @@
 from unittest.mock import patch
+
 from click.testing import CliRunner
+
 from textcast.cli import cli
 from textcast.filter_urls import filter_url
+
 from .conftest import (
     ARTICLE_URL_HTML,
-    FILTERED_URL,
     ARTICLE_URL_JS,
+    FILTERED_URL,
 )
 
 
@@ -51,7 +54,10 @@ def test_redirect_handling(mock_requests, capture_logging):
 @patch("textcast.filter_urls.get_final_url_with_browser")
 def test_js_redirect_handling(mock_browser_redirect, capture_logging):
     """Test handling of JavaScript-based redirects"""
-    mock_browser_redirect.return_value = ("https://youtube.com/watch?v=example123", True)
+    mock_browser_redirect.return_value = (
+        "https://youtube.com/watch?v=example123",
+        True,
+    )
 
     runner = CliRunner()
     runner.invoke(

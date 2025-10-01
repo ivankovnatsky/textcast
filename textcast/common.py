@@ -1,13 +1,15 @@
-import click
+import logging
 import os
 import random
 import re
 import string
-import logging
 from pathlib import Path
+
+import click
+
+from .audiobookshelf import upload_to_audiobookshelf
 from .elevenlabs import process_article_elevenlabs
 from .openai import process_article_openai
-from .audiobookshelf import upload_to_audiobookshelf
 
 logger = logging.getLogger(__name__)
 
@@ -67,20 +69,33 @@ def generate_lowercase_string():
 
 
 def process_text_to_audio(
-    text, title, vendor, directory, audio_format, model, voice, strip,
-    abs_url=None, abs_pod_lib_id=None, abs_pod_folder_id=None
+    text,
+    title,
+    vendor,
+    directory,
+    audio_format,
+    model,
+    voice,
+    strip,
+    abs_url=None,
+    abs_pod_lib_id=None,
+    abs_pod_folder_id=None,
 ):
     logger.info(f"Processing text to audio for title: {title}")
     logger.debug(
         f"Vendor: {vendor}, Format: {audio_format}, Model: {model}, Voice: {voice}"
     )
     logger.info(f"Text length: {len(text)} characters")
-    logger.debug(f"Text content being sent for audio conversion:\n{'-' * 50}\n{text}\n{'-' * 50}")
+    logger.debug(
+        f"Text content being sent for audio conversion:\n{'-' * 50}\n{text}\n{'-' * 50}"
+    )
 
     if strip:
         logger.debug(f"Stripping text to {strip} characters")
         text = text[:strip]
-        logger.debug(f"Text after stripping (length: {len(text)}):\n{'-' * 50}\n{text}\n{'-' * 50}")
+        logger.debug(
+            f"Text after stripping (length: {len(text)}):\n{'-' * 50}\n{text}\n{'-' * 50}"
+        )
 
     os.makedirs(directory, exist_ok=True)
     logger.debug(f"Ensuring directory exists: {directory}")
@@ -110,8 +125,12 @@ def process_text_to_audio(
                 os.remove(filename)
                 logger.info(f"Deleted local audio file: {filename}")
             except Exception as e:
-                logger.warning(f"Failed to delete local audio file {filename}: {str(e)}")
+                logger.warning(
+                    f"Failed to delete local audio file {filename}: {str(e)}"
+                )
         else:
-            logger.warning("Failed to upload to Audiobookshelf, but audio file was created successfully")
+            logger.warning(
+                "Failed to upload to Audiobookshelf, but audio file was created successfully"
+            )
     else:
         logger.debug("Audiobookshelf parameters not provided, skipping upload")

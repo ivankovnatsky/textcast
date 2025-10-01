@@ -2,7 +2,6 @@
 Service CLI commands for textcast daemon mode.
 """
 
-import click
 import logging
 import signal
 import subprocess
@@ -10,44 +9,56 @@ import sys
 import time
 from pathlib import Path
 
-from .service_config import load_config, create_example_config, get_default_config_path
-from .service_daemon import run_service, check_sources_once
+import click
+
+from .service_config import create_example_config, get_default_config_path, load_config
+from .service_daemon import check_sources_once, run_service
 
 logger = logging.getLogger(__name__)
 
 
 @click.group()
-@click.option('--config', type=click.Path(), help='Path to configuration file')
-@click.option('--debug', is_flag=True, help='Enable debug logging')
+@click.option("--config", type=click.Path(), help="Path to configuration file")
+@click.option("--debug", is_flag=True, help="Enable debug logging")
 @click.pass_context
 def service(ctx, config, debug):
     """Textcast service daemon commands."""
     ctx.ensure_object(dict)
-    ctx.obj['config'] = config
-    ctx.obj['debug'] = debug
+    ctx.obj["config"] = config
+    ctx.obj["debug"] = debug
 
     # Set up logging
     log_level = logging.DEBUG if debug else logging.INFO
     logging.basicConfig(
-        level=log_level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
 
 
 @service.command()
-@click.option('--foreground', '-f', is_flag=True, help='Run in foreground mode (default: daemon mode)')
-@click.option('--log-file', type=click.Path(), help='Log file path (overrides config)')
-@click.option('--no-watch', is_flag=True, help='Disable config file watching (watching enabled by default)')
+@click.option(
+    "--foreground",
+    "-f",
+    is_flag=True,
+    help="Run in foreground mode (default: daemon mode)",
+)
+@click.option("--log-file", type=click.Path(), help="Log file path (overrides config)")
+@click.option(
+    "--no-watch",
+    is_flag=True,
+    help="Disable config file watching (watching enabled by default)",
+)
 @click.pass_context
 def daemon(ctx, foreground, log_file, no_watch):
     """Run textcast service in daemon mode with automatic config file watching."""
-    config_path = ctx.obj.get('config')
+    config_path = ctx.obj.get("config")
 
     # Enable watching by default, disable only if explicitly requested
     watch_config = not no_watch
 
     if watch_config and foreground:
-        click.echo("Starting textcast service in foreground mode with config watching...")
+        click.echo(
+            "Starting textcast service in foreground mode with config watching..."
+        )
         _run_service_with_watcher(config_path, log_file)
     else:
         if foreground:
@@ -65,13 +76,13 @@ def daemon(ctx, foreground, log_file, no_watch):
 @click.pass_context
 def check(ctx):
     """Check all sources once and exit."""
-    config_path = ctx.obj.get('config')
+    config_path = ctx.obj.get("config")
     click.echo("Checking all sources once...")
     check_sources_once(config_path)
 
 
 @service.command()
-@click.option('--output', type=click.Path(), help='Output path for example config')
+@click.option("--output", type=click.Path(), help="Output path for example config")
 @click.pass_context
 def init_config(ctx, output):
     """Create an example configuration file."""
@@ -92,7 +103,7 @@ def init_config(ctx, output):
 @click.pass_context
 def status(ctx):
     """Show service configuration and status."""
-    config_path = ctx.obj.get('config')
+    config_path = ctx.obj.get("config")
 
     try:
         config = load_config(config_path)
@@ -123,14 +134,14 @@ def status(ctx):
                 click.echo(f"    Watch dir: {source.watch_dir}")
                 click.echo(f"    File patterns: {source.file_patterns}")
 
-        click.echo(f"\nProcessing:")
+        click.echo("\nProcessing:")
         click.echo(f"  Strategy: {config.processing.strategy}")
         click.echo(f"  Vendor: {config.processing.vendor}")
         click.echo(f"  Model: {config.processing.speech_model}")
         click.echo(f"  Voice: {config.processing.voice}")
 
         if config.audiobookshelf.server and config.audiobookshelf.api_key:
-            click.echo(f"\nAudiobookshelf:")
+            click.echo("\nAudiobookshelf:")
             click.echo(f"  Server: {config.audiobookshelf.server}")
             click.echo(f"  Library ID: {config.audiobookshelf.library_id}")
         else:
@@ -141,11 +152,11 @@ def status(ctx):
 
 
 @service.command()
-@click.argument('source_name')
+@click.argument("source_name")
 @click.pass_context
 def test_source(ctx, source_name):
     """Test a specific source configuration."""
-    config_path = ctx.obj.get('config')
+    config_path = ctx.obj.get("config")
 
     try:
         config = load_config(config_path)
@@ -165,6 +176,7 @@ def test_source(ctx, source_name):
 
         if source.type == "rss":
             from .rss_monitor import NewsletterMonitor
+
             monitor = NewsletterMonitor(source)
             urls = monitor.check_for_new_content()
             click.echo(f"Found {len(urls)} URLs:")
@@ -175,6 +187,7 @@ def test_source(ctx, source_name):
 
         elif source.type == "youtube":
             from .rss_monitor import YouTubeMonitor
+
             monitor = YouTubeMonitor(source)
             urls = monitor.check_for_new_content()
             click.echo(f"Found {len(urls)} videos:")
@@ -184,8 +197,12 @@ def test_source(ctx, source_name):
         elif source.type == "file":
             file_path = Path(source.file)
             if file_path.exists():
-                with open(file_path, 'r') as f:
-                    urls = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+                with open(file_path, "r") as f:
+                    urls = [
+                        line.strip()
+                        for line in f
+                        if line.strip() and not line.startswith("#")
+                    ]
                 click.echo(f"File contains {len(urls)} URLs")
             else:
                 click.echo("File does not exist")
@@ -193,8 +210,6 @@ def test_source(ctx, source_name):
         elif source.type == "upload":
             watch_dir = Path(source.watch_dir) if source.watch_dir else None
             if watch_dir and watch_dir.exists():
-                import glob
-                import fnmatch
 
                 all_files = []
                 for pattern in source.file_patterns:
@@ -241,8 +256,8 @@ def _run_service_with_watcher(config_path, log_file=None):
     click.echo("")
 
     try:
-        from watchdog.observers import Observer
         from watchdog.events import FileSystemEventHandler
+        from watchdog.observers import Observer
     except ImportError:
         click.echo("❌ watchdog package not found. Please install it:", err=True)
         click.echo("pip install watchdog", err=True)
@@ -258,7 +273,7 @@ def _run_service_with_watcher(config_path, log_file=None):
                 return
 
             # Only restart on config file changes
-            if event.src_path.endswith('.yaml') or event.src_path.endswith('.yml'):
+            if event.src_path.endswith(".yaml") or event.src_path.endswith(".yml"):
                 click.echo(f"\n📝 Config file changed: {event.src_path}")
                 click.echo("🔄 Restarting service...")
                 self.restart_service()
@@ -277,9 +292,15 @@ def _run_service_with_watcher(config_path, log_file=None):
             # Start new process
             click.echo(f"🚀 Starting service with config: {config_path}")
             cmd = [
-                sys.executable, "-m", "textcast", "service",
-                "--config", str(config_path), "daemon",
-                "--foreground", "--no-watch"
+                sys.executable,
+                "-m",
+                "textcast",
+                "service",
+                "--config",
+                str(config_path),
+                "daemon",
+                "--foreground",
+                "--no-watch",
             ]
 
             if log_file:
@@ -291,13 +312,14 @@ def _run_service_with_watcher(config_path, log_file=None):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                     universal_newlines=True,
-                    bufsize=1
+                    bufsize=1,
                 )
 
                 # Print output in real-time
                 import threading
+
                 def print_output():
-                    for line in iter(self.process.stdout.readline, ''):
+                    for line in iter(self.process.stdout.readline, ""):
                         if line:
                             click.echo(f"📋 {line.rstrip()}")
 
@@ -349,7 +371,9 @@ def _run_service_with_watcher(config_path, log_file=None):
 def watch(ctx):
     """Legacy command - use 'daemon --foreground' instead (watching is now enabled by default)."""
     click.echo("💡 The 'watch' command is deprecated.")
-    click.echo("🎯 Use 'textcast service daemon --foreground' instead (watching is now enabled by default)")
+    click.echo(
+        "🎯 Use 'textcast service daemon --foreground' instead (watching is now enabled by default)"
+    )
 
     # Forward to daemon command for compatibility
     ctx.invoke(daemon, foreground=True, log_file=None, no_watch=False)

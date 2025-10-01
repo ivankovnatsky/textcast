@@ -2,9 +2,9 @@
 # Copy this file to your config directory and customize as needed
 
 # Service settings
-check_interval: 5m  # Check external sources - REQUIRED time unit: 30s, 5m, 1h, 2d (no bare numbers)
-log_level: DEBUG    # DEBUG, INFO, WARNING, ERROR
-log_file: /tmp/textcast-service.log  # Optional: log to file
+check_interval: 5m # Check external sources - REQUIRED time unit: 30s, 5m, 1h, 2d (no bare numbers)
+log_level: DEBUG # DEBUG, INFO, WARNING, ERROR
+log_file: /tmp/textcast-service.log # Optional: log to file
 # Note: File sources are monitored by file watchers (immediate response to changes)
 
 # Content sources to monitor
@@ -12,15 +12,15 @@ sources:
   # RSS feed monitoring (newsletters, blogs, etc.)
   - type: rss
     name: sreweekly
-    enabled: false  # Disabled until duplicate processing bug is fixed
+    enabled: false # Disabled until duplicate processing bug is fixed
     url: https://sreweekly.com/feed
     check_duplicates: true
-    processing_strategy: condense  # Override global strategy for this source
+    processing_strategy: condense # Override global strategy for this source
 
   # YouTube channel monitoring
   - type: youtube
     name: serhii_sternenko
-    enabled: false  # Disabled until duplicate processing bug is fixed
+    enabled: false # Disabled until duplicate processing bug is fixed
     # Use the modern YouTube handle (recommended)
     channel_handle: "@STERNENKO"
     # Alternative methods:
@@ -42,7 +42,7 @@ sources:
     enabled: true
     watch_dir: /Volumes/Storage/Data/AudioBookShelf
     file_patterns: ["*.mp3", "*.m4a", "*.wav", "*.flac"]
-    check_duplicates: false  # Not applicable for upload sources
+    check_duplicates: false # Not applicable for upload sources
 
   # Upload processed articles from textcast service
   - type: upload
@@ -50,25 +50,25 @@ sources:
     enabled: true
     watch_dir: /Volumes/Storage/Data/Textcast/Audio
     file_patterns: ["*.mp3", "*.m4a", "*.wav", "*.flac"]
-    check_duplicates: false  # Not applicable for upload sources
+    check_duplicates: false # Not applicable for upload sources
 
 # Text processing configuration
 processing:
-  strategy: condense      # Global strategy: "condense" or "full"
-  condense_ratio: 0.5     # Condense to 50% of original length
-  text_model: gpt-4-turbo-preview    # OpenAI model for text processing
-  speech_model: tts-1-hd  # OpenAI TTS model
-  voice: nova             # TTS voice: alloy, echo, fable, onyx, nova, shimmer
-  audio_format: mp3       # Output audio format
-  output_dir: /Volumes/Storage/Data/Textcast/Audio  # Permanent audio storage directory
-  vendor: openai          # TTS vendor: openai, elevenlabs
+  strategy: condense # Global strategy: "condense" or "full"
+  condense_ratio: 0.5 # Condense to 50% of original length
+  text_model: gpt-4-turbo-preview # OpenAI model for text processing
+  speech_model: tts-1-hd # OpenAI TTS model
+  voice: nova # TTS voice: alloy, echo, fable, onyx, nova, shimmer
+  audio_format: mp3 # Output audio format
+  output_dir: /Volumes/Storage/Data/Textcast/Audio # Permanent audio storage directory
+  vendor: openai # TTS vendor: openai, elevenlabs
 
 # Audiobookshelf integration (automatic uploads by default)
 audiobookshelf:
-  server: ""  # Set your ABS_URL environment variable instead
-  api_key: ""  # Set your ABS_API_KEY environment variable instead
-  library_id: db54da2c-dc16-4fdb-8dd4-5375ae98f738  # Podcasts library
-  folder_id: c9d67ffa-8e94-41f6-b22d-3924cf9ff511   # Podcasts folder
+  server: "" # Set your ABS_URL environment variable instead
+  api_key: "" # Set your ABS_API_KEY environment variable instead
+  library_id: db54da2c-dc16-4fdb-8dd4-5375ae98f738 # Podcasts library
+  folder_id: c9d67ffa-8e94-41f6-b22d-3924cf9ff511 # Podcasts folder
 
 # Environment Variables Required:
 # export OPENAI_API_KEY="your-openai-api-key"

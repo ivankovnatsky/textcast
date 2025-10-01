@@ -1,9 +1,11 @@
 import io
-import time
 import logging
+import time
 from pathlib import Path
+
 from openai import OpenAI
 from pydub import AudioSegment
+
 from .chunks import split_text
 from .filename import generate_unique_filename
 

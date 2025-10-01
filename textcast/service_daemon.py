@@ -9,11 +9,10 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
-import threading
 
-from .service_config import ServiceConfig, SourceConfig, load_config
 # from .rss_monitor import NewsletterMonitor, YouTubeMonitor
 from .processor import process_texts
+from .service_config import ServiceConfig, SourceConfig, load_config
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +32,13 @@ class TextcastService:
                 continue
 
             if source.type == "rss":
-                logger.warning(f"RSS source '{source.name}' configured but not implemented yet")
+                logger.warning(
+                    f"RSS source '{source.name}' configured but not implemented yet"
+                )
             elif source.type == "youtube":
-                logger.warning(f"YouTube source '{source.name}' configured but not implemented yet")
+                logger.warning(
+                    f"YouTube source '{source.name}' configured but not implemented yet"
+                )
             elif source.type == "file":
                 # File sources will be monitored by file watchers
                 self._setup_file_watcher(source)
@@ -52,14 +55,18 @@ class TextcastService:
     def _setup_file_watcher(self, source: SourceConfig):
         """Set up file watcher for a file source."""
         try:
-            from watchdog.observers import Observer
             from watchdog.events import FileSystemEventHandler
+            from watchdog.observers import Observer
         except ImportError:
-            logger.warning("watchdog package not found. File sources will be checked via polling.")
+            logger.warning(
+                "watchdog package not found. File sources will be checked via polling."
+            )
             return
 
         if not source.file or not Path(source.file).exists():
-            logger.warning(f"File source {source.name}: file {source.file} does not exist")
+            logger.warning(
+                f"File source {source.name}: file {source.file} does not exist"
+            )
             return
 
         file_path = Path(source.file)
@@ -75,7 +82,9 @@ class TextcastService:
 
                 # Check if the modified file is our target file
                 if Path(event.src_path).resolve() == file_path.resolve():
-                    logger.info(f"File source {self.source.name} changed: {event.src_path}")
+                    logger.info(
+                        f"File source {self.source.name} changed: {event.src_path}"
+                    )
                     self.service._process_file_queue(self.source)
 
         handler = FileSourceHandler(self, source)
@@ -88,15 +97,18 @@ class TextcastService:
     def _setup_upload_watcher(self, source: SourceConfig):
         """Set up directory watcher for an upload source."""
         try:
-            from watchdog.observers import Observer
-            from watchdog.events import FileSystemEventHandler
             import fnmatch
+
+            from watchdog.events import FileSystemEventHandler
+            from watchdog.observers import Observer
         except ImportError:
             logger.warning("watchdog package not found. Upload sources will not work.")
             return
 
         if not source.watch_dir or not Path(source.watch_dir).exists():
-            logger.warning(f"Upload source {source.name}: directory {source.watch_dir} does not exist")
+            logger.warning(
+                f"Upload source {source.name}: directory {source.watch_dir} does not exist"
+            )
             return
 
         watch_path = Path(source.watch_dir)
@@ -115,7 +127,9 @@ class TextcastService:
                 # Check if file matches any of the patterns
                 for pattern in self.source.file_patterns:
                     if fnmatch.fnmatch(file_path.name.lower(), pattern.lower()):
-                        logger.info(f"Upload source {self.source.name}: new file detected: {file_path}")
+                        logger.info(
+                            f"Upload source {self.source.name}: new file detected: {file_path}"
+                        )
 
                         # Add debounce delay to prevent immediate processing during file creation
                         import threading
@@ -135,35 +149,53 @@ class TextcastService:
                                     current_time = time.time()
 
                                     if current_time - file_mtime < 10:
-                                        logger.debug(f"File {file_path.name} was recently modified, waiting for stability")
+                                        logger.debug(
+                                            f"File {file_path.name} was recently modified, waiting for stability"
+                                        )
                                         return
 
                                     # Check if file is not currently being processed by another event
                                     file_key = str(file_path)
 
                                     # Skip if this file was recently processed (within 10 seconds)
-                                    if (file_key in self.pending_files and
-                                        current_time - self.pending_files[file_key] < 10):
-                                        logger.debug(f"Skipping {file_path.name} - recently processed")
+                                    if (
+                                        file_key in self.pending_files
+                                        and current_time - self.pending_files[file_key]
+                                        < 10
+                                    ):
+                                        logger.debug(
+                                            f"Skipping {file_path.name} - recently processed"
+                                        )
                                         return
 
                                     # Mark file as being processed
                                     self.pending_files[file_key] = current_time
 
-                                    logger.info(f"File {file_path.name} is stable, proceeding with upload")
-                                    self.service._upload_to_audiobookshelf(file_path, self.source)
+                                    logger.info(
+                                        f"File {file_path.name} is stable, proceeding with upload"
+                                    )
+                                    self.service._upload_to_audiobookshelf(
+                                        file_path, self.source
+                                    )
 
                                     # Clean up old entries to prevent memory leaks
-                                    old_entries = [k for k, v in self.pending_files.items()
-                                                 if current_time - v > 60]
+                                    old_entries = [
+                                        k
+                                        for k, v in self.pending_files.items()
+                                        if current_time - v > 60
+                                    ]
                                     for k in old_entries:
                                         del self.pending_files[k]
 
                                 except OSError as e:
-                                    logger.debug(f"Error checking file {file_path.name}: {e}")
+                                    logger.debug(
+                                        f"Error checking file {file_path.name}: {e}"
+                                    )
                                     return
                             else:
-                                logger.debug(f"File {file_path.name} no longer exists, skipping upload")
+                                logger.debug(
+                                    f"File {file_path.name} no longer exists, skipping upload"
+                                )
 
                         # Start delayed upload in background thread
                         threading.Thread(target=delayed_upload, daemon=True).start()
@@ -174,7 +206,9 @@ class TextcastService:
         observer.schedule(handler, str(watch_path), recursive=True)
 
         self.file_watchers.append((observer, source.name))
-        logger.info(f"Set up upload watcher for {source.name}: {source.watch_dir} (patterns: {source.file_patterns})")
+        logger.info(
+            f"Set up upload watcher for {source.name}: {source.watch_dir} (patterns: {source.file_patterns})"
+        )
 
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals gracefully."""
@@ -204,12 +238,18 @@ class TextcastService:
             else:
                 remaining_hours = remaining_min // 60
                 remaining_min = remaining_min % 60
-                interval_str = f"{days}d{remaining_hours}h" + (f"{remaining_min}m" if remaining_min else "")
+                interval_str = f"{days}d{remaining_hours}h" + (
+                    f"{remaining_min}m" if remaining_min else ""
+                )
 
         enabled_sources = [s.name for s in self.config.sources if s.enabled]
         external_sources = []
-        file_sources = [s.name for s in self.config.sources if s.enabled and s.type == "file"]
-        upload_sources = [s.name for s in self.config.sources if s.enabled and s.type == "upload"]
+        file_sources = [
+            s.name for s in self.config.sources if s.enabled and s.type == "file"
+        ]
+        upload_sources = [
+            s.name for s in self.config.sources if s.enabled and s.type == "upload"
+        ]
 
         # Only show interval if external sources are enabled
         if external_sources:
@@ -253,7 +293,9 @@ class TextcastService:
                     if self.running:
                         self._check_external_sources()
             else:
-                logger.info("No external sources enabled, entering idle mode (file/upload watchers active)")
+                logger.info(
+                    "No external sources enabled, entering idle mode (file/upload watchers active)"
+                )
                 # Just wait for file watchers to do their work
                 while self.running:
                     time.sleep(1)
@@ -315,28 +357,30 @@ class TextcastService:
         source_strategy = source.processing_strategy or processing_config.strategy
 
         kwargs = {
-            'vendor': processing_config.vendor,
-            'directory': processing_config.output_dir,
-            'audio_format': processing_config.audio_format,
-            'speech_model': processing_config.speech_model,
-            'text_model': processing_config.text_model,
-            'voice': processing_config.voice,
-            'strip': None,
-            'yes': True,  # Auto-approve processing
-            'debug': False,
-            'condense': source_strategy == "condense",
-            'condense_ratio': processing_config.condense_ratio,
-            'aggregator': False,
-            'auto_detect_aggregator': True,
+            "vendor": processing_config.vendor,
+            "directory": processing_config.output_dir,
+            "audio_format": processing_config.audio_format,
+            "speech_model": processing_config.speech_model,
+            "text_model": processing_config.text_model,
+            "voice": processing_config.voice,
+            "strip": None,
+            "yes": True,  # Auto-approve processing
+            "debug": False,
+            "condense": source_strategy == "condense",
+            "condense_ratio": processing_config.condense_ratio,
+            "aggregator": False,
+            "auto_detect_aggregator": True,
         }
 
         # Add Audiobookshelf settings
         if self.config.audiobookshelf.server and self.config.audiobookshelf.api_key:
-            kwargs.update({
-                'abs_url': self.config.audiobookshelf.server,
-                'abs_pod_lib_id': self.config.audiobookshelf.library_id,
-                'abs_pod_folder_id': self.config.audiobookshelf.folder_id,
-            })
+            kwargs.update(
+                {
+                    "abs_url": self.config.audiobookshelf.server,
+                    "abs_pod_lib_id": self.config.audiobookshelf.library_id,
+                    "abs_pod_folder_id": self.config.audiobookshelf.folder_id,
+                }
+            )
 
         # Process the URLs
         results = process_texts(urls, **kwargs)
@@ -344,7 +388,9 @@ class TextcastService:
         # Log results
         successful = sum(1 for r in results if r.success)
         failed = len(results) - successful
-        logger.info(f"Processing complete for {source.name}: {successful} successful, {failed} failed")
+        logger.info(
+            f"Processing complete for {source.name}: {successful} successful, {failed} failed"
+        )
 
     def _process_file_queue(self, source: SourceConfig):
         """Process URLs from a file queue using textcast processing."""
@@ -354,13 +400,13 @@ class TextcastService:
 
         try:
             # Read URLs from queue
-            with open(source.file, 'r') as f:
+            with open(source.file, "r") as f:
                 urls = []
                 for line in f:
                     line = line.strip()
-                    if line and not line.startswith('#'):
+                    if line and not line.startswith("#"):
                         # Handle CSV format (url,strategy)
-                        url_parts = line.split(',')
+                        url_parts = line.split(",")
                         urls.append(url_parts[0])
 
             if not urls:
@@ -374,29 +420,31 @@ class TextcastService:
             source_strategy = source.processing_strategy or processing_config.strategy
 
             kwargs = {
-                'file_url_list': source.file,
-                'vendor': processing_config.vendor,
-                'directory': processing_config.output_dir,
-                'audio_format': processing_config.audio_format,
-                'speech_model': processing_config.speech_model,
-                'text_model': processing_config.text_model,
-                'voice': processing_config.voice,
-                'strip': None,
-                'yes': True,  # Auto-approve processing
-                'debug': False,
-                'condense': source_strategy == "condense",
-                'condense_ratio': processing_config.condense_ratio,
-                'aggregator': False,
-                'auto_detect_aggregator': True,
+                "file_url_list": source.file,
+                "vendor": processing_config.vendor,
+                "directory": processing_config.output_dir,
+                "audio_format": processing_config.audio_format,
+                "speech_model": processing_config.speech_model,
+                "text_model": processing_config.text_model,
+                "voice": processing_config.voice,
+                "strip": None,
+                "yes": True,  # Auto-approve processing
+                "debug": False,
+                "condense": source_strategy == "condense",
+                "condense_ratio": processing_config.condense_ratio,
+                "aggregator": False,
+                "auto_detect_aggregator": True,
             }
 
             # Add Audiobookshelf settings
             if self.config.audiobookshelf.server and self.config.audiobookshelf.api_key:
-                kwargs.update({
-                    'abs_url': self.config.audiobookshelf.server,
-                    'abs_pod_lib_id': self.config.audiobookshelf.library_id,
-                    'abs_pod_folder_id': self.config.audiobookshelf.folder_id,
-                })
+                kwargs.update(
+                    {
+                        "abs_url": self.config.audiobookshelf.server,
+                        "abs_pod_lib_id": self.config.audiobookshelf.library_id,
+                        "abs_pod_folder_id": self.config.audiobookshelf.folder_id,
+                    }
+                )
 
             # Process the URLs
             results = process_texts(urls, **kwargs)
@@ -405,24 +453,31 @@ class TextcastService:
             successful = sum(1 for r in results if r.success)
             failed = len(results) - successful
 
-            logger.info(f"Processing complete for {source.name}: {successful} successful, {failed} failed")
+            logger.info(
+                f"Processing complete for {source.name}: {successful} successful, {failed} failed"
+            )
 
         except Exception as e:
             logger.error(f"Error processing queue {source.file}: {e}", exc_info=True)
 
-
     def _upload_to_audiobookshelf(self, file_path: Path, source: SourceConfig):
         """Upload audio file to Audiobookshelf."""
         if not self.config.audiobookshelf.server:
-            logger.warning(f"Audiobookshelf server not configured, cannot upload {file_path}")
+            logger.warning(
+                f"Audiobookshelf server not configured, cannot upload {file_path}"
+            )
             return
 
         if not self.config.audiobookshelf.library_id:
-            logger.warning(f"Audiobookshelf library_id not configured, cannot upload {file_path}")
+            logger.warning(
+                f"Audiobookshelf library_id not configured, cannot upload {file_path}"
+            )
             return
 
         if not self.config.audiobookshelf.folder_id:
-            logger.warning(f"Audiobookshelf folder_id not configured, cannot upload {file_path}")
+            logger.warning(
+                f"Audiobookshelf folder_id not configured, cannot upload {file_path}"
+            )
             return
 
         try:
@@ -437,7 +492,7 @@ class TextcastService:
                 self.config.audiobookshelf.server,
                 self.config.audiobookshelf.library_id,
                 self.config.audiobookshelf.folder_id,
-                title=file_path.stem  # Use filename without extension as title
+                title=file_path.stem,  # Use filename without extension as title
             )
 
             if success:
@@ -449,25 +504,33 @@ class TextcastService:
                         file_path.unlink()
                         logger.info(f"Deleted uploaded file: {file_path.name}")
                     except Exception as e:
-                        logger.warning(f"Failed to delete uploaded file {file_path.name}: {e}")
+                        logger.warning(
+                            f"Failed to delete uploaded file {file_path.name}: {e}"
+                        )
                 else:
-                    logger.debug(f"File {file_path.name} already deleted (likely by another handler)")
+                    logger.debug(
+                        f"File {file_path.name} already deleted (likely by another handler)"
+                    )
             else:
                 logger.error(f"Failed to upload {file_path.name} to Audiobookshelf")
 
         except ImportError:
             logger.error("Audiobookshelf module not found. Cannot upload files.")
         except Exception as e:
-            logger.error(f"Error uploading {file_path.name} to Audiobookshelf: {e}", exc_info=True)
+            logger.error(
+                f"Error uploading {file_path.name} to Audiobookshelf: {e}",
+                exc_info=True,
+            )
 
     def _process_existing_upload_files(self, source: SourceConfig):
         """Process existing files in upload directory on service start."""
         if not source.watch_dir or not Path(source.watch_dir).exists():
-            logger.debug(f"Upload source {source.name}: directory {source.watch_dir} does not exist")
+            logger.debug(
+                f"Upload source {source.name}: directory {source.watch_dir} does not exist"
+            )
             return
 
         try:
-            import fnmatch
 
             watch_path = Path(source.watch_dir)
             existing_files = []
@@ -478,20 +541,29 @@ class TextcastService:
                 existing_files.extend(files)
 
             if existing_files:
-                logger.info(f"Found {len(existing_files)} existing files in {source.name} upload directory")
+                logger.info(
+                    f"Found {len(existing_files)} existing files in {source.name} upload directory"
+                )
 
                 for file_path in existing_files:
                     if file_path.is_file():  # Make sure it's actually a file
                         logger.info(f"Processing existing file: {file_path.name}")
                         self._upload_to_audiobookshelf(file_path, source)
             else:
-                logger.debug(f"No existing files found in {source.name} upload directory")
+                logger.debug(
+                    f"No existing files found in {source.name} upload directory"
+                )
 
         except Exception as e:
-            logger.error(f"Error processing existing upload files for {source.name}: {e}", exc_info=True)
+            logger.error(
+                f"Error processing existing upload files for {source.name}: {e}",
+                exc_info=True,
+            )
 
 
-def run_service(config_path: str = None, foreground: bool = False, log_file: str = None):
+def run_service(
+    config_path: str = None, foreground: bool = False, log_file: str = None
+):
     """Run the textcast service daemon."""
     # Load configuration
     try:
@@ -528,13 +600,11 @@ def run_service(config_path: str = None, foreground: bool = False, log_file: str
         handlers.append(logging.StreamHandler())
 
     # Configure logging
-    logging.basicConfig(
-        level=log_level,
-        format=log_format,
-        handlers=handlers
-    )
+    logging.basicConfig(level=log_level, format=log_format, handlers=handlers)
 
-    logger.info(f"Textcast service starting in {'foreground' if foreground else 'daemon'} mode")
+    logger.info(
+        f"Textcast service starting in {'foreground' if foreground else 'daemon'} mode"
+    )
     if effective_log_file:
         logger.info(f"Logging to file: {effective_log_file}")
 
@@ -554,7 +624,9 @@ def check_sources_once(config_path: str = None):
 
     # Set up logging
     log_level = getattr(logging, config.log_level.upper(), logging.INFO)
-    logging.basicConfig(level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    logging.basicConfig(
+        level=log_level, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
 
     # Create service and check once
     service = TextcastService(config)
