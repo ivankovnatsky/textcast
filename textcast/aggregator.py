@@ -16,10 +16,6 @@ AGGREGATOR_CONFIGS: Dict[str, Dict[str, Any]] = {
     "sreweekly.com": {
         "name": "SRE Weekly",
         "link_selector": 'a[target="_blank"]',  # Only links with target="_blank"
-        "exclude_patterns": [
-            r"wp-content",  # WordPress assets
-            r"sreweekly\.com",  # Internal links
-        ],
     },
 }
 
@@ -91,11 +87,9 @@ def extract_article_urls(url: str, html_content: str) -> List[str]:
 
     # Default selector if no specific config
     link_selector = 'a[target="_blank"]'  # Default: external links
-    exclude_patterns = []
 
     if config:
         link_selector = config.get("link_selector", link_selector)
-        exclude_patterns = config.get("exclude_patterns", [])
         logger.debug(f"Using config for {config['name']}")
     else:
         logger.debug("Using default link extraction")
@@ -123,12 +117,6 @@ def extract_article_urls(url: str, html_content: str) -> List[str]:
 
         # Skip non-HTTP(S) URLs
         if parsed.scheme not in ["http", "https"]:
-            continue
-
-        # Apply site-specific exclusion patterns
-        if any(
-            re.search(pattern, absolute_url.lower()) for pattern in exclude_patterns
-        ):
             continue
 
         # Check if we've seen this URL already
