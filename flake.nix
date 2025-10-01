@@ -47,6 +47,10 @@
             playwright-test
             playwright-driver.browsers
             gh
+            # Formatting tools
+            treefmt
+            nodePackages.prettier
+            ruff
           ];
           
           shellHook = ''
@@ -84,6 +88,10 @@
               (python312.withPackages pythonPackages)
               playwright-test
               gh
+              # Formatting tools
+              treefmt
+              nodePackages.prettier
+              ruff
             ];
             
             shellHook = ''
