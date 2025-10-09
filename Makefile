@@ -35,9 +35,7 @@ cast:
 		--condense \
 		--condense-ratio 0.5 \
 		--yes \
-		--abs-url "$$ABS_URL" \
-		--abs-pod-lib-id "db54da2c-dc16-4fdb-8dd4-5375ae98f738" \
-		--abs-pod-folder-id "c9d67ffa-8e94-41f6-b22d-3924cf9ff511"
+		--abs-url "$$ABS_URL"
 
 .PHONY: watch-cast
 watch-cast:

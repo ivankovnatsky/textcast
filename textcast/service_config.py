@@ -173,7 +173,7 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
         # Parse audiobookshelf config
         abs_data = data.get("audiobookshelf", {})
 
-        # Use environment variables if not provided in config
+        # Use environment variables if not provided in config (only for api_key and server)
         if not abs_data.get("api_key"):
             abs_data["api_key"] = os.getenv("ABS_API_KEY", "")
         if not abs_data.get("server"):
@@ -255,6 +255,25 @@ def save_config(config: ServiceConfig, config_path: Optional[str] = None) -> Non
 
 def create_example_config(config_path: Optional[str] = None) -> None:
     """Create an example configuration file."""
+    # Determine the path
+    if config_path is None:
+        config_path = get_default_config_path().parent / "config.example.yaml"
+    else:
+        config_path = Path(config_path)
+
+    # If example config already exists, load it to preserve values like library_id/folder_id
+    existing_abs_config = {}
+    if config_path.exists():
+        try:
+            existing_config = load_config(str(config_path))
+            existing_abs_config = {
+                "server": existing_config.audiobookshelf.server,
+                "library_id": existing_config.audiobookshelf.library_id,
+                "folder_id": existing_config.audiobookshelf.folder_id,
+            }
+        except Exception:
+            pass  # If loading fails, use defaults
+
     example_config = ServiceConfig(
         check_interval=5,  # Will be saved as 5 for backward compatibility
         sources=[
@@ -289,14 +308,11 @@ def create_example_config(config_path: Optional[str] = None) -> None:
             vendor="openai",
         ),
         audiobookshelf=AudiobookshelfConfig(
-            server="http://bee:8000",
-            library_id="db54da2c-dc16-4fdb-8dd4-5375ae98f738",
-            folder_id="c9d67ffa-8e94-41f6-b22d-3924cf9ff511",
+            server=existing_abs_config.get("server", ""),
+            library_id=existing_abs_config.get("library_id", ""),
+            folder_id=existing_abs_config.get("folder_id", ""),
         ),
         log_level="INFO",
     )
-
-    if config_path is None:
-        config_path = get_default_config_path().parent / "config.example.yaml"
 
     save_config(example_config, config_path)
