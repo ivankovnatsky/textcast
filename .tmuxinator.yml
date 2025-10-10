@@ -17,3 +17,8 @@ windows:
       layout: even-horizontal
       panes:
         - claude
+  - audiobookshelf:
+      layout: even-horizontal
+      root: /Volumes/Storage/Data/AudioBookShelf
+      panes:
+        -
