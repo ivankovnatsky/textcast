@@ -23,6 +23,50 @@ class AudiobookshelfClient:
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
 
+    def get_libraries(self):
+        """Fetch all libraries from Audiobookshelf."""
+        return self.make_request("GET", "/api/libraries")
+
+    def get_library_by_name(self, library_name: str):
+        """Get library ID and first folder ID by library name.
+
+        Args:
+            library_name: Name of the library to find
+
+        Returns:
+            dict with 'library_id' and 'folder_id' keys
+
+        Raises:
+            Exception if library not found
+        """
+        libraries = self.get_libraries()
+
+        if not libraries or not isinstance(libraries, dict):
+            raise Exception("Failed to fetch libraries from Audiobookshelf")
+
+        # libraries response has a 'libraries' key with array of library objects
+        libs = libraries.get("libraries", [])
+
+        for lib in libs:
+            if lib.get("name") == library_name:
+                library_id = lib.get("id")
+                folders = lib.get("folders", [])
+
+                if not folders:
+                    raise Exception(f"Library '{library_name}' has no folders")
+
+                folder_id = folders[0].get("id")
+
+                logger.info(f"Found library '{library_name}': {library_id}")
+                logger.info(f"Using first folder: {folder_id}")
+
+                return {
+                    "library_id": library_id,
+                    "folder_id": folder_id,
+                }
+
+        raise Exception(f"Library '{library_name}' not found. Available libraries: {[lib.get('name') for lib in libs]}")
+
     def make_request(self, method: str, endpoint: str, data=None, files=None):
         """Make an HTTP request to the Audiobookshelf API."""
         url = f"{self.base_url}{endpoint}"
@@ -112,22 +156,38 @@ class AudiobookshelfClient:
     def upload_file(
         self,
         file_path: Path,
-        library_id: str,
-        folder_id: str,
+        library: str,
+        folder_id: Optional[str] = None,
         title: Optional[str] = None,
     ):
         """Upload a file to a specific library.
 
         Args:
             file_path: Path to the file to upload
-            library_id: ID of the library to upload to
-            folder_id: ID of the folder to upload to
+            library: Library name (e.g., "Podcasts") or library ID (UUID)
+            folder_id: ID of the folder to upload to (optional, auto-detected if library is a name)
             title: Title for the media (optional, defaults to filename)
         """
         if not file_path.exists():
             raise FileNotFoundError(f"File '{file_path}' does not exist.")
 
         title = title or file_path.stem
+
+        # Determine if library is a name or ID
+        # UUIDs are 36 chars with dashes (e.g., "db54da2c-dc16-4fdb-8dd4-5375ae98f738")
+        is_library_id = len(library) == 36 and "-" in library
+
+        if is_library_id:
+            # Using library ID directly - folder_id must be provided
+            if not folder_id:
+                raise ValueError("folder_id is required when using library ID")
+            library_id = library
+        else:
+            # Using library name - look it up and auto-detect folder
+            logger.info(f"Looking up library by name: {library}")
+            lib_info = self.get_library_by_name(library)
+            library_id = lib_info["library_id"]
+            folder_id = lib_info["folder_id"]
 
         # Use required parameters
         data = {
@@ -141,7 +201,7 @@ class AudiobookshelfClient:
 
         logger.info("Uploading to Audiobookshelf:")
         logger.info(f"  URL: {self.base_url}")
-        logger.info(f"  Library ID: {library_id}")
+        logger.info(f"  Library: {library} -> {library_id}")
         logger.info(f"  Folder ID: {folder_id}")
         logger.info(f"  File: {file_path}")
         logger.info(f"  Title: {title}")
@@ -153,8 +213,8 @@ class AudiobookshelfClient:
 def upload_to_audiobookshelf(
     file_path: Path,
     abs_url: str,
-    abs_pod_lib_id: str,
-    abs_pod_folder_id: str,
+    library: str,
+    folder_id: Optional[str] = None,
     title: Optional[str] = None,
 ) -> bool:
     """
@@ -163,8 +223,8 @@ def upload_to_audiobookshelf(
     Args:
         file_path: Path to the audio file
         abs_url: Audiobookshelf server URL
-        abs_pod_lib_id: Podcast library ID
-        abs_pod_folder_id: Podcast folder ID
+        library: Library name (e.g., "Podcasts") or library ID (UUID)
+        folder_id: Optional folder ID (auto-detected if library is a name)
         title: Optional title for the upload
 
     Returns:
@@ -180,7 +240,7 @@ def upload_to_audiobookshelf(
         # Create client and upload
         client = AudiobookshelfClient(api_key, abs_url)
         response = client.upload_file(
-            file_path, abs_pod_lib_id, abs_pod_folder_id, title
+            file_path, library, folder_id, title
         )
 
         if response:

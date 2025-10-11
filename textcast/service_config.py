@@ -111,8 +111,9 @@ class AudiobookshelfConfig:
 
     server: str = "http://localhost:13378"
     api_key: str = ""
-    library_id: str = ""
-    folder_id: str = ""
+    library_name: str = "Podcasts"  # Library name (preferred over IDs)
+    library_id: str = ""  # Deprecated: use library_name instead
+    folder_id: str = ""  # Deprecated: auto-detected when using library_name
 
 
 @dataclass
@@ -242,6 +243,7 @@ def save_config(config: ServiceConfig, config_path: Optional[str] = None) -> Non
         "audiobookshelf": {
             "server": config.audiobookshelf.server,
             "api_key": config.audiobookshelf.api_key,
+            "library_name": config.audiobookshelf.library_name,
             "library_id": config.audiobookshelf.library_id,
             "folder_id": config.audiobookshelf.folder_id,
         },
@@ -261,15 +263,14 @@ def create_example_config(config_path: Optional[str] = None) -> None:
     else:
         config_path = Path(config_path)
 
-    # If example config already exists, load it to preserve values like library_id/folder_id
+    # If example config already exists, load it to preserve values like library_name
     existing_abs_config = {}
     if config_path.exists():
         try:
             existing_config = load_config(str(config_path))
             existing_abs_config = {
                 "server": existing_config.audiobookshelf.server,
-                "library_id": existing_config.audiobookshelf.library_id,
-                "folder_id": existing_config.audiobookshelf.folder_id,
+                "library_name": existing_config.audiobookshelf.library_name,
             }
         except Exception:
             pass  # If loading fails, use defaults
@@ -309,8 +310,7 @@ def create_example_config(config_path: Optional[str] = None) -> None:
         ),
         audiobookshelf=AudiobookshelfConfig(
             server=existing_abs_config.get("server", ""),
-            library_id=existing_abs_config.get("library_id", ""),
-            folder_id=existing_abs_config.get("folder_id", ""),
+            library_name=existing_abs_config.get("library_name", "Podcasts"),
         ),
         log_level="INFO",
     )

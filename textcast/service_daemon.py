@@ -468,15 +468,12 @@ class TextcastService:
             )
             return
 
-        if not self.config.audiobookshelf.library_id:
-            logger.warning(
-                f"Audiobookshelf library_id not configured, cannot upload {file_path}"
-            )
-            return
+        # Use library_name (preferred) or fall back to library_id for backward compatibility
+        library = self.config.audiobookshelf.library_name or self.config.audiobookshelf.library_id
 
-        if not self.config.audiobookshelf.folder_id:
+        if not library:
             logger.warning(
-                f"Audiobookshelf folder_id not configured, cannot upload {file_path}"
+                f"Audiobookshelf library not configured (set library_name or library_id), cannot upload {file_path}"
             )
             return
 
@@ -487,11 +484,12 @@ class TextcastService:
             logger.info(f"Uploading {file_path.name} to Audiobookshelf...")
 
             # Upload the file (API key comes from environment variable)
+            # folder_id is optional - auto-detected when using library_name
             success = upload_to_audiobookshelf(
                 file_path,  # Pass Path object, not string
                 self.config.audiobookshelf.server,
-                self.config.audiobookshelf.library_id,
-                self.config.audiobookshelf.folder_id,
+                library,  # Can be library name or ID
+                folder_id=self.config.audiobookshelf.folder_id or None,  # Optional
                 title=file_path.stem,  # Use filename without extension as title
             )
 
