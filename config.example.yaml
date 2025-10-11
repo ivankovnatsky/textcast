@@ -67,7 +67,7 @@ processing:
 audiobookshelf:
   server: "" # Set your ABS_URL environment variable instead
   api_key: "" # Set your ABS_API_KEY environment variable instead
-  library_name: Podcasts # Library name (preferred over IDs - resilient to server changes)
-  # Deprecated: library_id and folder_id (auto-detected from library_name)
+  library_name: "" # Library name (empty = auto-select first library, or specify like "Podcasts")
+  # Deprecated: library_id and folder_id (auto-detected)
   library_id: "" # Optional: Use if you want to specify library by UUID instead
-  folder_id: "" # Optional: Auto-detected when using library_name
+  folder_id: "" # Optional: Auto-detected
