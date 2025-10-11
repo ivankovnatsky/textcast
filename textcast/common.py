@@ -78,6 +78,9 @@ def process_text_to_audio(
     voice,
     strip,
     abs_url=None,
+    abs_library=None,  # Library name or ID
+    abs_folder_id=None,  # Optional folder ID (auto-detected if library is a name)
+    # Deprecated parameters for backward compatibility
     abs_pod_lib_id=None,
     abs_pod_folder_id=None,
 ):
@@ -112,11 +115,19 @@ def process_text_to_audio(
 
     logger.info(f"Audio processing complete for {title}")
 
+    # Handle backward compatibility with old parameter names
+    if abs_pod_lib_id and not abs_library:
+        abs_library = abs_pod_lib_id
+        logger.debug("Using deprecated abs_pod_lib_id parameter")
+    if abs_pod_folder_id and not abs_folder_id:
+        abs_folder_id = abs_pod_folder_id
+        logger.debug("Using deprecated abs_pod_folder_id parameter")
+
     # Upload to Audiobookshelf if parameters are provided
-    if abs_url and abs_pod_lib_id and abs_pod_folder_id:
+    if abs_url and abs_library:
         logger.info("Uploading to Audiobookshelf...")
         success = upload_to_audiobookshelf(
-            filename, abs_url, abs_pod_lib_id, abs_pod_folder_id, title
+            filename, abs_url, abs_library, abs_folder_id, title
         )
         if success:
             logger.info("Successfully uploaded to Audiobookshelf!")
