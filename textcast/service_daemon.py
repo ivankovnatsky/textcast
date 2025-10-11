@@ -469,13 +469,8 @@ class TextcastService:
             return
 
         # Use library_name (preferred) or fall back to library_id for backward compatibility
-        library = self.config.audiobookshelf.library_name or self.config.audiobookshelf.library_id
-
-        if not library:
-            logger.warning(
-                f"Audiobookshelf library not configured (set library_name or library_id), cannot upload {file_path}"
-            )
-            return
+        # If neither is set, upload_to_audiobookshelf will auto-select first library
+        library = self.config.audiobookshelf.library_name or self.config.audiobookshelf.library_id or None
 
         try:
             # Import audiobookshelf module

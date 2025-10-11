@@ -111,7 +111,7 @@ class AudiobookshelfConfig:
 
     server: str = "http://localhost:13378"
     api_key: str = ""
-    library_name: str = "Podcasts"  # Library name (preferred over IDs)
+    library_name: str = ""  # Library name (empty = auto-select first library)
     library_id: str = ""  # Deprecated: use library_name instead
     folder_id: str = ""  # Deprecated: auto-detected when using library_name
 
@@ -310,7 +310,7 @@ def create_example_config(config_path: Optional[str] = None) -> None:
         ),
         audiobookshelf=AudiobookshelfConfig(
             server=existing_abs_config.get("server", ""),
-            library_name=existing_abs_config.get("library_name", "Podcasts"),
+            library_name=existing_abs_config.get("library_name", ""),
         ),
         log_level="INFO",
     )
