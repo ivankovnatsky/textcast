@@ -42,6 +42,9 @@ class TextcastService:
             elif source.type == "file":
                 # File sources will be monitored by file watchers
                 self._setup_file_watcher(source)
+            elif source.type == "upload_file_process":
+                # File sources for audio processing (download and upload to ABS)
+                self._setup_file_watcher(source)
             elif source.type == "upload":
                 # Upload sources will be monitored by directory watchers
                 self._setup_upload_watcher(source)
@@ -85,7 +88,11 @@ class TextcastService:
                     logger.info(
                         f"File source {self.source.name} changed: {event.src_path}"
                     )
-                    self.service._process_file_queue(self.source)
+                    # Route to appropriate processor based on source type
+                    if self.source.type == "upload_file_process":
+                        self.service._process_audio_file_queue(self.source)
+                    else:
+                        self.service._process_file_queue(self.source)
 
         handler = FileSourceHandler(self, source)
         observer = Observer()
@@ -247,6 +254,9 @@ class TextcastService:
         file_sources = [
             s.name for s in self.config.sources if s.enabled and s.type == "file"
         ]
+        upload_file_sources = [
+            s.name for s in self.config.sources if s.enabled and s.type == "upload_file_process"
+        ]
         upload_sources = [
             s.name for s in self.config.sources if s.enabled and s.type == "upload"
         ]
@@ -258,6 +268,7 @@ class TextcastService:
         logger.info(f"Enabled sources: {enabled_sources}")
         logger.info(f"External sources (polled): {external_sources}")
         logger.info(f"File sources (watched): {file_sources}")
+        logger.info(f"Upload file sources (watched): {upload_file_sources}")
         logger.info(f"Upload sources (watched): {upload_sources}")
 
         self.running = True
@@ -276,6 +287,8 @@ class TextcastService:
             for source in self.config.sources:
                 if source.enabled and source.type == "file":
                     self._process_file_queue(source)
+                elif source.enabled and source.type == "upload_file_process":
+                    self._process_audio_file_queue(source)
 
             # Process existing files in upload directories once
             for source in self.config.sources:
@@ -459,6 +472,87 @@ class TextcastService:
 
         except Exception as e:
             logger.error(f"Error processing queue {source.file}: {e}", exc_info=True)
+
+    def _process_audio_file_queue(self, source: SourceConfig):
+        """Process URLs from a file queue for audio download and upload to Audiobookshelf."""
+        if not Path(source.file).exists():
+            logger.debug(f"Queue file does not exist: {source.file}")
+            return
+
+        try:
+            # Read URLs from queue
+            with open(source.file, "r") as f:
+                urls = []
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#"):
+                        urls.append(line)
+
+            if not urls:
+                logger.debug(f"No URLs to process in {source.file}")
+                return
+
+            logger.info(f"Processing {len(urls)} URLs from {source.name} for audio download")
+
+            # Check if Audiobookshelf is configured
+            if not self.config.audiobookshelf.server:
+                logger.error("Audiobookshelf server not configured")
+                return
+
+            # Import the processing function
+            from .audiobookshelf import process_url_to_audiobookshelf
+
+            # Use library_name (preferred) or fall back to library_id for backward compatibility
+            library = self.config.audiobookshelf.library_name or self.config.audiobookshelf.library_id or None
+
+            # Process each URL
+            successful_urls = []
+            failed_urls = []
+
+            for url in urls:
+                logger.info(f"Processing URL: {url}")
+                try:
+                    success = process_url_to_audiobookshelf(
+                        url,
+                        self.config.audiobookshelf.server,
+                        library=library,
+                        folder_id=self.config.audiobookshelf.folder_id or None,
+                    )
+
+                    if success:
+                        successful_urls.append(url)
+                        logger.info(f"Successfully processed: {url}")
+                    else:
+                        failed_urls.append(url)
+                        logger.error(f"Failed to process: {url}")
+
+                except Exception as e:
+                    failed_urls.append(url)
+                    logger.error(f"Error processing {url}: {e}", exc_info=True)
+
+            # Remove successfully processed URLs from the file
+            if successful_urls:
+                try:
+                    with open(source.file, "r") as f:
+                        lines = f.readlines()
+
+                    with open(source.file, "w") as f:
+                        for line in lines:
+                            stripped_line = line.strip()
+                            if stripped_line not in successful_urls:
+                                f.write(line)
+
+                    logger.info(f"Removed {len(successful_urls)} successfully processed URLs from {source.file}")
+                except Exception as e:
+                    logger.error(f"Error updating queue file {source.file}: {e}", exc_info=True)
+
+            # Log results
+            logger.info(
+                f"Audio processing complete for {source.name}: {len(successful_urls)} successful, {len(failed_urls)} failed"
+            )
+
+        except Exception as e:
+            logger.error(f"Error processing audio queue {source.file}: {e}", exc_info=True)
 
     def _upload_to_audiobookshelf(self, file_path: Path, source: SourceConfig):
         """Upload audio file to Audiobookshelf."""

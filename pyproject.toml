@@ -23,6 +23,7 @@ dependencies = [
     "requests",
     "simpleaudio; sys_platform == 'darwin'",
     "watchdog",
+    "yt-dlp",
 ]
 
 [project.urls]
@@ -31,7 +32,46 @@ Changelog = "https://github.com/ivankovnatsky/textcast/releases"
 Issues = "https://github.com/ivankovnatsky/textcast/issues"
 CI = "https://github.com/ivankovnatsky/textcast/actions"
 
-[project.entry-points.console_scripts]
+[project.scripts]
+textcast = "textcast.cli:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "textcast"
+version = "0.1.27"
+description = "CLI tool for converting text to audio using TTS APIs"
+authors = ["Ivan Kovnatsky"]
+readme = "README.md"
+license = "MIT"
+homepage = "https://github.com/ivankovnatsky/textcast"
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+beautifulsoup4 = "*"
+click = "*"
+elevenlabs = "*"
+feedparser = "*"
+lxml = {extras = ["html_clean"], version = "*"}
+openai = ">=1.0"
+playwright = "*"
+pydub = "*"
+PyYAML = "*"
+readability-lxml = "*"
+requests = "*"
+simpleaudio = {version = "*", markers = "sys_platform == 'darwin'"}
+watchdog = "*"
+yt-dlp = "*"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+cogapp = "*"
+requests-mock = "*"
+autoflake = "*"
+
+[tool.poetry.scripts]
 textcast = "textcast.cli:main"
 
 [tool.setuptools]

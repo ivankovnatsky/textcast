@@ -22,6 +22,8 @@
         isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
 
         # Common Python packages for both platforms
+        # NOTE: Keep in sync with pyproject.toml [tool.poetry.dependencies]
+        # TODO: Migrate to poetry2nix when riscv64 support is fixed
         pythonPackages =
           ps: with ps; [
             # Core Dependencies
@@ -37,6 +39,7 @@
             readability-lxml
             requests
             watchdog
+            yt-dlp
             # Development & Testing
             pytest
             requests-mock
