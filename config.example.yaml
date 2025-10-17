@@ -36,6 +36,14 @@ sources:
     file: /Volumes/Storage/Data/Textcast/Texts/Texts.txt
     check_duplicates: true
 
+  # Process URLs from file for audio download and upload to Audiobookshelf
+  # Downloads audio using yt-dlp and uploads directly to ABS (bypasses TTS)
+  - type: upload_file_process
+    name: audiobookshelf_upload_process
+    enabled: true
+    file: /Volumes/Storage/Data/Tmp/AudioBookShelf/List.txt
+    check_duplicates: false
+
   # Upload directory monitoring (auto-upload audio files to Audiobookshelf)
   - type: upload
     name: audiobookshelf_upload
