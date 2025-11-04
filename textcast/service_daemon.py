@@ -12,6 +12,7 @@ from typing import Dict, List
 
 # from .rss_monitor import NewsletterMonitor, YouTubeMonitor
 from .processor import process_texts
+from .server import TextcastServer
 from .service_config import ServiceConfig, SourceConfig, load_config
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ class TextcastService:
         self.running = False
         self.monitors: Dict[str, object] = {}
         self.file_watchers = []  # Store file watchers
+        self.server = TextcastServer(config)  # Initialize web server
 
         # Initialize monitors for each source
         for source in config.sources:
@@ -278,6 +280,9 @@ class TextcastService:
         self.running = True
 
         try:
+            # Start web server if enabled
+            self.server.start()
+
             # Start file watchers
             for observer, source_name in self.file_watchers:
                 observer.start()
@@ -332,6 +337,7 @@ class TextcastService:
     def stop(self):
         """Stop the service daemon."""
         self.running = False
+        self.server.stop()
 
     def _check_external_sources(self):
         """Check external sources (RSS, YouTube) for new content."""

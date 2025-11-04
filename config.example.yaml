@@ -79,3 +79,10 @@ audiobookshelf:
   # Deprecated: library_id and folder_id (auto-detected)
   library_id: "" # Optional: Use if you want to specify library by UUID instead
   folder_id: "" # Optional: Auto-detected
+
+# Web server for adding URLs via web interface
+server:
+  enabled: true # Enable web server
+  host: 127.0.0.1 # Bind to localhost (use 0.0.0.0 for all interfaces)
+  port: 8084 # Port to listen on
+  base_url: "" # Optional: Override base URL (auto-generated if empty)
