@@ -35,6 +35,7 @@ def service(ctx, config, debug):
 
 
 @service.command()
+@click.option("--config", type=click.Path(), help="Path to configuration file")
 @click.option(
     "--foreground",
     "-f",
@@ -48,9 +49,10 @@ def service(ctx, config, debug):
     help="Disable config file watching (watching enabled by default)",
 )
 @click.pass_context
-def daemon(ctx, foreground, log_file, no_watch):
+def daemon(ctx, config, foreground, log_file, no_watch):
     """Run textcast service in daemon mode with automatic config file watching."""
-    config_path = ctx.obj.get("config")
+    # Use command-line config if provided, otherwise fall back to group-level config
+    config_path = config or ctx.obj.get("config")
 
     # Enable watching by default, disable only if explicitly requested
     watch_config = not no_watch
@@ -73,10 +75,11 @@ def daemon(ctx, foreground, log_file, no_watch):
 
 
 @service.command()
+@click.option("--config", type=click.Path(), help="Path to configuration file")
 @click.pass_context
-def check(ctx):
+def check(ctx, config):
     """Check all sources once and exit."""
-    config_path = ctx.obj.get("config")
+    config_path = config or ctx.obj.get("config")
     click.echo("Checking all sources once...")
     check_sources_once(config_path)
 
@@ -100,10 +103,11 @@ def init_config(ctx, output):
 
 
 @service.command()
+@click.option("--config", type=click.Path(), help="Path to configuration file")
 @click.pass_context
-def status(ctx):
+def status(ctx, config):
     """Show service configuration and status."""
-    config_path = ctx.obj.get("config")
+    config_path = config or ctx.obj.get("config")
 
     try:
         config = load_config(config_path)
@@ -152,11 +156,12 @@ def status(ctx):
 
 
 @service.command()
+@click.option("--config", type=click.Path(), help="Path to configuration file")
 @click.argument("source_name")
 @click.pass_context
-def test_source(ctx, source_name):
+def test_source(ctx, config, source_name):
     """Test a specific source configuration."""
-    config_path = ctx.obj.get("config")
+    config_path = config or ctx.obj.get("config")
 
     try:
         config = load_config(config_path)
