@@ -47,15 +47,44 @@
             # Code Quality
             autoflake
           ];
+
+        # Python environment with all dependencies
+        pythonEnv = pkgs.python312.withPackages pythonPackages;
+
+        # Package the service
+        textcastPackage = pkgs.python312Packages.buildPythonApplication {
+          pname = "textcast";
+          version = "0.1.0";
+          pyproject = true;
+
+          src = ./.;
+
+          build-system = with pkgs.python312Packages; [
+            poetry-core
+          ];
+
+          dependencies = pythonPackages pkgs.python312Packages;
+
+          meta = with pkgs.lib; {
+            description = "Text to Audio Podcast Service";
+            homepage = "https://github.com/ivankovnatsky/textcast";
+            license = licenses.mit;
+          };
+        };
       in
       # Linux-specific configuration
       (
         if isLinux then
           {
+            packages = {
+              textcast = textcastPackage;
+              default = textcastPackage;
+            };
+
             devShells.default = pkgs.mkShell {
               buildInputs = with pkgs; [
                 ffmpeg
-                (python312.withPackages pythonPackages)
+                pythonEnv
                 playwright-test
                 playwright-driver.browsers
                 gh
@@ -80,6 +109,11 @@
         # macOS-specific configuration
         else
           {
+            packages = {
+              textcast = textcastPackage;
+              default = textcastPackage;
+            };
+
             devShells.default =
               let
                 playwright-browsers-chromium = pkgs.stdenv.mkDerivation {
@@ -99,7 +133,7 @@
               pkgs.mkShell {
                 buildInputs = with pkgs; [
                   ffmpeg
-                  (python312.withPackages pythonPackages)
+                  pythonEnv
                   playwright-test
                   gh
                   # Formatting tools
