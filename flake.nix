@@ -59,6 +59,14 @@
 
           src = ./.;
 
+          nativeBuildInputs = [ pkgs.makeWrapper ];
+
+          buildInputs = [
+            pkgs.coreutils
+            pkgs.ffmpeg
+            pkgs.playwright-driver.browsers
+          ];
+
           build-system = with pkgs.python312Packages; [
             poetry-core
           ];
@@ -68,6 +76,13 @@
           # Disable runtime dependency check - simpleaudio is optional (Darwin-only)
           # and causes platform issues by pulling in alsa-lib (Linux-only)
           dontCheckRuntimeDeps = true;
+
+          postFixup = ''
+            wrapProgram $out/bin/textcast \
+              --prefix PATH : "${pkgs.lib.makeBinPath [ pkgs.coreutils pkgs.ffmpeg ]}" \
+              --set PLAYWRIGHT_BROWSERS_PATH "${pkgs.playwright-driver.browsers}" \
+              --set PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS "true"
+          '';
 
           meta = with pkgs.lib; {
             description = "Text to Audio Podcast Service";
@@ -87,6 +102,7 @@
 
             devShells.default = pkgs.mkShell {
               buildInputs = with pkgs; [
+                coreutils
                 ffmpeg
                 pythonEnv
                 playwright-test
@@ -101,7 +117,9 @@
 
               shellHook = ''
                 echo "Setting up Playwright for Linux environment..."
-                export PLAYWRIGHT_BROWSERS_PATH=${pkgs.playwright-driver.browsers}
+                export PATH="${pkgs.coreutils}/bin:${pkgs.ffmpeg}/bin:$PATH"
+                export PLAYWRIGHT_BROWSERS_PATH="${pkgs.playwright-driver.browsers}"
+                export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
 
                 export OPENAI_API_KEY=$(cat .secrets/openai-api-key)
                 export ELEVEN_API_KEY=$(cat .secrets/eleven-api-key)
@@ -118,45 +136,33 @@
               default = textcastPackage;
             };
 
-            devShells.default =
-              let
-                playwright-browsers-chromium = pkgs.stdenv.mkDerivation {
-                  pname = "playwright-browsers-chromium";
-                  version = pkgs.playwright-test.version;
+            devShells.default = pkgs.mkShell {
+              buildInputs = with pkgs; [
+                coreutils
+                ffmpeg
+                pythonEnv
+                playwright-test
+                playwright-driver.browsers
+                gh
+                # Formatting tools
+                treefmt
+                nodePackages.prettier
+                nixfmt-rfc-style
+                ruff
+              ];
 
-                  dontUnpack = true;
-                  nativeBuildInputs = [ pkgs.cacert ];
+              shellHook = ''
+                echo "Setting up Playwright for macOS environment..."
+                export PATH="${pkgs.coreutils}/bin:${pkgs.ffmpeg}/bin:$PATH"
+                export PLAYWRIGHT_BROWSERS_PATH="${pkgs.playwright-driver.browsers}"
+                export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
 
-                  installPhase = ''
-                    export PLAYWRIGHT_BROWSERS_PATH=$out
-                    ${pkgs.playwright-test}/bin/playwright install chromium
-                    rm -r $out/.links
-                  '';
-                };
-              in
-              pkgs.mkShell {
-                buildInputs = with pkgs; [
-                  ffmpeg
-                  pythonEnv
-                  playwright-test
-                  gh
-                  # Formatting tools
-                  treefmt
-                  nodePackages.prettier
-                  nixfmt-rfc-style
-                  ruff
-                ];
-
-                shellHook = ''
-                  echo "Setting up Playwright for macOS environment..."
-                  export PLAYWRIGHT_BROWSERS_PATH="${playwright-browsers-chromium}"
-
-                  export OPENAI_API_KEY=$(cat .secrets/openai-api-key)
-                  export ELEVEN_API_KEY=$(cat .secrets/eleven-api-key)
-                  export ABS_API_KEY=$(cat .secrets/abs-api-key)
-                  export ABS_URL=$(cat .secrets/abs-url)
-                '';
-              };
+                export OPENAI_API_KEY=$(cat .secrets/openai-api-key)
+                export ELEVEN_API_KEY=$(cat .secrets/eleven-api-key)
+                export ABS_API_KEY=$(cat .secrets/abs-api-key)
+                export ABS_URL=$(cat .secrets/abs-url)
+              '';
+            };
           }
       )
     );
