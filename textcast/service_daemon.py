@@ -66,13 +66,17 @@ class TextcastService:
             )
             return
 
-        if not source.file or not Path(source.file).exists():
-            logger.warning(
-                f"File source {source.name}: file {source.file} does not exist"
-            )
+        if not source.file:
+            logger.warning(f"File source {source.name}: no file specified")
             return
 
         file_path = Path(source.file)
+
+        # Create file if it doesn't exist
+        if not file_path.exists():
+            logger.info(f"File source {source.name}: creating file {source.file}")
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.touch()
 
         class FileSourceHandler(FileSystemEventHandler):
             def __init__(self, service_ref, source_config):
