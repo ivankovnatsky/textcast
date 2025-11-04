@@ -5,6 +5,7 @@ from typing import List, Optional
 
 import click
 
+from .aggregator import detect_and_expand_aggregator
 from .common import process_text_to_audio
 from .condense import condense_text
 from .constants import MIN_CONTENT_LENGTH, SUSPICIOUS_TEXTS
@@ -39,8 +40,31 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
     """
     results = []
     aggregator_source = kwargs.get("aggregator_source")
+    auto_detect_aggregator = kwargs.get("auto_detect_aggregator", True)
+
+    # Expand aggregator URLs if auto-detection is enabled
+    expanded_urls = []
+    aggregator_sources = {}  # Map article URLs to their aggregator source
 
     for url in urls:
+        if auto_detect_aggregator:
+            is_aggregator, article_urls = detect_and_expand_aggregator(url)
+            if is_aggregator and article_urls:
+                logger.info(
+                    f"Detected aggregator URL {url}, expanded to {len(article_urls)} articles"
+                )
+                expanded_urls.extend(article_urls)
+                # Track which aggregator each article came from
+                for article_url in article_urls:
+                    aggregator_sources[article_url] = url
+            else:
+                # Not an aggregator or failed to expand, process as regular URL
+                expanded_urls.append(url)
+        else:
+            expanded_urls.append(url)
+
+    # Process the expanded URLs
+    for url in expanded_urls:
         try:
             if not filter_url(url):
                 logger.info(f"Skipping URL: {url}")
@@ -162,7 +186,8 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
 
             # Remove successfully processed URL from the file immediately
             file_url_list = kwargs.get("file_url_list")
-            aggregator_source = kwargs.get("aggregator_source")
+            # Check if this URL came from an aggregator
+            current_aggregator = aggregator_sources.get(url)
 
             if file_url_list and os.path.exists(file_url_list):
                 try:
@@ -172,10 +197,10 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
                     # If this came from an aggregator, we need to remove the aggregator URL
                     # only when all articles are processed (this is handled elsewhere)
                     # For now, just log appropriately
-                    if aggregator_source:
+                    if current_aggregator:
                         # Don't remove individual article URLs, they weren't in the file
                         logger.info(
-                            f"Processed article from aggregator {aggregator_source}: {url}"
+                            f"Processed article from aggregator {current_aggregator}: {url}"
                         )
                     else:
                         # Remove the URL from the file (it was directly in the file)
@@ -225,8 +250,9 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
 
             continue
 
-    # Remove aggregator URL from file after all articles are processed
-    if aggregator_source:
+    # Remove aggregator URLs from file after all their articles are processed
+    unique_aggregators = set(aggregator_sources.values())
+    if unique_aggregators:
         file_url_list = kwargs.get("file_url_list")
         if file_url_list and os.path.exists(file_url_list):
             try:
@@ -235,16 +261,23 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
 
                 with open(file_url_list, "w") as f:
                     for line in lines:
-                        if line.strip() != aggregator_source:
+                        if line.strip() not in unique_aggregators:
                             f.write(line)
 
-                # Count successful articles from this aggregator
-                successful_from_aggregator = sum(1 for r in results if r.success)
-                logger.info(
-                    f"Removed aggregator URL from {file_url_list} after processing {successful_from_aggregator} articles: {aggregator_source}"
-                )
+                # Log each aggregator that was processed
+                for aggregator_url in unique_aggregators:
+                    articles_from_aggregator = [
+                        url for url, agg in aggregator_sources.items() if agg == aggregator_url
+                    ]
+                    successful_from_aggregator = sum(
+                        1 for r in results
+                        if r.success and r.url in articles_from_aggregator
+                    )
+                    logger.info(
+                        f"Removed aggregator URL from {file_url_list} after processing {successful_from_aggregator}/{len(articles_from_aggregator)} articles: {aggregator_url}"
+                    )
             except Exception as e:
-                logger.error(f"Failed to remove aggregator URL from file: {str(e)}")
+                logger.error(f"Failed to remove aggregator URLs from file: {str(e)}")
 
     # Update summary to include skipped count
     successful = sum(1 for r in results if r.success)
