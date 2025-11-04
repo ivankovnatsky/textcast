@@ -38,6 +38,7 @@
             pyyaml
             readability-lxml
             requests
+            simpleaudio
             watchdog
             yt-dlp
             # Development & Testing
