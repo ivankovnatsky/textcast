@@ -38,7 +38,6 @@
             pyyaml
             readability-lxml
             requests
-            simpleaudio
             watchdog
             yt-dlp
             # Development & Testing
@@ -65,6 +64,10 @@
           ];
 
           dependencies = pythonPackages pkgs.python312Packages;
+
+          # Disable runtime dependency check - simpleaudio is optional (Darwin-only)
+          # and causes platform issues by pulling in alsa-lib (Linux-only)
+          dontCheckRuntimeDeps = true;
 
           meta = with pkgs.lib; {
             description = "Text to Audio Podcast Service";
