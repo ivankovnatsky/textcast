@@ -31,6 +31,7 @@
             click
             elevenlabs
             feedparser
+            flask
             lxml
             openai
             playwright

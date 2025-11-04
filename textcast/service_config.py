@@ -117,6 +117,16 @@ class AudiobookshelfConfig:
 
 
 @dataclass
+class ServerConfig:
+    """Configuration for web server."""
+
+    enabled: bool = False
+    host: str = "127.0.0.1"
+    port: int = 8084
+    base_url: Optional[str] = None  # Auto-generated if not set
+
+
+@dataclass
 class ServiceConfig:
     """Main service configuration."""
 
@@ -125,6 +135,7 @@ class ServiceConfig:
     sources: List[SourceConfig] = field(default_factory=list)
     processing: ProcessingConfig = field(default_factory=ProcessingConfig)
     audiobookshelf: AudiobookshelfConfig = field(default_factory=AudiobookshelfConfig)
+    server: ServerConfig = field(default_factory=ServerConfig)
     log_level: str = "INFO"
     log_file: Optional[str] = None
 
@@ -182,6 +193,10 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
 
         audiobookshelf = AudiobookshelfConfig(**abs_data)
 
+        # Parse server config
+        server_data = data.get("server", {})
+        server = ServerConfig(**server_data)
+
         # Create main config
         config = ServiceConfig(
             check_interval=parse_interval(data.get("check_interval", "5m")),
@@ -189,6 +204,7 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
             sources=sources,
             processing=processing,
             audiobookshelf=audiobookshelf,
+            server=server,
             log_level=data.get("log_level", "INFO"),
             log_file=data.get("log_file"),
         )
