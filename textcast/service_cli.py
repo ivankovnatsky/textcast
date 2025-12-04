@@ -325,7 +325,7 @@ def _run_service_with_watcher(config_path, log_file=None):
                 def print_output():
                     for line in iter(self.process.stdout.readline, ""):
                         if line:
-                            click.echo(f"📋 {line.rstrip()}")
+                            click.echo(line.rstrip())
 
                 output_thread = threading.Thread(target=print_output, daemon=True)
                 output_thread.start()
