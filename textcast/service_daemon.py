@@ -399,19 +399,24 @@ class TextcastService:
             "auto_detect_aggregator": True,
         }
 
-        # Add Audiobookshelf settings
-        if self.config.audiobookshelf.server and self.config.audiobookshelf.api_key:
-            kwargs.update(
-                {
-                    "abs_url": self.config.audiobookshelf.server,
-                    "abs_pod_lib_id": self.config.audiobookshelf.library_id,
-                    "abs_pod_folder_id": self.config.audiobookshelf.folder_id,
-                }
-            )
+        # Use destinations list (new format)
+        if self.config.destinations:
+            kwargs["destinations"] = self.config.destinations
+        else:
+            # Fall back to legacy config for backward compatibility
+            # Add Audiobookshelf settings
+            if self.config.audiobookshelf.server and self.config.audiobookshelf.api_key:
+                kwargs.update(
+                    {
+                        "abs_url": self.config.audiobookshelf.server,
+                        "abs_pod_lib_id": self.config.audiobookshelf.library_id,
+                        "abs_pod_folder_id": self.config.audiobookshelf.folder_id,
+                    }
+                )
 
-        # Add Podservice settings
-        if self.config.podservice.enabled and self.config.podservice.url:
-            kwargs["podservice_url"] = self.config.podservice.url
+            # Add Podservice settings
+            if self.config.podservice.enabled and self.config.podservice.url:
+                kwargs["podservice_url"] = self.config.podservice.url
 
         # Process the URLs
         results = process_texts(urls, **kwargs)
@@ -517,19 +522,24 @@ class TextcastService:
                 "auto_detect_aggregator": True,
             }
 
-            # Add Audiobookshelf settings
-            if self.config.audiobookshelf.server and self.config.audiobookshelf.api_key:
-                kwargs.update(
-                    {
-                        "abs_url": self.config.audiobookshelf.server,
-                        "abs_pod_lib_id": self.config.audiobookshelf.library_id,
-                        "abs_pod_folder_id": self.config.audiobookshelf.folder_id,
-                    }
-                )
+            # Use destinations list (new format)
+            if self.config.destinations:
+                kwargs["destinations"] = self.config.destinations
+            else:
+                # Fall back to legacy config for backward compatibility
+                # Add Audiobookshelf settings
+                if self.config.audiobookshelf.server and self.config.audiobookshelf.api_key:
+                    kwargs.update(
+                        {
+                            "abs_url": self.config.audiobookshelf.server,
+                            "abs_pod_lib_id": self.config.audiobookshelf.library_id,
+                            "abs_pod_folder_id": self.config.audiobookshelf.folder_id,
+                        }
+                    )
 
-            # Add Podservice settings
-            if self.config.podservice.enabled and self.config.podservice.url:
-                kwargs["podservice_url"] = self.config.podservice.url
+                # Add Podservice settings
+                if self.config.podservice.enabled and self.config.podservice.url:
+                    kwargs["podservice_url"] = self.config.podservice.url
 
             # Process the URLs
             results = process_texts(urls, **kwargs)

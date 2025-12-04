@@ -118,10 +118,36 @@ class AudiobookshelfConfig:
 
 @dataclass
 class PodserviceConfig:
-    """Configuration for Podservice integration."""
+    """Configuration for Podservice integration (legacy, use destinations instead)."""
 
     enabled: bool = False
     url: str = ""  # Base URL of podservice (e.g., http://192.168.50.7:8083)
+
+
+@dataclass
+class DestinationConfig:
+    """Base configuration for a destination."""
+
+    type: str  # podservice, audiobookshelf
+    enabled: bool = True
+
+
+@dataclass
+class PodserviceDestination(DestinationConfig):
+    """Configuration for Podservice destination."""
+
+    url: str = ""  # Base URL of podservice
+
+
+@dataclass
+class AudiobookshelfDestination(DestinationConfig):
+    """Configuration for Audiobookshelf destination."""
+
+    server: str = ""
+    api_key: str = ""
+    library_name: str = ""  # Library name (empty = auto-select first library)
+    library_id: str = ""  # Deprecated: use library_name instead
+    folder_id: str = ""  # Deprecated: auto-detected when using library_name
 
 
 @dataclass
@@ -142,6 +168,10 @@ class ServiceConfig:
     file_check_interval: int = 1  # minutes (for local files - more frequent)
     sources: List[SourceConfig] = field(default_factory=list)
     processing: ProcessingConfig = field(default_factory=ProcessingConfig)
+    destinations: List[Union[PodserviceDestination, AudiobookshelfDestination]] = field(
+        default_factory=list
+    )
+    # Legacy config fields (deprecated, use destinations instead)
     audiobookshelf: AudiobookshelfConfig = field(default_factory=AudiobookshelfConfig)
     podservice: PodserviceConfig = field(default_factory=PodserviceConfig)
     server: ServerConfig = field(default_factory=ServerConfig)
@@ -165,6 +195,104 @@ def get_default_config_path() -> Path:
     else:
         # Linux and other Unix-like systems
         return home / ".config" / "textcast-service" / "config.yaml"
+
+
+def _parse_destinations(
+    data: dict,
+) -> List[Union[PodserviceDestination, AudiobookshelfDestination]]:
+    """Parse destinations list from config data.
+
+    Supports both new 'destinations:' format and legacy 'audiobookshelf:'/'podservice:' blocks.
+    """
+    import logging
+
+    logger = logging.getLogger(__name__)
+    destinations = []
+
+    # Check for new destinations format
+    if "destinations" in data:
+        for dest_data in data.get("destinations", []):
+            dest_type = dest_data.get("type")
+            if dest_type == "podservice":
+                destinations.append(
+                    PodserviceDestination(
+                        type="podservice",
+                        enabled=dest_data.get("enabled", True),
+                        url=dest_data.get("url", ""),
+                    )
+                )
+            elif dest_type == "audiobookshelf":
+                # Get api_key from config or environment
+                api_key = dest_data.get("api_key", "")
+                if not api_key:
+                    api_key = os.getenv("ABS_API_KEY", "")
+                # Get server from config or environment
+                server = dest_data.get("server", "")
+                if not server:
+                    server = os.getenv("ABS_URL", "")
+
+                destinations.append(
+                    AudiobookshelfDestination(
+                        type="audiobookshelf",
+                        enabled=dest_data.get("enabled", True),
+                        server=server,
+                        api_key=api_key,
+                        library_name=dest_data.get("library_name", ""),
+                        library_id=dest_data.get("library_id", ""),
+                        folder_id=dest_data.get("folder_id", ""),
+                    )
+                )
+            else:
+                logger.warning(f"Unknown destination type: {dest_type}")
+        return destinations
+
+    # Legacy format: convert audiobookshelf and podservice blocks to destinations
+    has_legacy = False
+
+    # Check for legacy podservice block
+    podservice_data = data.get("podservice", {})
+    if podservice_data.get("enabled") and podservice_data.get("url"):
+        has_legacy = True
+        destinations.append(
+            PodserviceDestination(
+                type="podservice",
+                enabled=True,
+                url=podservice_data.get("url", ""),
+            )
+        )
+
+    # Check for legacy audiobookshelf block
+    abs_data = data.get("audiobookshelf", {})
+    # Get api_key from config or environment
+    api_key = abs_data.get("api_key", "")
+    if not api_key:
+        api_key = os.getenv("ABS_API_KEY", "")
+    # Get server from config or environment
+    server = abs_data.get("server", "")
+    if not server:
+        server = os.getenv("ABS_URL", "")
+
+    if server and api_key:
+        has_legacy = True
+        destinations.append(
+            AudiobookshelfDestination(
+                type="audiobookshelf",
+                enabled=True,
+                server=server,
+                api_key=api_key,
+                library_name=abs_data.get("library_name", ""),
+                library_id=abs_data.get("library_id", ""),
+                folder_id=abs_data.get("folder_id", ""),
+            )
+        )
+
+    if has_legacy:
+        logger.warning(
+            "Using legacy 'audiobookshelf:' and 'podservice:' config format. "
+            "Please migrate to new 'destinations:' list format."
+        )
+
+    return destinations
 
 
 def load_config(config_path: Optional[str] = None) -> ServiceConfig:
@@ -191,22 +319,23 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
         processing_data = data.get("processing", {})
         processing = ProcessingConfig(**processing_data)
 
-        # Parse audiobookshelf config
-        abs_data = data.get("audiobookshelf", {})
+        # Parse destinations (new format with backward compatibility)
+        destinations = _parse_destinations(data)
 
+        # Parse legacy audiobookshelf config (for backward compatibility)
+        abs_data = data.get("audiobookshelf", {})
         # Use environment variables if not provided in config (only for api_key and server)
         if not abs_data.get("api_key"):
             abs_data["api_key"] = os.getenv("ABS_API_KEY", "")
         if not abs_data.get("server"):
             abs_data["server"] = os.getenv("ABS_URL", "")
-
         audiobookshelf = AudiobookshelfConfig(**abs_data)
 
         # Parse server config
         server_data = data.get("server", {})
         server = ServerConfig(**server_data)
 
-        # Parse podservice config
+        # Parse legacy podservice config (for backward compatibility)
         podservice_data = data.get("podservice", {})
         podservice = PodserviceConfig(**podservice_data)
 
@@ -216,6 +345,7 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
             file_check_interval=parse_interval(data.get("file_check_interval", "1m")),
             sources=sources,
             processing=processing,
+            destinations=destinations,
             audiobookshelf=audiobookshelf,
             podservice=podservice,
             server=server,
@@ -227,6 +357,35 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
 
     except Exception as e:
         raise Exception(f"Failed to load configuration from {config_path}: {e}")
+
+
+def _serialize_destinations(
+    destinations: List[Union[PodserviceDestination, AudiobookshelfDestination]],
+) -> List[dict]:
+    """Serialize destinations list to dict format for YAML."""
+    result = []
+    for dest in destinations:
+        if isinstance(dest, PodserviceDestination):
+            result.append(
+                {
+                    "type": "podservice",
+                    "enabled": dest.enabled,
+                    "url": dest.url,
+                }
+            )
+        elif isinstance(dest, AudiobookshelfDestination):
+            result.append(
+                {
+                    "type": "audiobookshelf",
+                    "enabled": dest.enabled,
+                    "server": dest.server,
+                    "api_key": dest.api_key,
+                    "library_name": dest.library_name,
+                    "library_id": dest.library_id,
+                    "folder_id": dest.folder_id,
+                }
+            )
+    return result
 
 
 def save_config(config: ServiceConfig, config_path: Optional[str] = None) -> None:
@@ -270,20 +429,26 @@ def save_config(config: ServiceConfig, config_path: Optional[str] = None) -> Non
             "output_dir": config.processing.output_dir,
             "vendor": config.processing.vendor,
         },
-        "audiobookshelf": {
+        "log_level": config.log_level,
+        "log_file": config.log_file,
+    }
+
+    # Use new destinations format if destinations are configured
+    if config.destinations:
+        data["destinations"] = _serialize_destinations(config.destinations)
+    else:
+        # Fall back to legacy format if no destinations but legacy configs exist
+        data["audiobookshelf"] = {
             "server": config.audiobookshelf.server,
             "api_key": config.audiobookshelf.api_key,
             "library_name": config.audiobookshelf.library_name,
             "library_id": config.audiobookshelf.library_id,
             "folder_id": config.audiobookshelf.folder_id,
-        },
-        "podservice": {
+        }
+        data["podservice"] = {
             "enabled": config.podservice.enabled,
             "url": config.podservice.url,
-        },
-        "log_level": config.log_level,
-        "log_file": config.log_file,
-    }
+        }
 
     with open(config_path, "w") as f:
         yaml.dump(data, f, default_flow_style=False, indent=2)

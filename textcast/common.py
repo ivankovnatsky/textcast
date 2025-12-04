@@ -4,6 +4,7 @@ import random
 import re
 import string
 from pathlib import Path
+from typing import List, Optional, Union
 
 import click
 
@@ -11,6 +12,7 @@ from .audiobookshelf import upload_to_audiobookshelf
 from .elevenlabs import process_article_elevenlabs
 from .openai import process_article_openai
 from .podservice import upload_to_podservice
+from .service_config import AudiobookshelfDestination, PodserviceDestination
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +80,11 @@ def process_text_to_audio(
     model,
     voice,
     strip,
+    # New destinations parameter
+    destinations: Optional[
+        List[Union[PodserviceDestination, AudiobookshelfDestination]]
+    ] = None,
+    # Legacy parameters (deprecated, use destinations instead)
     abs_url=None,
     abs_library=None,  # Library name or ID
     abs_folder_id=None,  # Optional folder ID (auto-detected if library is a name)
@@ -121,53 +128,104 @@ def process_text_to_audio(
 
     logger.info(f"Audio processing complete for {title}")
 
-    # Handle backward compatibility with old parameter names
-    if abs_pod_lib_id and not abs_library:
-        abs_library = abs_pod_lib_id
-        logger.debug("Using deprecated abs_pod_lib_id parameter")
-    if abs_pod_folder_id and not abs_folder_id:
-        abs_folder_id = abs_pod_folder_id
-        logger.debug("Using deprecated abs_pod_folder_id parameter")
-
     # Track if any upload succeeded (for cleanup decision)
     upload_succeeded = False
 
-    # Upload to Audiobookshelf if parameters are provided
-    if abs_url and abs_library:
-        logger.info("Uploading to Audiobookshelf...")
-        success = upload_to_audiobookshelf(
-            filename, abs_url, abs_library, abs_folder_id, title
-        )
-        if success:
-            logger.info("Successfully uploaded to Audiobookshelf!")
-            upload_succeeded = True
-        else:
-            logger.warning(
-                "Failed to upload to Audiobookshelf, but audio file was created successfully"
-            )
-    else:
-        logger.debug("Audiobookshelf parameters not provided, skipping upload")
+    # Use new destinations list if provided
+    if destinations:
+        for dest in destinations:
+            if not dest.enabled:
+                logger.debug(f"Destination {dest.type} is disabled, skipping")
+                continue
 
-    # Upload to Podservice if URL is provided
-    if podservice_url:
-        logger.info("Uploading to Podservice...")
-        success = upload_to_podservice(
-            file_path=filename,
-            title=title,
-            podservice_url=podservice_url,
-            description=description,
-            source_url=source_url,
-            image_url=image_url,
-        )
-        if success:
-            logger.info("Successfully uploaded to Podservice!")
-            upload_succeeded = True
-        else:
-            logger.warning(
-                "Failed to upload to Podservice, but audio file was created successfully"
-            )
+            if isinstance(dest, PodserviceDestination):
+                if dest.url:
+                    logger.info(f"Uploading to Podservice: {dest.url}")
+                    success = upload_to_podservice(
+                        file_path=filename,
+                        title=title,
+                        podservice_url=dest.url,
+                        description=description,
+                        source_url=source_url,
+                        image_url=image_url,
+                    )
+                    if success:
+                        logger.info("Successfully uploaded to Podservice!")
+                        upload_succeeded = True
+                    else:
+                        logger.warning(
+                            "Failed to upload to Podservice, but audio file was created"
+                        )
+                else:
+                    logger.debug("Podservice destination has no URL, skipping")
+
+            elif isinstance(dest, AudiobookshelfDestination):
+                if dest.server:
+                    # Use library_name (preferred) or fall back to library_id
+                    library = dest.library_name or dest.library_id or None
+                    logger.info(f"Uploading to Audiobookshelf: {dest.server}")
+                    success = upload_to_audiobookshelf(
+                        filename,
+                        dest.server,
+                        library,
+                        dest.folder_id or None,
+                        title,
+                    )
+                    if success:
+                        logger.info("Successfully uploaded to Audiobookshelf!")
+                        upload_succeeded = True
+                    else:
+                        logger.warning(
+                            "Failed to upload to Audiobookshelf, but audio file was created"
+                        )
+                else:
+                    logger.debug("Audiobookshelf destination has no server, skipping")
     else:
-        logger.debug("Podservice URL not provided, skipping upload")
+        # Fall back to legacy parameters for backward compatibility
+        # Handle backward compatibility with old parameter names
+        if abs_pod_lib_id and not abs_library:
+            abs_library = abs_pod_lib_id
+            logger.debug("Using deprecated abs_pod_lib_id parameter")
+        if abs_pod_folder_id and not abs_folder_id:
+            abs_folder_id = abs_pod_folder_id
+            logger.debug("Using deprecated abs_pod_folder_id parameter")
+
+        # Upload to Audiobookshelf if parameters are provided
+        if abs_url and abs_library:
+            logger.info("Uploading to Audiobookshelf...")
+            success = upload_to_audiobookshelf(
+                filename, abs_url, abs_library, abs_folder_id, title
+            )
+            if success:
+                logger.info("Successfully uploaded to Audiobookshelf!")
+                upload_succeeded = True
+            else:
+                logger.warning(
+                    "Failed to upload to Audiobookshelf, but audio file was created"
+                )
+        else:
+            logger.debug("Audiobookshelf parameters not provided, skipping upload")
+
+        # Upload to Podservice if URL is provided
+        if podservice_url:
+            logger.info("Uploading to Podservice...")
+            success = upload_to_podservice(
+                file_path=filename,
+                title=title,
+                podservice_url=podservice_url,
+                description=description,
+                source_url=source_url,
+                image_url=image_url,
+            )
+            if success:
+                logger.info("Successfully uploaded to Podservice!")
+                upload_succeeded = True
+            else:
+                logger.warning(
+                    "Failed to upload to Podservice, but audio file was created"
+                )
+        else:
+            logger.debug("Podservice URL not provided, skipping upload")
 
     # Clean up local audio file after successful upload to any target
     if upload_succeeded:

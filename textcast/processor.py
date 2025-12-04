@@ -177,6 +177,8 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
                 model=kwargs["speech_model"],
                 voice=kwargs["voice"],
                 strip=kwargs["strip"],
+                destinations=kwargs.get("destinations"),
+                # Legacy parameters for backward compatibility
                 abs_url=kwargs.get("abs_url"),
                 abs_pod_lib_id=kwargs.get("abs_pod_lib_id"),
                 abs_pod_folder_id=kwargs.get("abs_pod_folder_id"),
