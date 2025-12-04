@@ -117,6 +117,14 @@ class AudiobookshelfConfig:
 
 
 @dataclass
+class PodserviceConfig:
+    """Configuration for Podservice integration."""
+
+    enabled: bool = False
+    url: str = ""  # Base URL of podservice (e.g., http://192.168.50.7:8083)
+
+
+@dataclass
 class ServerConfig:
     """Configuration for web server."""
 
@@ -135,6 +143,7 @@ class ServiceConfig:
     sources: List[SourceConfig] = field(default_factory=list)
     processing: ProcessingConfig = field(default_factory=ProcessingConfig)
     audiobookshelf: AudiobookshelfConfig = field(default_factory=AudiobookshelfConfig)
+    podservice: PodserviceConfig = field(default_factory=PodserviceConfig)
     server: ServerConfig = field(default_factory=ServerConfig)
     log_level: str = "INFO"
     log_file: Optional[str] = None
@@ -197,6 +206,10 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
         server_data = data.get("server", {})
         server = ServerConfig(**server_data)
 
+        # Parse podservice config
+        podservice_data = data.get("podservice", {})
+        podservice = PodserviceConfig(**podservice_data)
+
         # Create main config
         config = ServiceConfig(
             check_interval=parse_interval(data.get("check_interval", "5m")),
@@ -204,6 +217,7 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
             sources=sources,
             processing=processing,
             audiobookshelf=audiobookshelf,
+            podservice=podservice,
             server=server,
             log_level=data.get("log_level", "INFO"),
             log_file=data.get("log_file"),
@@ -262,6 +276,10 @@ def save_config(config: ServiceConfig, config_path: Optional[str] = None) -> Non
             "library_name": config.audiobookshelf.library_name,
             "library_id": config.audiobookshelf.library_id,
             "folder_id": config.audiobookshelf.folder_id,
+        },
+        "podservice": {
+            "enabled": config.podservice.enabled,
+            "url": config.podservice.url,
         },
         "log_level": config.log_level,
         "log_file": config.log_file,

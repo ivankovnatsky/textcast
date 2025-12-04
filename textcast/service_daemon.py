@@ -405,6 +405,10 @@ class TextcastService:
                 }
             )
 
+        # Add Podservice settings
+        if self.config.podservice.enabled and self.config.podservice.url:
+            kwargs["podservice_url"] = self.config.podservice.url
+
         # Process the URLs
         results = process_texts(urls, **kwargs)
 
@@ -468,6 +472,10 @@ class TextcastService:
                         "abs_pod_folder_id": self.config.audiobookshelf.folder_id,
                     }
                 )
+
+            # Add Podservice settings
+            if self.config.podservice.enabled and self.config.podservice.url:
+                kwargs["podservice_url"] = self.config.podservice.url
 
             # Process the URLs
             results = process_texts(urls, **kwargs)
