@@ -48,17 +48,30 @@ class TextcastServer:
                 <title>Textcast</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <style>
-                    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }}
+                    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background-color: #fff; color: #333; }}
                     h1 {{ color: #333; }}
+                    h2 {{ color: #333; }}
                     p {{ color: #666; }}
                     .form-group {{ margin: 40px 0 20px 0; padding-top: 30px; border-top: 1px solid #eee; }}
                     .input-wrapper {{ position: relative; display: flex; gap: 10px; }}
-                    input[type="text"] {{ flex: 1; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }}
+                    input[type="text"] {{ flex: 1; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background-color: #fff; color: #333; }}
                     button {{ background-color: #007bff; color: white; padding: 12px 24px; font-size: 16px; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; }}
                     button:hover {{ background-color: #0056b3; }}
                     .info {{ margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; }}
                     .info ul {{ margin: 10px 0; padding-left: 20px; }}
                     .info li {{ margin: 5px 0; }}
+
+                    /* Dark mode */
+                    @media (prefers-color-scheme: dark) {{
+                        body {{ background-color: #1a1a1a; color: #e0e0e0; }}
+                        h1, h2 {{ color: #e0e0e0; }}
+                        p {{ color: #999; }}
+                        .form-group {{ border-top-color: #333; }}
+                        input[type="text"] {{ background-color: #2a2a2a; color: #e0e0e0; border-color: #444; }}
+                        button {{ background-color: #0d6efd; }}
+                        button:hover {{ background-color: #0b5ed7; }}
+                        .info {{ background-color: #2a2a2a; border-left-color: #4a9eff; }}
+                    }}
 
                     /* Mobile styles */
                     @media (max-width: 768px) {{
