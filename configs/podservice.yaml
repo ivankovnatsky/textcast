@@ -32,6 +32,6 @@ destinations:
 
 # Web server for status/monitoring (optional)
 server:
-  enabled: false
-  host: 127.0.0.1
+  enabled: true
+  host: 192.168.50.8
   port: 8084
