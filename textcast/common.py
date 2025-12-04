@@ -10,6 +10,7 @@ import click
 from .audiobookshelf import upload_to_audiobookshelf
 from .elevenlabs import process_article_elevenlabs
 from .openai import process_article_openai
+from .podservice import upload_to_podservice
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +84,11 @@ def process_text_to_audio(
     # Deprecated parameters for backward compatibility
     abs_pod_lib_id=None,
     abs_pod_folder_id=None,
+    # Podservice parameters
+    podservice_url=None,
+    source_url=None,  # Original article URL for GUID
+    description=None,  # Episode description for podservice
+    image_url=None,  # Episode artwork URL for podservice
 ):
     logger.info(f"Processing text to audio for title: {title}")
     logger.debug(
@@ -123,6 +129,9 @@ def process_text_to_audio(
         abs_folder_id = abs_pod_folder_id
         logger.debug("Using deprecated abs_pod_folder_id parameter")
 
+    # Track if any upload succeeded (for cleanup decision)
+    upload_succeeded = False
+
     # Upload to Audiobookshelf if parameters are provided
     if abs_url and abs_library:
         logger.info("Uploading to Audiobookshelf...")
@@ -131,17 +140,39 @@ def process_text_to_audio(
         )
         if success:
             logger.info("Successfully uploaded to Audiobookshelf!")
-            # Clean up local audio file after successful upload
-            try:
-                os.remove(filename)
-                logger.info(f"Deleted local audio file: {filename}")
-            except Exception as e:
-                logger.warning(
-                    f"Failed to delete local audio file {filename}: {str(e)}"
-                )
+            upload_succeeded = True
         else:
             logger.warning(
                 "Failed to upload to Audiobookshelf, but audio file was created successfully"
             )
     else:
         logger.debug("Audiobookshelf parameters not provided, skipping upload")
+
+    # Upload to Podservice if URL is provided
+    if podservice_url:
+        logger.info("Uploading to Podservice...")
+        success = upload_to_podservice(
+            file_path=filename,
+            title=title,
+            podservice_url=podservice_url,
+            description=description,
+            source_url=source_url,
+            image_url=image_url,
+        )
+        if success:
+            logger.info("Successfully uploaded to Podservice!")
+            upload_succeeded = True
+        else:
+            logger.warning(
+                "Failed to upload to Podservice, but audio file was created successfully"
+            )
+    else:
+        logger.debug("Podservice URL not provided, skipping upload")
+
+    # Clean up local audio file after successful upload to any target
+    if upload_succeeded:
+        try:
+            os.remove(filename)
+            logger.info(f"Deleted local audio file: {filename}")
+        except Exception as e:
+            logger.warning(f"Failed to delete local audio file {filename}: {str(e)}")

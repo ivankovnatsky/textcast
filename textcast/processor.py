@@ -180,6 +180,8 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
                 abs_url=kwargs.get("abs_url"),
                 abs_pod_lib_id=kwargs.get("abs_pod_lib_id"),
                 abs_pod_folder_id=kwargs.get("abs_pod_folder_id"),
+                podservice_url=kwargs.get("podservice_url"),
+                source_url=url,  # Pass original URL for GUID deduplication
             )
 
             results.append(ProcessingResult(url=url, success=True))

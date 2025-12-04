@@ -111,6 +111,11 @@ logger = logging.getLogger(__name__)
     default=True,
     help="Automatically detect and process aggregator pages (default: True)",
 )
+@click.option(
+    "--podservice-url",
+    type=str,
+    help="Podservice server URL for uploading audio episodes to podcast feed",
+)
 def cli(
     vendor,
     url,
@@ -131,6 +136,7 @@ def cli(
     abs_pod_folder_id,
     aggregator,
     auto_detect_aggregator,
+    podservice_url,
 ):
     # Set up logging
     log_level = logging.DEBUG if debug else logging.INFO
@@ -279,6 +285,7 @@ def cli(
             "abs_pod_folder_id": abs_pod_folder_id,
             "file_url_list": file_url_list,  # Pass the file_url_list to process_texts
             "aggregator_source": aggregator_source,  # Pass aggregator source if any
+            "podservice_url": podservice_url,  # Podservice URL for podcast feed upload
         }
 
         results = process_texts(urls, **kwargs)

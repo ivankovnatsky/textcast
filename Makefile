@@ -60,3 +60,7 @@ service-no-watch:
 .PHONY: service-debug
 service-debug:
 	@nix develop --command python -m textcast service --debug daemon --foreground
+
+.PHONY: service-podservice
+service-podservice:
+	@nix develop --command python -m textcast service daemon --foreground --config configs/podservice.yaml
