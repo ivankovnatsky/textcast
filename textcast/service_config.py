@@ -97,7 +97,7 @@ class ProcessingConfig:
 
     strategy: str = "condense"  # condense, full
     condense_ratio: float = 0.5
-    text_model: str = "gpt-4-turbo-preview"
+    text_model: str = "gpt-5.1"
     speech_model: str = "tts-1-hd"
     voice: str = "nova"
     audio_format: str = "mp3"
@@ -501,7 +501,7 @@ def create_example_config(config_path: Optional[str] = None) -> None:
         processing=ProcessingConfig(
             strategy="condense",
             condense_ratio=0.5,
-            text_model="gpt-4-turbo-preview",
+            text_model="gpt-5.1",
             speech_model="tts-1-hd",
             voice="nova",
             audio_format="mp3",

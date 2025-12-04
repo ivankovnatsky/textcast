@@ -49,8 +49,8 @@ logger = logging.getLogger(__name__)
 @click.option(
     "--text-model",
     type=str,
-    default="gpt-4-turbo-preview",
-    help="The model to be used for text condensing (e.g., gpt-4-turbo-preview, gpt-3.5-turbo)",
+    default="gpt-5.1",
+    help="The model to be used for text condensing (e.g., gpt-5.1, gpt-4-turbo-preview)",
 )
 @click.option(
     "--voice",

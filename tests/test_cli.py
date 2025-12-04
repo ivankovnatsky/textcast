@@ -89,7 +89,7 @@ def test_process_article_with_condense(capture_logging):
             "--speech-model",
             "tts-1",
             "--text-model",
-            "gpt-4-turbo-preview",
+            "gpt-5.1",
             "--voice",
             "alloy",
             "--strip",
@@ -109,7 +109,7 @@ def test_process_article_with_condense(capture_logging):
     log_output = capture_logging.getvalue()
     assert "Starting OpenAI processing" in log_output
     assert "Condensing article..." in log_output
-    assert "Using text_model: gpt-4-turbo-preview" in log_output
+    assert "Using text_model: gpt-5.1" in log_output
     assert "Text split into" in log_output
     assert "Processing chunk" in log_output
     assert "Audio saved to" in log_output
