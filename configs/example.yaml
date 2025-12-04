@@ -71,14 +71,22 @@ processing:
   output_dir: /Volumes/Storage/Data/Textcast/Audio # Permanent audio storage directory
   vendor: openai # TTS vendor: openai, elevenlabs
 
-# Audiobookshelf integration (automatic uploads by default)
-audiobookshelf:
-  server: "" # Set your ABS_URL environment variable instead
-  api_key: "" # Set your ABS_API_KEY environment variable instead
-  library_name: "" # Library name (empty = auto-select first library, or specify like "Podcasts")
-  # Deprecated: library_id and folder_id (auto-detected)
-  library_id: "" # Optional: Use if you want to specify library by UUID instead
-  folder_id: "" # Optional: Auto-detected
+# Audio file destinations (where processed audio is uploaded)
+destinations:
+  # Podservice destination for podcast feed uploads
+  - type: podservice
+    enabled: false
+    url: "" # Set your podservice URL, e.g., http://192.168.50.7:8083
+
+  # Audiobookshelf integration (automatic uploads)
+  - type: audiobookshelf
+    enabled: false
+    server: "" # Set your ABS_URL environment variable instead
+    api_key: "" # Set your ABS_API_KEY environment variable instead
+    library_name: "" # Library name (empty = auto-select first library, or specify like "Podcasts")
+    # Deprecated: library_id and folder_id (auto-detected)
+    library_id: "" # Optional: Use if you want to specify library by UUID instead
+    folder_id: "" # Optional: Auto-detected
 
 # Web server for adding URLs via web interface
 server:

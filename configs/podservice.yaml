@@ -22,10 +22,12 @@ processing:
   output_dir: /tmp/textcast-test/Audio
   vendor: openai
 
-# Podservice destination (primary upload target)
-podservice:
-  enabled: true
-  url: http://192.168.50.8:8083
+# Audio file destinations
+destinations:
+  # Podservice destination (primary upload target)
+  - type: podservice
+    enabled: true
+    url: http://192.168.50.8:8083
 
 # Web server for status/monitoring (optional)
 server:
