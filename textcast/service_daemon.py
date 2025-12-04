@@ -767,8 +767,19 @@ def run_service(
     if not handlers:
         handlers.append(logging.StreamHandler())
 
-    # Configure logging
-    logging.basicConfig(level=log_level, format=log_format, handlers=handlers)
+    # Configure logging - use root logger to affect all loggers
+    root_logger = logging.getLogger()
+    root_logger.setLevel(log_level)
+
+    # Remove existing handlers to avoid duplicates
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+
+    # Add new handlers with formatter
+    formatter = logging.Formatter(log_format)
+    for handler in handlers:
+        handler.setFormatter(formatter)
+        root_logger.addHandler(handler)
 
     logger.info(
         f"Textcast service starting in {'foreground' if foreground else 'daemon'} mode"
