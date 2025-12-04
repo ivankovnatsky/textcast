@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Dict, List
 
 # from .rss_monitor import NewsletterMonitor, YouTubeMonitor
+from .podservice import upload_to_podservice
 from .processor import process_texts
 from .server import TextcastServer
 from .service_config import ServiceConfig, SourceConfig, load_config
@@ -288,6 +289,9 @@ class TextcastService:
                 observer.start()
                 logger.info(f"Started file watcher for {source_name}")
 
+            # Upload any orphan audio files from previous failed uploads
+            self._upload_orphan_audio_files()
+
             # Initial check of external sources (only if any are enabled)
             if external_sources:
                 self._check_external_sources()
@@ -418,6 +422,56 @@ class TextcastService:
         logger.info(
             f"Processing complete for {source.name}: {successful} successful, {failed} failed"
         )
+
+    def _upload_orphan_audio_files(self):
+        """Upload any orphan audio files that failed to upload previously.
+
+        On startup, scan the output directory for audio files and attempt to upload
+        them to podservice. Files are deleted after successful upload.
+        """
+        if not self.config.podservice.enabled or not self.config.podservice.url:
+            logger.debug("Podservice not enabled, skipping orphan upload check")
+            return
+
+        output_dir = Path(self.config.processing.output_dir)
+        if not output_dir.exists():
+            logger.debug(f"Output directory does not exist: {output_dir}")
+            return
+
+        # Find all audio files (mp3, m4a, wav, etc.)
+        audio_extensions = {".mp3", ".m4a", ".wav", ".ogg", ".flac"}
+        audio_files = [
+            f for f in output_dir.iterdir()
+            if f.is_file() and f.suffix.lower() in audio_extensions
+        ]
+
+        if not audio_files:
+            logger.debug("No orphan audio files to upload")
+            return
+
+        logger.info(f"Found {len(audio_files)} orphan audio file(s) to upload")
+
+        for audio_file in audio_files:
+            # Extract title from filename (reverse of format_filename)
+            # e.g., "tech-jobs-market-2025-part-3-job-seekers-stories.mp3" -> "tech jobs market 2025 part 3 job seekers stories"
+            title = audio_file.stem.replace("-", " ").title()
+
+            logger.info(f"Uploading orphan file: {audio_file.name}")
+            success = upload_to_podservice(
+                file_path=audio_file,
+                title=title,
+                podservice_url=self.config.podservice.url,
+            )
+
+            if success:
+                # Delete file after successful upload
+                try:
+                    audio_file.unlink()
+                    logger.info(f"Deleted orphan file after upload: {audio_file.name}")
+                except Exception as e:
+                    logger.warning(f"Failed to delete orphan file {audio_file.name}: {e}")
+            else:
+                logger.warning(f"Failed to upload orphan file: {audio_file.name}")
 
     def _process_file_queue(self, source: SourceConfig):
         """Process URLs from a file queue using textcast processing."""
