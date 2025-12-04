@@ -3,7 +3,7 @@
 
 # Service settings
 check_interval: 5m # Check external sources - REQUIRED time unit: 30s, 5m, 1h, 2d (no bare numbers)
-log_level: DEBUG # DEBUG, INFO, WARNING, ERROR
+log_level: INFO # DEBUG, INFO, WARNING, ERROR
 log_file: /Volumes/Storage/Data/.textcast/logs/textcast-service.log # Optional: log to file
 
 # Content sources to monitor

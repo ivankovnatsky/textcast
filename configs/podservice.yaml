@@ -3,7 +3,7 @@
 # No Audiobookshelf configuration required
 
 check_interval: 5m
-log_level: DEBUG
+log_level: INFO
 log_file: /tmp/textcast-test/textcast-service.log
 
 sources:
