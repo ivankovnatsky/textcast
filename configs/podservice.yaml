@@ -25,7 +25,7 @@ processing:
 # Podservice destination (primary upload target)
 podservice:
   enabled: true
-  url: http://localhost:8083
+  url: http://192.168.50.8:8083
 
 # Web server for status/monitoring (optional)
 server:
