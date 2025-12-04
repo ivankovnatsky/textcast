@@ -405,10 +405,10 @@ class TextcastService:
         else:
             # Fall back to legacy config for backward compatibility
             # Add Audiobookshelf settings
-            if self.config.audiobookshelf.server and self.config.audiobookshelf.api_key:
+            if self.config.audiobookshelf.url and self.config.audiobookshelf.api_key:
                 kwargs.update(
                     {
-                        "abs_url": self.config.audiobookshelf.server,
+                        "abs_url": self.config.audiobookshelf.url,
                         "abs_pod_lib_id": self.config.audiobookshelf.library_id,
                         "abs_pod_folder_id": self.config.audiobookshelf.folder_id,
                     }
@@ -528,10 +528,10 @@ class TextcastService:
             else:
                 # Fall back to legacy config for backward compatibility
                 # Add Audiobookshelf settings
-                if self.config.audiobookshelf.server and self.config.audiobookshelf.api_key:
+                if self.config.audiobookshelf.url and self.config.audiobookshelf.api_key:
                     kwargs.update(
                         {
-                            "abs_url": self.config.audiobookshelf.server,
+                            "abs_url": self.config.audiobookshelf.url,
                             "abs_pod_lib_id": self.config.audiobookshelf.library_id,
                             "abs_pod_folder_id": self.config.audiobookshelf.folder_id,
                         }
@@ -577,8 +577,8 @@ class TextcastService:
             logger.info(f"Processing {len(urls)} URLs from {source.name} for audio download")
 
             # Check if Audiobookshelf is configured
-            if not self.config.audiobookshelf.server:
-                logger.error("Audiobookshelf server not configured")
+            if not self.config.audiobookshelf.url:
+                logger.error("Audiobookshelf url not configured")
                 return
 
             # Import the processing function
@@ -596,7 +596,7 @@ class TextcastService:
                 try:
                     success = process_url_to_audiobookshelf(
                         url,
-                        self.config.audiobookshelf.server,
+                        self.config.audiobookshelf.url,
                         library=library,
                         folder_id=self.config.audiobookshelf.folder_id or None,
                     )
@@ -638,9 +638,9 @@ class TextcastService:
 
     def _upload_to_audiobookshelf(self, file_path: Path, source: SourceConfig):
         """Upload audio file to Audiobookshelf."""
-        if not self.config.audiobookshelf.server:
+        if not self.config.audiobookshelf.url:
             logger.warning(
-                f"Audiobookshelf server not configured, cannot upload {file_path}"
+                f"Audiobookshelf url not configured, cannot upload {file_path}"
             )
             return
 
@@ -658,7 +658,7 @@ class TextcastService:
             # folder_id is optional - auto-detected when using library_name
             success = upload_to_audiobookshelf(
                 file_path,  # Pass Path object, not string
-                self.config.audiobookshelf.server,
+                self.config.audiobookshelf.url,
                 library,  # Can be library name or ID
                 folder_id=self.config.audiobookshelf.folder_id or None,  # Optional
                 title=file_path.stem,  # Use filename without extension as title

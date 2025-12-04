@@ -109,7 +109,7 @@ class ProcessingConfig:
 class AudiobookshelfConfig:
     """Configuration for Audiobookshelf integration."""
 
-    server: str = "http://localhost:13378"
+    url: str = "http://localhost:13378"  # Base URL of Audiobookshelf server
     api_key: str = ""
     library_name: str = ""  # Library name (empty = auto-select first library)
     library_id: str = ""  # Deprecated: use library_name instead
@@ -143,7 +143,7 @@ class PodserviceDestination(DestinationConfig):
 class AudiobookshelfDestination(DestinationConfig):
     """Configuration for Audiobookshelf destination."""
 
-    server: str = ""
+    url: str = ""  # Base URL of Audiobookshelf server
     api_key: str = ""
     library_name: str = ""  # Library name (empty = auto-select first library)
     library_id: str = ""  # Deprecated: use library_name instead
@@ -226,16 +226,16 @@ def _parse_destinations(
                 api_key = dest_data.get("api_key", "")
                 if not api_key:
                     api_key = os.getenv("ABS_API_KEY", "")
-                # Get server from config or environment
-                server = dest_data.get("server", "")
-                if not server:
-                    server = os.getenv("ABS_URL", "")
+                # Get url from config or environment
+                url = dest_data.get("url", "")
+                if not url:
+                    url = os.getenv("ABS_URL", "")
 
                 destinations.append(
                     AudiobookshelfDestination(
                         type="audiobookshelf",
                         enabled=dest_data.get("enabled", True),
-                        server=server,
+                        url=url,
                         api_key=api_key,
                         library_name=dest_data.get("library_name", ""),
                         library_id=dest_data.get("library_id", ""),
@@ -267,18 +267,18 @@ def _parse_destinations(
     api_key = abs_data.get("api_key", "")
     if not api_key:
         api_key = os.getenv("ABS_API_KEY", "")
-    # Get server from config or environment
-    server = abs_data.get("server", "")
-    if not server:
-        server = os.getenv("ABS_URL", "")
+    # Get url from config or environment
+    url = abs_data.get("url", "")
+    if not url:
+        url = os.getenv("ABS_URL", "")
 
-    if server and api_key:
+    if url and api_key:
         has_legacy = True
         destinations.append(
             AudiobookshelfDestination(
                 type="audiobookshelf",
                 enabled=True,
-                server=server,
+                url=url,
                 api_key=api_key,
                 library_name=abs_data.get("library_name", ""),
                 library_id=abs_data.get("library_id", ""),

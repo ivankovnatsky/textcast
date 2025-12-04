@@ -81,7 +81,7 @@ destinations:
   # Audiobookshelf integration (automatic uploads)
   - type: audiobookshelf
     enabled: false
-    server: "" # Set your ABS_URL environment variable instead
+    url: "" # Set your ABS_URL environment variable instead
     api_key: "" # Set your ABS_API_KEY environment variable instead
     library_name: "" # Library name (empty = auto-select first library, or specify like "Podcasts")
     # Deprecated: library_id and folder_id (auto-detected)
