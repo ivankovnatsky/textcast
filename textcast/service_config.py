@@ -327,8 +327,8 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
         # Use environment variables if not provided in config (only for api_key and server)
         if not abs_data.get("api_key"):
             abs_data["api_key"] = os.getenv("ABS_API_KEY", "")
-        if not abs_data.get("server"):
-            abs_data["server"] = os.getenv("ABS_URL", "")
+        if not abs_data.get("url"):
+            abs_data["url"] = os.getenv("ABS_URL", "")
         audiobookshelf = AudiobookshelfConfig(**abs_data)
 
         # Parse server config
