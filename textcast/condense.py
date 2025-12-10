@@ -35,31 +35,25 @@ def condense_text(text: str, text_model: str, condense_ratio: float) -> str:
     system_message = f"""You are a text condensing assistant. Your task is to shorten text while preserving key information.
 
 CRITICAL REQUIREMENTS:
-
-1. You MUST produce output that is approximately {target_word_count} words
-   long. This word count requirement is non-negotiable. If you produce
-   significantly fewer words, you have failed the task.
-2. You MUST write the output in the SAME LANGUAGE as the input text."""
+1. You MUST produce output that is approximately {target_word_count} words long. This word count requirement is non-negotiable. If you produce significantly fewer words, you have failed the task.
+2. You MUST write the output in the SAME LANGUAGE as the input text. If the input is in Ukrainian, output in Ukrainian. If in German, output in German. Never translate to English unless the original is in English."""
 
     prompt = f"""Condense the following text.
 
 LENGTH REQUIREMENT (MANDATORY):
-
 - Original text: {input_word_count} words
 - Required output length: {target_word_count} words (±10%)
 - Count your words carefully. Your response MUST be between {int(target_word_count * 0.9)} and {int(target_word_count * 1.1)} words.
 
 LANGUAGE REQUIREMENT (MANDATORY):
-
 - Output MUST be in the same language as the input text
-- Do NOT translate, keep in the original language
+- Do NOT translate to English or any other language
 
 Guidelines:
-
-- Try to stick to the original text, try to not paraphrase
 - Preserve all key facts, arguments, and important details
 - Shorten sentences but keep all main points
 - Remove only truly redundant content
+- If the text is already concise, keep more of the original wording
 
 Text to condense:
 
