@@ -379,9 +379,9 @@ class TextcastService:
 
         logger.info(f"Processing {len(urls)} URLs from {source.name}")
 
-        # Prepare processing arguments - use new config structure with legacy fallback
-        text_config = self.config.text
-        audio_config = self.config.audio
+        # Prepare processing arguments from nested config
+        text_config = self.config.processing.text
+        audio_config = self.config.processing.audio
         source_strategy = source.processing_strategy or text_config.strategy
 
         kwargs = {
@@ -503,9 +503,9 @@ class TextcastService:
 
             logger.info(f"Processing {len(urls)} URLs from {source.name}")
 
-            # Prepare processing arguments - use new config structure with legacy fallback
-            text_config = self.config.text
-            audio_config = self.config.audio
+            # Prepare processing arguments from nested config
+            text_config = self.config.processing.text
+            audio_config = self.config.processing.audio
             source_strategy = source.processing_strategy or text_config.strategy
 
             kwargs = {
