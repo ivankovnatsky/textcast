@@ -58,7 +58,7 @@ class TextcastServer:
                     p {{ color: #666; }}
                     .form-group {{ margin: 40px 0 20px 0; padding-top: 30px; border-top: 1px solid #eee; }}
                     .input-wrapper {{ position: relative; display: flex; gap: 10px; }}
-                    input[type="text"] {{ flex: 1; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background-color: #fff; color: #333; }}
+                    input[type="text"], textarea {{ flex: 1; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background-color: #fff; color: #333; }}
                     button {{ background-color: #007bff; color: white; padding: 12px 24px; font-size: 16px; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; }}
                     button:hover {{ background-color: #0056b3; }}
                     .info {{ margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #007bff; }}
@@ -121,7 +121,7 @@ class TextcastServer:
                     <form method="POST" action="/add-text">
                         <div style="margin-bottom: 15px;">
                             <input type="text" name="title" placeholder="Article title (required)" required style="width: 100%; margin-bottom: 10px;">
-                            <textarea name="text" placeholder="Paste article text here..." required style="width: 100%; min-height: 200px; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background-color: #fff; color: #333; font-family: inherit; resize: vertical;"></textarea>
+                            <textarea name="text" placeholder="Paste article text here..." required style="width: 100%; min-height: 200px; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
                         </div>
                         <button type="submit">Process Text</button>
                     </form>
