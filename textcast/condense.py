@@ -1,37 +1,15 @@
 import logging
 
+from anthropic import Anthropic
 from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
 
-def condense_text(text: str, text_model: str, condense_ratio: float) -> str:
-    """
-    Condense the text using OpenAI's GPT model while maintaining key information.
-
-    Args:
-        text: The text to condense
-        text_model: The OpenAI model to use for condensing
-        condense_ratio: Target length as a ratio of original length
-
-    Returns:
-        str: Condensed version of the input text
-    """
-    if not text or not text.strip():
-        logger.warning("Input text is empty or whitespace only")
-        return text
-
-    input_word_count = len(text.split())
-    target_word_count = int(input_word_count * condense_ratio)
-
-    logger.debug(f"Input text length: {len(text)} characters, {input_word_count} words")
-    logger.debug(
-        f"Target ratio: {condense_ratio} ({int(condense_ratio * 100)}%), "
-        f"target word count: {target_word_count}"
-    )
-
-    client = OpenAI()
-
+def _build_condense_prompt(
+    text: str, input_word_count: int, target_word_count: int
+) -> tuple[str, str]:
+    """Build system message and prompt for text condensing."""
     system_message = f"""You are a text condensing assistant. Your task is to shorten text while preserving key information.
 
 CRITICAL REQUIREMENTS:
@@ -59,17 +37,90 @@ Text to condense:
 
 {text}"""
 
-    try:
-        response = client.chat.completions.create(
-            model=text_model,
-            messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": prompt},
-            ],
-            temperature=0.3,
-        )
+    return system_message, prompt
 
-        condensed_text = response.choices[0].message.content
+
+def _condense_with_openai(
+    text: str, model: str, system_message: str, prompt: str
+) -> str:
+    """Condense text using OpenAI API."""
+    client = OpenAI()
+
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.3,
+    )
+
+    return response.choices[0].message.content
+
+
+def _condense_with_anthropic(
+    text: str, model: str, system_message: str, prompt: str
+) -> str:
+    """Condense text using Anthropic API."""
+    client = Anthropic()
+
+    # Estimate max_tokens based on target (roughly 1.5x the input to be safe)
+    estimated_tokens = len(text.split()) * 2
+
+    response = client.messages.create(
+        model=model,
+        max_tokens=max(1024, estimated_tokens),
+        system=system_message,
+        messages=[
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.3,
+    )
+
+    # Anthropic returns a list of content blocks
+    return response.content[0].text
+
+
+def condense_text(
+    text: str,
+    model: str,
+    condense_ratio: float,
+    provider: str = "openai",
+) -> str:
+    """
+    Condense the text using AI while maintaining key information.
+
+    Args:
+        text: The text to condense
+        model: The model to use for condensing (e.g., gpt-5.1, claude-sonnet-4-20250514)
+        condense_ratio: Target length as a ratio of original length
+        provider: The API provider to use ("openai" or "anthropic")
+
+    Returns:
+        str: Condensed version of the input text
+    """
+    if not text or not text.strip():
+        logger.warning("Input text is empty or whitespace only")
+        return text
+
+    input_word_count = len(text.split())
+    target_word_count = int(input_word_count * condense_ratio)
+
+    logger.debug(f"Input text length: {len(text)} characters, {input_word_count} words")
+    logger.debug(
+        f"Target ratio: {condense_ratio} ({int(condense_ratio * 100)}%), "
+        f"target word count: {target_word_count}"
+    )
+    logger.debug(f"Using provider: {provider}, model: {model}")
+
+    system_message, prompt = _build_condense_prompt(text, input_word_count, target_word_count)
+
+    try:
+        if provider == "anthropic":
+            condensed_text = _condense_with_anthropic(text, model, system_message, prompt)
+        else:
+            # Default to OpenAI
+            condensed_text = _condense_with_openai(text, model, system_message, prompt)
 
         if not condensed_text or not condensed_text.strip():
             logger.warning(

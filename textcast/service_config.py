@@ -92,8 +92,29 @@ class SourceConfig:
 
 
 @dataclass
+class TextConfig:
+    """Configuration for text processing (condensing)."""
+
+    provider: str = "openai"  # openai, anthropic
+    model: str = "gpt-5.1"  # gpt-5.1, claude-sonnet-4-20250514, etc.
+    strategy: str = "condense"  # condense, full
+    condense_ratio: float = 0.5
+
+
+@dataclass
+class AudioConfig:
+    """Configuration for audio generation (TTS)."""
+
+    vendor: str = "openai"  # openai, elevenlabs
+    model: str = "tts-1-hd"  # tts-1, tts-1-hd, eleven_monolingual_v1
+    voice: str = "nova"  # alloy, echo, fable, onyx, nova, shimmer (openai); Sarah (elevenlabs)
+    format: str = "mp3"  # mp3, opus, aac, flac, pcm
+    output_dir: str = "/tmp/textcast-service"
+
+
+@dataclass
 class ProcessingConfig:
-    """Configuration for text processing."""
+    """Configuration for text processing (legacy, use text: and audio: instead)."""
 
     strategy: str = "condense"  # condense, full
     condense_ratio: float = 0.5
@@ -167,6 +188,10 @@ class ServiceConfig:
     check_interval: int = 5  # minutes (for external resources: RSS, YouTube)
     file_check_interval: int = 1  # minutes (for local files - more frequent)
     sources: List[SourceConfig] = field(default_factory=list)
+    # New structured config (preferred)
+    text: TextConfig = field(default_factory=TextConfig)
+    audio: AudioConfig = field(default_factory=AudioConfig)
+    # Legacy config (deprecated, use text: and audio: instead)
     processing: ProcessingConfig = field(default_factory=ProcessingConfig)
     destinations: List[Union[PodserviceDestination, AudiobookshelfDestination]] = field(
         default_factory=list
@@ -315,9 +340,38 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
         for source_data in data.get("sources", []):
             sources.append(SourceConfig(**source_data))
 
-        # Parse processing config
+        # Parse new text and audio config (preferred)
+        text_data = data.get("text", {})
+        audio_data = data.get("audio", {})
+
+        # Parse legacy processing config (for backward compatibility)
         processing_data = data.get("processing", {})
         processing = ProcessingConfig(**processing_data)
+
+        # Build text config - prefer new format, fall back to legacy
+        if text_data:
+            text_config = TextConfig(**text_data)
+        else:
+            # Migrate from legacy processing block
+            text_config = TextConfig(
+                provider="openai",  # Legacy only supported openai
+                model=processing_data.get("text_model", "gpt-5.1"),
+                strategy=processing_data.get("strategy", "condense"),
+                condense_ratio=processing_data.get("condense_ratio", 0.5),
+            )
+
+        # Build audio config - prefer new format, fall back to legacy
+        if audio_data:
+            audio_config = AudioConfig(**audio_data)
+        else:
+            # Migrate from legacy processing block
+            audio_config = AudioConfig(
+                vendor=processing_data.get("vendor", "openai"),
+                model=processing_data.get("speech_model", "tts-1-hd"),
+                voice=processing_data.get("voice", "nova"),
+                format=processing_data.get("audio_format", "mp3"),
+                output_dir=processing_data.get("output_dir", "/tmp/textcast-service"),
+            )
 
         # Parse destinations (new format with backward compatibility)
         destinations = _parse_destinations(data)
@@ -344,6 +398,8 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
             check_interval=parse_interval(data.get("check_interval", "5m")),
             file_check_interval=parse_interval(data.get("file_check_interval", "1m")),
             sources=sources,
+            text=text_config,
+            audio=audio_config,
             processing=processing,
             destinations=destinations,
             audiobookshelf=audiobookshelf,

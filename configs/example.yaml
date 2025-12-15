@@ -60,16 +60,31 @@ sources:
     file_patterns: ["*.mp3", "*.m4a", "*.wav", "*.flac"]
     check_duplicates: false # Not applicable for upload sources
 
-# Text processing configuration
-processing:
-  strategy: condense # Global strategy: "condense" or "full"
+# Text processing configuration (condensing)
+text:
+  provider: openai # API provider: openai, anthropic
+  model: gpt-5.1 # Model for condensing (gpt-5.1, claude-sonnet-4-20250514, etc.)
+  strategy: condense # Strategy: "condense" or "full"
   condense_ratio: 0.5 # Condense to 50% of original length
-  text_model: gpt-5.1 # OpenAI model for text processing
-  speech_model: tts-1-hd # OpenAI TTS model
-  voice: nova # TTS voice: alloy, echo, fable, onyx, nova, shimmer
-  audio_format: mp3 # Output audio format
-  output_dir: /Volumes/Storage/Data/Textcast/Audio # Permanent audio storage directory
+
+# Audio generation configuration (TTS)
+audio:
   vendor: openai # TTS vendor: openai, elevenlabs
+  model: tts-1-hd # TTS model: tts-1, tts-1-hd (openai); eleven_monolingual_v1 (elevenlabs)
+  voice: nova # TTS voice: alloy, echo, fable, onyx, nova, shimmer (openai); Sarah (elevenlabs)
+  format: mp3 # Output audio format: mp3, opus, aac, flac, pcm
+  output_dir: /Volumes/Storage/Data/Textcast/Audio # Permanent audio storage directory
+
+# Legacy processing configuration (deprecated, use text: and audio: instead)
+# processing:
+#   strategy: condense
+#   condense_ratio: 0.5
+#   text_model: gpt-5.1
+#   speech_model: tts-1-hd
+#   voice: nova
+#   audio_format: mp3
+#   output_dir: /Volumes/Storage/Data/Textcast/Audio
+#   vendor: openai
 
 # Audio file destinations (where processed audio is uploaded)
 destinations:

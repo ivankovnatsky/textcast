@@ -178,27 +178,29 @@ class TextcastServer:
                 # Process in background thread
                 def process_text_background():
                     try:
-                        processing_config = self.config.processing
+                        text_config = self.config.text
+                        audio_config = self.config.audio
                         processed_text = text
 
                         # Condense if enabled
-                        if processing_config.strategy == "condense":
+                        if text_config.strategy == "condense":
                             logger.info(f"Condensing text for: {title}")
                             processed_text = condense_text(
                                 text,
-                                processing_config.text_model,
-                                processing_config.condense_ratio,
+                                text_config.model,
+                                text_config.condense_ratio,
+                                text_config.provider,
                             )
 
                         # Process to audio
                         process_text_to_audio(
                             text=processed_text,
                             title=title,
-                            vendor=processing_config.vendor,
-                            directory=processing_config.output_dir,
-                            audio_format=processing_config.audio_format,
-                            model=processing_config.speech_model,
-                            voice=processing_config.voice,
+                            vendor=audio_config.vendor,
+                            directory=audio_config.output_dir,
+                            audio_format=audio_config.format,
+                            model=audio_config.model,
+                            voice=audio_config.voice,
                             strip=None,
                             destinations=self.config.destinations if self.config.destinations else None,
                         )
