@@ -17,10 +17,10 @@ sources:
 processing:
   # Text processing (condensing)
   text:
-    provider: openai # API provider: openai, anthropic
-    model: gpt-5.1 # Model for condensing
-    # provider: anthropic
-    # model: claude-sonnet-4-5-20250929
+    # provider: openai # API provider: openai, anthropic
+    # model: gpt-5.1 # Model for condensing
+    provider: anthropic
+    model: claude-sonnet-4-5-20250929
     strategy: condense
     condense_ratio: 0.5
 
