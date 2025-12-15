@@ -49,8 +49,8 @@ logger = logging.getLogger(__name__)
 @click.option(
     "--text-model",
     type=str,
-    default="claude-sonnet-4-20250514",
-    help="The model to be used for text condensing (e.g., claude-sonnet-4-20250514, gpt-5.1)",
+    default="claude-sonnet-4-5-20250929",
+    help="The model to be used for text condensing (e.g., claude-sonnet-4-5-20250929, gpt-5.1)",
 )
 @click.option(
     "--text-provider",

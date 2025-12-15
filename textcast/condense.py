@@ -92,7 +92,7 @@ def condense_text(
 
     Args:
         text: The text to condense
-        model: The model to use for condensing (e.g., gpt-5.1, claude-sonnet-4-20250514)
+        model: The model to use for condensing (e.g., gpt-5.1, claude-sonnet-4-5-20250929)
         condense_ratio: Target length as a ratio of original length
         provider: The API provider to use ("openai" or "anthropic")
 
