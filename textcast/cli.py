@@ -49,13 +49,13 @@ logger = logging.getLogger(__name__)
 @click.option(
     "--text-model",
     type=str,
-    default="gpt-5.1",
-    help="The model to be used for text condensing (e.g., gpt-5.1, claude-sonnet-4-20250514)",
+    default="claude-sonnet-4-20250514",
+    help="The model to be used for text condensing (e.g., claude-sonnet-4-20250514, gpt-5.1)",
 )
 @click.option(
     "--text-provider",
     type=click.Choice(["openai", "anthropic"]),
-    default="openai",
+    default="anthropic",
     help="The API provider for text condensing (openai or anthropic)",
 )
 @click.option(

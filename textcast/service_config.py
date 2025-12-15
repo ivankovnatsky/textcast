@@ -92,17 +92,17 @@ class SourceConfig:
 
 
 @dataclass
-class TextConfig:
+class TextProcessingConfig:
     """Configuration for text processing (condensing)."""
 
-    provider: str = "openai"  # openai, anthropic
-    model: str = "gpt-5.1"  # gpt-5.1, claude-sonnet-4-20250514, etc.
+    provider: str = "anthropic"  # openai, anthropic
+    model: str = "claude-sonnet-4-20250514"  # claude-sonnet-4-20250514, gpt-5.1, etc.
     strategy: str = "condense"  # condense, full
     condense_ratio: float = 0.5
 
 
 @dataclass
-class AudioConfig:
+class AudioProcessingConfig:
     """Configuration for audio generation (TTS)."""
 
     vendor: str = "openai"  # openai, elevenlabs
@@ -114,16 +114,10 @@ class AudioConfig:
 
 @dataclass
 class ProcessingConfig:
-    """Configuration for text processing (legacy, use text: and audio: instead)."""
+    """Configuration for processing with nested text and audio configs."""
 
-    strategy: str = "condense"  # condense, full
-    condense_ratio: float = 0.5
-    text_model: str = "gpt-5.1"
-    speech_model: str = "tts-1-hd"
-    voice: str = "nova"
-    audio_format: str = "mp3"
-    output_dir: str = "/tmp/textcast-service"
-    vendor: str = "openai"
+    text: TextProcessingConfig = field(default_factory=TextProcessingConfig)
+    audio: AudioProcessingConfig = field(default_factory=AudioProcessingConfig)
 
 
 @dataclass
@@ -188,10 +182,6 @@ class ServiceConfig:
     check_interval: int = 5  # minutes (for external resources: RSS, YouTube)
     file_check_interval: int = 1  # minutes (for local files - more frequent)
     sources: List[SourceConfig] = field(default_factory=list)
-    # New structured config (preferred)
-    text: TextConfig = field(default_factory=TextConfig)
-    audio: AudioConfig = field(default_factory=AudioConfig)
-    # Legacy config (deprecated, use text: and audio: instead)
     processing: ProcessingConfig = field(default_factory=ProcessingConfig)
     destinations: List[Union[PodserviceDestination, AudiobookshelfDestination]] = field(
         default_factory=list
@@ -340,38 +330,40 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
         for source_data in data.get("sources", []):
             sources.append(SourceConfig(**source_data))
 
-        # Parse new text and audio config (preferred)
-        text_data = data.get("text", {})
-        audio_data = data.get("audio", {})
-
-        # Parse legacy processing config (for backward compatibility)
+        # Parse processing config with nested text and audio
         processing_data = data.get("processing", {})
-        processing = ProcessingConfig(**processing_data)
 
-        # Build text config - prefer new format, fall back to legacy
+        # Check for new nested format (processing.text and processing.audio)
+        text_data = processing_data.get("text", {})
+        audio_data = processing_data.get("audio", {})
+
+        # Build text config - prefer nested format, fall back to legacy flat format
         if text_data:
-            text_config = TextConfig(**text_data)
+            text_config = TextProcessingConfig(**text_data)
         else:
-            # Migrate from legacy processing block
-            text_config = TextConfig(
-                provider="openai",  # Legacy only supported openai
-                model=processing_data.get("text_model", "gpt-5.1"),
+            # Migrate from legacy flat processing block
+            text_config = TextProcessingConfig(
+                provider=processing_data.get("text_provider", "anthropic"),
+                model=processing_data.get("text_model", "claude-sonnet-4-20250514"),
                 strategy=processing_data.get("strategy", "condense"),
                 condense_ratio=processing_data.get("condense_ratio", 0.5),
             )
 
-        # Build audio config - prefer new format, fall back to legacy
+        # Build audio config - prefer nested format, fall back to legacy flat format
         if audio_data:
-            audio_config = AudioConfig(**audio_data)
+            audio_config = AudioProcessingConfig(**audio_data)
         else:
-            # Migrate from legacy processing block
-            audio_config = AudioConfig(
+            # Migrate from legacy flat processing block
+            audio_config = AudioProcessingConfig(
                 vendor=processing_data.get("vendor", "openai"),
                 model=processing_data.get("speech_model", "tts-1-hd"),
                 voice=processing_data.get("voice", "nova"),
                 format=processing_data.get("audio_format", "mp3"),
                 output_dir=processing_data.get("output_dir", "/tmp/textcast-service"),
             )
+
+        # Create ProcessingConfig with nested text and audio
+        processing = ProcessingConfig(text=text_config, audio=audio_config)
 
         # Parse destinations (new format with backward compatibility)
         destinations = _parse_destinations(data)
@@ -398,8 +390,6 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
             check_interval=parse_interval(data.get("check_interval", "5m")),
             file_check_interval=parse_interval(data.get("file_check_interval", "1m")),
             sources=sources,
-            text=text_config,
-            audio=audio_config,
             processing=processing,
             destinations=destinations,
             audiobookshelf=audiobookshelf,

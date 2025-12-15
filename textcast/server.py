@@ -178,8 +178,8 @@ class TextcastServer:
                 # Process in background thread
                 def process_text_background():
                     try:
-                        text_config = self.config.text
-                        audio_config = self.config.audio
+                        text_config = self.config.processing.text
+                        audio_config = self.config.processing.audio
                         processed_text = text
 
                         # Condense if enabled
