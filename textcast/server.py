@@ -2,10 +2,11 @@
 
 import logging
 import threading
-from pathlib import Path
 
-from flask import Flask, Response, redirect, request
+from flask import Flask, redirect, request
 
+from .common import process_text_to_audio
+from .condense import condense_text
 from .service_config import ServiceConfig
 
 logger = logging.getLogger(__name__)
@@ -34,10 +35,13 @@ class TextcastServer:
         def index():
             """Root endpoint."""
             success = request.args.get("success")
+            success_text = request.args.get("success_text")
             error = request.args.get("error")
 
             message = ""
-            if success:
+            if success_text:
+                message = '<div style="padding: 10px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 4px; margin-bottom: 20px;">✓ Text submitted for processing! Audio will be generated in the background.</div>'
+            elif success:
                 message = '<div style="padding: 10px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 4px; margin-bottom: 20px;">✓ URL added successfully! Processing will start automatically.</div>'
             elif error:
                 message = f'<div style="padding: 10px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 4px; margin-bottom: 20px;">✗ Error: {error}</div>'
@@ -67,7 +71,7 @@ class TextcastServer:
                         h1, h2 {{ color: #e0e0e0; }}
                         p {{ color: #999; }}
                         .form-group {{ border-top-color: #333; }}
-                        input[type="text"] {{ background-color: #2a2a2a; color: #e0e0e0; border-color: #444; }}
+                        input[type="text"], textarea {{ background-color: #2a2a2a; color: #e0e0e0; border-color: #444; }}
                         button {{ background-color: #0d6efd; }}
                         button:hover {{ background-color: #0b5ed7; }}
                         .info {{ background-color: #2a2a2a; border-left-color: #4a9eff; }}
@@ -110,6 +114,18 @@ class TextcastServer:
                         </div>
                     </form>
                 </div>
+
+                <div class="form-group">
+                    <h2>Add Free Text</h2>
+                    <p style="color: #666; margin-bottom: 15px;">Paste article text directly when URL extraction fails.</p>
+                    <form method="POST" action="/add-text">
+                        <div style="margin-bottom: 15px;">
+                            <input type="text" name="title" placeholder="Article title (required)" required style="width: 100%; margin-bottom: 10px;">
+                            <textarea name="text" placeholder="Paste article text here..." required style="width: 100%; min-height: 200px; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; background-color: #fff; color: #333; font-family: inherit; resize: vertical;"></textarea>
+                        </div>
+                        <button type="submit">Process Text</button>
+                    </form>
+                </div>
             </body>
             </html>
             """
@@ -142,6 +158,62 @@ class TextcastServer:
                 return redirect(f"/?error=Configuration error: {str(e)}")
             except Exception as e:
                 logger.error(f"Error adding URL: {e}", exc_info=True)
+                return redirect(f"/?error={str(e)}")
+
+        @self.app.route("/add-text", methods=["POST"])
+        def add_text():
+            """Process free text directly."""
+            try:
+                text = request.form.get("text", "").strip()
+                title = request.form.get("title", "").strip()
+
+                if not text:
+                    return redirect("/?error=Text is required")
+
+                if not title:
+                    return redirect("/?error=Title is required")
+
+                logger.info(f"Processing free text via web interface: {title}")
+
+                # Process in background thread
+                def process_text_background():
+                    try:
+                        processing_config = self.config.processing
+                        processed_text = text
+
+                        # Condense if enabled
+                        if processing_config.strategy == "condense":
+                            logger.info(f"Condensing text for: {title}")
+                            processed_text = condense_text(
+                                text,
+                                processing_config.text_model,
+                                processing_config.condense_ratio,
+                            )
+
+                        # Process to audio
+                        process_text_to_audio(
+                            text=processed_text,
+                            title=title,
+                            vendor=processing_config.vendor,
+                            directory=processing_config.output_dir,
+                            audio_format=processing_config.audio_format,
+                            model=processing_config.speech_model,
+                            voice=processing_config.voice,
+                            strip=None,
+                            destinations=self.config.destinations if self.config.destinations else None,
+                        )
+
+                        logger.info(f"Successfully processed free text: {title}")
+
+                    except Exception as e:
+                        logger.error(f"Error processing free text '{title}': {e}", exc_info=True)
+
+                threading.Thread(target=process_text_background, daemon=True).start()
+
+                return redirect("/?success_text=1")
+
+            except Exception as e:
+                logger.error(f"Error submitting text: {e}", exc_info=True)
                 return redirect(f"/?error={str(e)}")
 
     def start(self):
