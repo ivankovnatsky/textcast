@@ -71,6 +71,114 @@ def generate_lowercase_string():
     return result
 
 
+def upload_to_destinations(
+    file_path: Path,
+    title: str,
+    destinations: Optional[
+        List[Union[PodserviceDestination, AudiobookshelfDestination]]
+    ] = None,
+    source_url: Optional[str] = None,
+    description: Optional[str] = None,
+    image_url: Optional[str] = None,
+    # Legacy parameters
+    abs_url: Optional[str] = None,
+    abs_library: Optional[str] = None,
+    abs_folder_id: Optional[str] = None,
+    podservice_url: Optional[str] = None,
+) -> bool:
+    """Upload audio file to configured destinations.
+
+    Args:
+        file_path: Path to audio file
+        title: Title for the upload
+        destinations: List of destination configs (new format)
+        source_url: Original URL for GUID deduplication
+        description: Episode description
+        image_url: Episode artwork URL
+        abs_url, abs_library, abs_folder_id: Legacy Audiobookshelf params
+        podservice_url: Legacy Podservice URL
+
+    Returns:
+        True if any upload succeeded
+    """
+    upload_succeeded = False
+
+    # Use new destinations list if provided
+    if destinations:
+        for dest in destinations:
+            if not dest.enabled:
+                logger.debug(f"Destination {dest.type} is disabled, skipping")
+                continue
+
+            if isinstance(dest, PodserviceDestination):
+                if dest.url:
+                    logger.info(f"Uploading to Podservice: {dest.url}")
+                    success = upload_to_podservice(
+                        file_path=file_path,
+                        title=title,
+                        podservice_url=dest.url,
+                        description=description,
+                        source_url=source_url,
+                        image_url=image_url,
+                    )
+                    if success:
+                        logger.info("Successfully uploaded to Podservice!")
+                        upload_succeeded = True
+                    else:
+                        logger.warning("Failed to upload to Podservice")
+                else:
+                    logger.debug("Podservice destination has no URL, skipping")
+
+            elif isinstance(dest, AudiobookshelfDestination):
+                if dest.url:
+                    library = dest.library_name or dest.library_id or None
+                    logger.info(f"Uploading to Audiobookshelf: {dest.url}")
+                    success = upload_to_audiobookshelf(
+                        file_path,
+                        dest.url,
+                        library,
+                        dest.folder_id or None,
+                        title,
+                    )
+                    if success:
+                        logger.info("Successfully uploaded to Audiobookshelf!")
+                        upload_succeeded = True
+                    else:
+                        logger.warning("Failed to upload to Audiobookshelf")
+                else:
+                    logger.debug("Audiobookshelf destination has no URL, skipping")
+    else:
+        # Fall back to legacy parameters
+        if abs_url and abs_library:
+            logger.info("Uploading to Audiobookshelf...")
+            success = upload_to_audiobookshelf(
+                file_path, abs_url, abs_library, abs_folder_id, title
+            )
+            if success:
+                logger.info("Successfully uploaded to Audiobookshelf!")
+                upload_succeeded = True
+            else:
+                logger.warning("Failed to upload to Audiobookshelf")
+
+        if podservice_url:
+            logger.info("Uploading to Podservice...")
+            success = upload_to_podservice(
+                file_path=file_path,
+                title=title,
+                podservice_url=podservice_url,
+                description=description,
+                source_url=source_url,
+                image_url=image_url,
+            )
+            if success:
+                logger.info("Successfully uploaded to Podservice!")
+                upload_succeeded = True
+            else:
+                logger.warning("Failed to upload to Podservice")
+
+    return upload_succeeded
+
+
 def process_text_to_audio(
     text,
     title,
