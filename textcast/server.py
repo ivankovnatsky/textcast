@@ -121,7 +121,7 @@ class TextcastServer:
                     <form method="POST" action="/add-text">
                         <div style="margin-bottom: 15px;">
                             <input type="text" name="title" placeholder="Article title (required)" required style="width: 100%; margin-bottom: 10px;">
-                            <textarea name="text" placeholder="Paste article text here..." required style="width: 100%; min-height: 200px; padding: 12px; font-size: 16px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
+                            <textarea name="text" placeholder="Paste article text here..." required style="width: 100%; min-height: 200px; font-family: inherit; resize: vertical;"></textarea>
                         </div>
                         <button type="submit">Process Text</button>
                     </form>
