@@ -7,10 +7,12 @@ from playwright.sync_api import sync_playwright
 
 logger = logging.getLogger(__name__)
 
-FILTERED_DOMAINS = {
-    # Video platforms
+YOUTUBE_DOMAINS = {
     "youtube.com",
     "youtu.be",
+}
+
+FILTERED_DOMAINS = {
     # Package repositories
     "pypi.org",
     "npmjs.com",
@@ -60,6 +62,12 @@ def get_final_url_with_browser(url: str) -> Optional[Tuple[str, bool]]:
             return None
         finally:
             browser.close()
+
+
+def is_youtube_url(url: str) -> bool:
+    """Check if the URL is a YouTube video URL."""
+    domain = urlparse(url).netloc.lower()
+    return any(yt_domain in domain for yt_domain in YOUTUBE_DOMAINS)
 
 
 def is_filtered_domain(url: str) -> bool:

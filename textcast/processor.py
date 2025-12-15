@@ -6,11 +6,12 @@ from typing import List, Optional
 import click
 
 from .aggregator import detect_and_expand_aggregator
-from .common import process_text_to_audio
+from .audiobookshelf import download_audio
+from .common import process_text_to_audio, upload_to_destinations
 from .condense import condense_text
 from .constants import MIN_CONTENT_LENGTH, SUSPICIOUS_TEXTS
 from .errors import ProcessingError
-from .filter_urls import filter_url
+from .filter_urls import filter_url, is_youtube_url
 from .text import get_text_content
 
 logger = logging.getLogger(__name__)
@@ -66,6 +67,59 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
     # Process the expanded URLs
     for url in expanded_urls:
         try:
+            # Handle YouTube URLs specially - download audio and upload to destinations
+            if is_youtube_url(url):
+                logger.info(f"Processing YouTube URL: {url}")
+                output_dir = kwargs.get("directory", "/tmp/textcast")
+                audio_file = download_audio(url, output_dir)
+
+                if audio_file and audio_file.exists():
+                    # Get title from filename (yt-dlp sets it)
+                    title = audio_file.stem
+
+                    # Upload to destinations
+                    upload_success = upload_to_destinations(
+                        file_path=audio_file,
+                        title=title,
+                        destinations=kwargs.get("destinations"),
+                        source_url=url,
+                        abs_url=kwargs.get("abs_url"),
+                        abs_library=kwargs.get("abs_pod_lib_id"),
+                        abs_folder_id=kwargs.get("abs_pod_folder_id"),
+                        podservice_url=kwargs.get("podservice_url"),
+                    )
+
+                    if upload_success:
+                        logger.info(f"Successfully processed YouTube URL: {url}")
+                        results.append(ProcessingResult(url=url, success=True))
+
+                        # Clean up local file after successful upload
+                        try:
+                            os.remove(audio_file)
+                            logger.info(f"Deleted local audio file: {audio_file}")
+                        except Exception as e:
+                            logger.warning(f"Failed to delete local audio file: {e}")
+
+                        # Remove from URL file
+                        file_url_list = kwargs.get("file_url_list")
+                        if file_url_list and os.path.exists(file_url_list):
+                            try:
+                                with open(file_url_list, "r") as f:
+                                    lines = f.readlines()
+                                with open(file_url_list, "w") as f:
+                                    for line in lines:
+                                        if line.strip() != url:
+                                            f.write(line)
+                                logger.info(f"Removed YouTube URL from {file_url_list}: {url}")
+                            except Exception as e:
+                                logger.error(f"Failed to update URL file: {e}")
+                    else:
+                        raise ProcessingError("Failed to upload YouTube audio to destinations")
+                else:
+                    raise ProcessingError("Failed to download audio from YouTube")
+
+                continue
+
             if not filter_url(url):
                 logger.info(f"Skipping URL: {url}")
                 results.append(
