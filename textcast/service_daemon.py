@@ -379,22 +379,24 @@ class TextcastService:
 
         logger.info(f"Processing {len(urls)} URLs from {source.name}")
 
-        # Prepare processing arguments
-        processing_config = self.config.processing
-        source_strategy = source.processing_strategy or processing_config.strategy
+        # Prepare processing arguments - use new config structure with legacy fallback
+        text_config = self.config.text
+        audio_config = self.config.audio
+        source_strategy = source.processing_strategy or text_config.strategy
 
         kwargs = {
-            "vendor": processing_config.vendor,
-            "directory": processing_config.output_dir,
-            "audio_format": processing_config.audio_format,
-            "speech_model": processing_config.speech_model,
-            "text_model": processing_config.text_model,
-            "voice": processing_config.voice,
+            "vendor": audio_config.vendor,
+            "directory": audio_config.output_dir,
+            "audio_format": audio_config.format,
+            "speech_model": audio_config.model,
+            "text_model": text_config.model,
+            "text_provider": text_config.provider,
+            "voice": audio_config.voice,
             "strip": None,
             "yes": True,  # Auto-approve processing
             "debug": False,
             "condense": source_strategy == "condense",
-            "condense_ratio": processing_config.condense_ratio,
+            "condense_ratio": text_config.condense_ratio,
             "aggregator": False,
             "auto_detect_aggregator": True,
         }
@@ -501,23 +503,25 @@ class TextcastService:
 
             logger.info(f"Processing {len(urls)} URLs from {source.name}")
 
-            # Prepare processing arguments based on source and global config
-            processing_config = self.config.processing
-            source_strategy = source.processing_strategy or processing_config.strategy
+            # Prepare processing arguments - use new config structure with legacy fallback
+            text_config = self.config.text
+            audio_config = self.config.audio
+            source_strategy = source.processing_strategy or text_config.strategy
 
             kwargs = {
                 "file_url_list": source.file,
-                "vendor": processing_config.vendor,
-                "directory": processing_config.output_dir,
-                "audio_format": processing_config.audio_format,
-                "speech_model": processing_config.speech_model,
-                "text_model": processing_config.text_model,
-                "voice": processing_config.voice,
+                "vendor": audio_config.vendor,
+                "directory": audio_config.output_dir,
+                "audio_format": audio_config.format,
+                "speech_model": audio_config.model,
+                "text_model": text_config.model,
+                "text_provider": text_config.provider,
+                "voice": audio_config.voice,
                 "strip": None,
                 "yes": True,  # Auto-approve processing
                 "debug": False,
                 "condense": source_strategy == "condense",
-                "condense_ratio": processing_config.condense_ratio,
+                "condense_ratio": text_config.condense_ratio,
                 "aggregator": False,
                 "auto_detect_aggregator": True,
             }

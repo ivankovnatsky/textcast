@@ -50,7 +50,13 @@ logger = logging.getLogger(__name__)
     "--text-model",
     type=str,
     default="gpt-5.1",
-    help="The model to be used for text condensing (e.g., gpt-5.1, gpt-4-turbo-preview)",
+    help="The model to be used for text condensing (e.g., gpt-5.1, claude-sonnet-4-20250514)",
+)
+@click.option(
+    "--text-provider",
+    type=click.Choice(["openai", "anthropic"]),
+    default="openai",
+    help="The API provider for text condensing (openai or anthropic)",
 )
 @click.option(
     "--voice",
@@ -125,6 +131,7 @@ def cli(
     audio_format,
     speech_model,
     text_model,
+    text_provider,
     voice,
     strip,
     yes,
@@ -182,14 +189,14 @@ def cli(
         "Using vendor: %s, speech_model: %s, voice: %s", vendor, speech_model, voice
     )
     if condense:
-        logger.debug("Using text_model: %s", text_model)
+        logger.debug("Using text_provider: %s, text_model: %s", text_provider, text_model)
 
     if file_text:
         with open(file_text, "r") as f:
             text = f.read()
         if condense:
             logger.info("Condensing text...")
-            text = condense_text(text, text_model, condense_ratio)
+            text = condense_text(text, text_model, condense_ratio, text_provider)
         title = f"custom-text-podcast-{generate_lowercase_string()}"
         logger.info(f"Processing custom text with title: {title}")
         process_text_to_audio(
@@ -274,6 +281,7 @@ def cli(
             "audio_format": audio_format,
             "speech_model": speech_model,
             "text_model": text_model,
+            "text_provider": text_provider,
             "voice": voice,
             "strip": strip,
             "yes": yes,

@@ -27,6 +27,7 @@
         pythonPackages =
           ps: with ps; [
             # Core Dependencies
+            anthropic
             beautifulsoup4
             click
             elevenlabs

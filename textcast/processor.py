@@ -164,7 +164,10 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
             if kwargs.get("condense"):
                 logger.info("Condensing text...")
                 text = condense_text(
-                    text, kwargs["text_model"], kwargs["condense_ratio"]
+                    text,
+                    kwargs["text_model"],
+                    kwargs["condense_ratio"],
+                    kwargs.get("text_provider", "openai"),
                 )
 
             # Process the text to audio

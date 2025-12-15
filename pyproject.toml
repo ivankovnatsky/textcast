@@ -10,6 +10,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License"
 ]
 dependencies = [
+    "anthropic",
     "beautifulsoup4",
     "click",
     "elevenlabs",
@@ -51,6 +52,7 @@ homepage = "https://github.com/ivankovnatsky/textcast"
 
 [tool.poetry.dependencies]
 python = ">=3.8"
+anthropic = "*"
 beautifulsoup4 = "*"
 click = "*"
 elevenlabs = "*"
