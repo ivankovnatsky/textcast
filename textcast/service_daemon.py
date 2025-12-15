@@ -25,6 +25,7 @@ class TextcastService:
     def __init__(self, config: ServiceConfig):
         self.config = config
         self.running = False
+        self._shutdown_signal = None  # Track signal that triggered shutdown
         self.monitors: Dict[str, object] = {}
         self.file_watchers = []  # Store file watchers
         self.server = TextcastServer(config)  # Initialize web server
@@ -225,9 +226,13 @@ class TextcastService:
         )
 
     def _signal_handler(self, signum, frame):
-        """Handle shutdown signals gracefully."""
-        logger.info(f"Received signal {signum}, shutting down...")
-        self.stop()
+        """Handle shutdown signals gracefully.
+
+        Note: Don't log here - logging in signal handlers can cause
+        reentrant call errors if the signal interrupts an ongoing log write.
+        """
+        self._shutdown_signal = signum
+        self.running = False
 
     def start(self):
         """Start the service daemon."""
@@ -331,6 +336,13 @@ class TextcastService:
         except Exception as e:
             logger.error(f"Service error: {e}", exc_info=True)
         finally:
+            # Log shutdown signal if we received one
+            if self._shutdown_signal is not None:
+                logger.info(f"Received signal {self._shutdown_signal}, shutting down...")
+
+            # Stop web server
+            self.server.stop()
+
             # Stop file watchers
             for observer, source_name in self.file_watchers:
                 observer.stop()
