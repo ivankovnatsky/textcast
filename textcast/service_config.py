@@ -96,7 +96,7 @@ class TextProcessingConfig:
     """Configuration for text processing (condensing)."""
 
     provider: str = "anthropic"  # openai, anthropic
-    model: str = "claude-sonnet-4-20250514"  # claude-sonnet-4-20250514, gpt-5.1, etc.
+    model: str = "claude-sonnet-4-5-20250929"  # claude-sonnet-4-5-20250929, gpt-5.1, etc.
     strategy: str = "condense"  # condense, full
     condense_ratio: float = 0.5
 
@@ -344,7 +344,7 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
             # Migrate from legacy flat processing block
             text_config = TextProcessingConfig(
                 provider=processing_data.get("text_provider", "anthropic"),
-                model=processing_data.get("text_model", "claude-sonnet-4-20250514"),
+                model=processing_data.get("text_model", "claude-sonnet-4-5-20250929"),
                 strategy=processing_data.get("strategy", "condense"),
                 condense_ratio=processing_data.get("condense_ratio", 0.5),
             )
