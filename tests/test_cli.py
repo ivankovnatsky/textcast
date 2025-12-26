@@ -8,7 +8,7 @@ from textcast.cli import cli
 from .conftest import ARTICLE_URL_HTML
 
 
-def test_process_article_openai_file_list(setup_article_file, capture_logging):
+def test_process_text_openai_file_list(setup_article_file, capture_logging):
     # Clean up existing MP3 files first
     for f in Path("/tmp").glob("*.mp3"):
         f.unlink()
