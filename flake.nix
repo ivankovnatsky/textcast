@@ -81,7 +81,12 @@
 
           postFixup = ''
             wrapProgram $out/bin/textcast \
-              --prefix PATH : "${pkgs.lib.makeBinPath [ pkgs.coreutils pkgs.ffmpeg ]}" \
+              --prefix PATH : "${
+                pkgs.lib.makeBinPath [
+                  pkgs.coreutils
+                  pkgs.ffmpeg
+                ]
+              }" \
               --set PLAYWRIGHT_BROWSERS_PATH "${pkgs.playwright-driver.browsers}" \
               --set PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS "true"
           '';

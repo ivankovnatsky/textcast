@@ -189,7 +189,9 @@ def cli(
         "Using vendor: %s, speech_model: %s, voice: %s", vendor, speech_model, voice
     )
     if condense:
-        logger.debug("Using text_provider: %s, text_model: %s", text_provider, text_model)
+        logger.debug(
+            "Using text_provider: %s, text_model: %s", text_provider, text_model
+        )
 
     if file_text:
         with open(file_text, "r") as f:

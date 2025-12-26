@@ -4,8 +4,6 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from textcast.podservice import upload_to_podservice
 
 
@@ -73,7 +71,10 @@ class TestUploadToPodservice:
         try:
             mock_response = MagicMock()
             mock_response.status_code = 400
-            mock_response.json.return_value = {"success": False, "error": "Missing title"}
+            mock_response.json.return_value = {
+                "success": False,
+                "error": "Missing title",
+            }
             mock_response.text = "Missing title"
 
             with patch("textcast.podservice.requests.post", return_value=mock_response):
@@ -176,7 +177,9 @@ class TestUploadToPodservice:
             mock_response.status_code = 201
             mock_response.json.return_value = {"success": True, "episode": {}}
 
-            with patch("textcast.podservice.requests.post", return_value=mock_response) as mock_post:
+            with patch(
+                "textcast.podservice.requests.post", return_value=mock_response
+            ) as mock_post:
                 upload_to_podservice(
                     file_path=audio_path,
                     title="Test Episode",
@@ -200,7 +203,9 @@ class TestUploadToPodservice:
             mock_response.status_code = 201
             mock_response.json.return_value = {"success": True, "episode": {}}
 
-            with patch("textcast.podservice.requests.post", return_value=mock_response) as mock_post:
+            with patch(
+                "textcast.podservice.requests.post", return_value=mock_response
+            ) as mock_post:
                 upload_to_podservice(
                     file_path=audio_path,
                     title="Test Episode",

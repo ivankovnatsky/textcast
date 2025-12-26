@@ -1,6 +1,5 @@
 """Tests for service configuration, including destinations parsing."""
 
-import os
 import tempfile
 from pathlib import Path
 

@@ -40,7 +40,6 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
         List[ProcessingResult]: Results of processing each text
     """
     results = []
-    aggregator_source = kwargs.get("aggregator_source")
     auto_detect_aggregator = kwargs.get("auto_detect_aggregator", True)
 
     # Expand aggregator URLs if auto-detection is enabled
@@ -110,11 +109,15 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
                                     for line in lines:
                                         if line.strip() != url:
                                             f.write(line)
-                                logger.info(f"Removed YouTube URL from {file_url_list}: {url}")
+                                logger.info(
+                                    f"Removed YouTube URL from {file_url_list}: {url}"
+                                )
                             except Exception as e:
                                 logger.error(f"Failed to update URL file: {e}")
                     else:
-                        raise ProcessingError("Failed to upload YouTube audio to destinations")
+                        raise ProcessingError(
+                            "Failed to upload YouTube audio to destinations"
+                        )
                 else:
                     raise ProcessingError("Failed to download audio from YouTube")
 
@@ -328,10 +331,13 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
                 # Log each aggregator that was processed
                 for aggregator_url in unique_aggregators:
                     articles_from_aggregator = [
-                        url for url, agg in aggregator_sources.items() if agg == aggregator_url
+                        url
+                        for url, agg in aggregator_sources.items()
+                        if agg == aggregator_url
                     ]
                     successful_from_aggregator = sum(
-                        1 for r in results
+                        1
+                        for r in results
                         if r.success and r.url in articles_from_aggregator
                     )
                     logger.info(
