@@ -14,7 +14,7 @@ def _build_condense_prompt(
 
 CRITICAL REQUIREMENTS:
 1. You MUST produce output that is approximately {target_word_count} words long. This word count requirement is non-negotiable. If you produce significantly fewer words, you have failed the task.
-2. You MUST write the output in the SAME LANGUAGE as the input text. If the input is in Ukrainian, output in Ukrainian. If in German, output in German. Never translate to English unless the original is in English."""
+2. You MUST write the output in the SAME LANGUAGE as the input text. Never translate to any other language, just stick to original."""
 
     prompt = f"""Condense the following text.
 
@@ -25,7 +25,7 @@ LENGTH REQUIREMENT (MANDATORY):
 
 LANGUAGE REQUIREMENT (MANDATORY):
 - Output MUST be in the same language as the input text
-- Do NOT translate to English or any other language
+- Do NOT translate to any other language, stick to original
 
 Guidelines:
 - Preserve all key facts, arguments, and important details
