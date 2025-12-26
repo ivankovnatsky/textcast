@@ -96,7 +96,9 @@ class TextProcessingConfig:
     """Configuration for text processing (condensing)."""
 
     provider: str = "anthropic"  # openai, anthropic
-    model: str = "claude-sonnet-4-5-20250929"  # claude-sonnet-4-5-20250929, gpt-5.1, etc.
+    model: str = (
+        "claude-sonnet-4-5-20250929"  # claude-sonnet-4-5-20250929, gpt-5.1, etc.
+    )
     strategy: str = "condense"  # condense, full
     condense_ratio: float = 0.5
 
@@ -107,7 +109,9 @@ class AudioProcessingConfig:
 
     vendor: str = "openai"  # openai, elevenlabs
     model: str = "tts-1-hd"  # tts-1, tts-1-hd, eleven_monolingual_v1
-    voice: str = "nova"  # alloy, echo, fable, onyx, nova, shimmer (openai); Sarah (elevenlabs)
+    voice: str = (
+        "nova"  # alloy, echo, fable, onyx, nova, shimmer (openai); Sarah (elevenlabs)
+    )
     format: str = "mp3"  # mp3, opus, aac, flac, pcm
     output_dir: str = "/tmp/textcast-service"
 

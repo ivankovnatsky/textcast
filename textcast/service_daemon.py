@@ -267,7 +267,9 @@ class TextcastService:
             s.name for s in self.config.sources if s.enabled and s.type == "file"
         ]
         upload_file_sources = [
-            s.name for s in self.config.sources if s.enabled and s.type == "upload_file_process"
+            s.name
+            for s in self.config.sources
+            if s.enabled and s.type == "upload_file_process"
         ]
         upload_sources = [
             s.name for s in self.config.sources if s.enabled and s.type == "upload"
@@ -338,7 +340,9 @@ class TextcastService:
         finally:
             # Log shutdown signal if we received one
             if self._shutdown_signal is not None:
-                logger.info(f"Received signal {self._shutdown_signal}, shutting down...")
+                logger.info(
+                    f"Received signal {self._shutdown_signal}, shutting down..."
+                )
 
             # Stop web server
             self.server.stop()
@@ -460,7 +464,8 @@ class TextcastService:
         # Find all audio files (mp3, m4a, wav, etc.)
         audio_extensions = {".mp3", ".m4a", ".wav", ".ogg", ".flac"}
         audio_files = [
-            f for f in output_dir.iterdir()
+            f
+            for f in output_dir.iterdir()
             if f.is_file() and f.suffix.lower() in audio_extensions
         ]
 
@@ -488,7 +493,9 @@ class TextcastService:
                     audio_file.unlink()
                     logger.info(f"Deleted orphan file after upload: {audio_file.name}")
                 except Exception as e:
-                    logger.warning(f"Failed to delete orphan file {audio_file.name}: {e}")
+                    logger.warning(
+                        f"Failed to delete orphan file {audio_file.name}: {e}"
+                    )
             else:
                 logger.warning(f"Failed to upload orphan file: {audio_file.name}")
 
@@ -544,7 +551,10 @@ class TextcastService:
             else:
                 # Fall back to legacy config for backward compatibility
                 # Add Audiobookshelf settings
-                if self.config.audiobookshelf.url and self.config.audiobookshelf.api_key:
+                if (
+                    self.config.audiobookshelf.url
+                    and self.config.audiobookshelf.api_key
+                ):
                     kwargs.update(
                         {
                             "abs_url": self.config.audiobookshelf.url,
@@ -590,7 +600,9 @@ class TextcastService:
                 logger.debug(f"No URLs to process in {source.file}")
                 return
 
-            logger.info(f"Processing {len(urls)} URLs from {source.name} for audio download")
+            logger.info(
+                f"Processing {len(urls)} URLs from {source.name} for audio download"
+            )
 
             # Check if Audiobookshelf is configured
             if not self.config.audiobookshelf.url:
@@ -601,7 +613,11 @@ class TextcastService:
             from .audiobookshelf import process_url_to_audiobookshelf
 
             # Use library_name (preferred) or fall back to library_id for backward compatibility
-            library = self.config.audiobookshelf.library_name or self.config.audiobookshelf.library_id or None
+            library = (
+                self.config.audiobookshelf.library_name
+                or self.config.audiobookshelf.library_id
+                or None
+            )
 
             # Process each URL
             successful_urls = []
@@ -640,9 +656,13 @@ class TextcastService:
                             if stripped_line not in successful_urls:
                                 f.write(line)
 
-                    logger.info(f"Removed {len(successful_urls)} successfully processed URLs from {source.file}")
+                    logger.info(
+                        f"Removed {len(successful_urls)} successfully processed URLs from {source.file}"
+                    )
                 except Exception as e:
-                    logger.error(f"Error updating queue file {source.file}: {e}", exc_info=True)
+                    logger.error(
+                        f"Error updating queue file {source.file}: {e}", exc_info=True
+                    )
 
             # Log results
             logger.info(
@@ -650,7 +670,9 @@ class TextcastService:
             )
 
         except Exception as e:
-            logger.error(f"Error processing audio queue {source.file}: {e}", exc_info=True)
+            logger.error(
+                f"Error processing audio queue {source.file}: {e}", exc_info=True
+            )
 
     def _upload_to_audiobookshelf(self, file_path: Path, source: SourceConfig):
         """Upload audio file to Audiobookshelf."""
@@ -662,7 +684,11 @@ class TextcastService:
 
         # Use library_name (preferred) or fall back to library_id for backward compatibility
         # If neither is set, upload_to_audiobookshelf will auto-select first library
-        library = self.config.audiobookshelf.library_name or self.config.audiobookshelf.library_id or None
+        library = (
+            self.config.audiobookshelf.library_name
+            or self.config.audiobookshelf.library_id
+            or None
+        )
 
         try:
             # Import audiobookshelf module

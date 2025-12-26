@@ -113,11 +113,15 @@ def condense_text(
     )
     logger.debug(f"Using provider: {provider}, model: {model}")
 
-    system_message, prompt = _build_condense_prompt(text, input_word_count, target_word_count)
+    system_message, prompt = _build_condense_prompt(
+        text, input_word_count, target_word_count
+    )
 
     try:
         if provider == "anthropic":
-            condensed_text = _condense_with_anthropic(text, model, system_message, prompt)
+            condensed_text = _condense_with_anthropic(
+                text, model, system_message, prompt
+            )
         else:
             # Default to OpenAI
             condensed_text = _condense_with_openai(text, model, system_message, prompt)
@@ -129,7 +133,9 @@ def condense_text(
             return text
 
         output_word_count = len(condensed_text.split())
-        actual_ratio = output_word_count / input_word_count if input_word_count > 0 else 0
+        actual_ratio = (
+            output_word_count / input_word_count if input_word_count > 0 else 0
+        )
         ratio_deviation = abs(actual_ratio - condense_ratio)
 
         logger.debug(

@@ -104,7 +104,9 @@ class AudiobookshelfClient:
                     "folder_id": folder_id,
                 }
 
-        raise Exception(f"Library '{library_name}' not found. Available libraries: {[lib.get('name') for lib in libs]}")
+        raise Exception(
+            f"Library '{library_name}' not found. Available libraries: {[lib.get('name') for lib in libs]}"
+        )
 
     def make_request(self, method: str, endpoint: str, data=None, files=None):
         """Make an HTTP request to the Audiobookshelf API."""
@@ -285,9 +287,7 @@ def upload_to_audiobookshelf(
 
         # Create client and upload
         client = AudiobookshelfClient(api_key, abs_url)
-        response = client.upload_file(
-            file_path, library, folder_id, title
-        )
+        response = client.upload_file(file_path, library, folder_id, title)
 
         if response:
             logger.info("Successfully uploaded to Audiobookshelf!")
@@ -332,7 +332,7 @@ def download_audio(url: str, output_dir: Optional[Path] = None) -> Optional[Path
         class YtDlpLogger:
             def debug(self, msg):
                 # Skip progress messages
-                if msg.startswith('[download]'):
+                if msg.startswith("[download]"):
                     return
                 logger.debug(msg)
 
@@ -346,18 +346,21 @@ def download_audio(url: str, output_dir: Optional[Path] = None) -> Optional[Path
                 logger.error(msg)
 
         ydl_opts = {
-            'format': 'bestaudio/best',
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'mp3',
-            }, {
-                'key': 'FFmpegMetadata',
-            }],
-            'postprocessor_args': ['-ac', '1', '-ar', '24000'],
-            'outtmpl': str(output_dir / '%(title)s.%(ext)s'),
-            'quiet': True,
-            'no_warnings': False,
-            'logger': YtDlpLogger(),
+            "format": "bestaudio/best",
+            "postprocessors": [
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "mp3",
+                },
+                {
+                    "key": "FFmpegMetadata",
+                },
+            ],
+            "postprocessor_args": ["-ac", "1", "-ar", "24000"],
+            "outtmpl": str(output_dir / "%(title)s.%(ext)s"),
+            "quiet": True,
+            "no_warnings": False,
+            "logger": YtDlpLogger(),
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -365,7 +368,7 @@ def download_audio(url: str, output_dir: Optional[Path] = None) -> Optional[Path
 
             # Get the output filename
             if info:
-                title = info.get('title', 'audio')
+                title = info.get("title", "audio")
                 # yt-dlp will create the file with .mp3 extension after post-processing
                 mp3_file = output_dir / f"{title}.mp3"
 

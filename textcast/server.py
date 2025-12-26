@@ -141,7 +141,9 @@ class TextcastServer:
 
                 # Basic URL validation
                 if not url.startswith(("http://", "https://")):
-                    return redirect("/?error=Invalid URL (must start with http:// or https://)")
+                    return redirect(
+                        "/?error=Invalid URL (must start with http:// or https://)"
+                    )
 
                 # Get texts file path
                 texts_file = self._get_texts_file()
@@ -202,13 +204,17 @@ class TextcastServer:
                             model=audio_config.model,
                             voice=audio_config.voice,
                             strip=None,
-                            destinations=self.config.destinations if self.config.destinations else None,
+                            destinations=self.config.destinations
+                            if self.config.destinations
+                            else None,
                         )
 
                         logger.info(f"Successfully processed free text: {title}")
 
                     except Exception as e:
-                        logger.error(f"Error processing free text '{title}': {e}", exc_info=True)
+                        logger.error(
+                            f"Error processing free text '{title}': {e}", exc_info=True
+                        )
 
                 threading.Thread(target=process_text_background, daemon=True).start()
 
@@ -226,7 +232,9 @@ class TextcastServer:
 
         # Auto-generate base_url if not set
         if not self.config.server.base_url:
-            self.config.server.base_url = f"http://{self.config.server.host}:{self.config.server.port}"
+            self.config.server.base_url = (
+                f"http://{self.config.server.host}:{self.config.server.port}"
+            )
 
         logger.info(
             f"Starting HTTP server on {self.config.server.host}:{self.config.server.port}"
@@ -248,9 +256,7 @@ class TextcastServer:
         self.server_thread = threading.Thread(target=run_server, daemon=True)
         self.server_thread.start()
 
-        logger.info(
-            f"Web interface available at: {self.config.server.base_url}"
-        )
+        logger.info(f"Web interface available at: {self.config.server.base_url}")
 
     def stop(self):
         """Stop the server."""
