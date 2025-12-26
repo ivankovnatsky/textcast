@@ -428,7 +428,7 @@ def _serialize_destinations(
                 {
                     "type": "audiobookshelf",
                     "enabled": dest.enabled,
-                    "server": dest.server,
+                    "url": dest.url,
                     "api_key": dest.api_key,
                     "library_name": dest.library_name,
                     "library_id": dest.library_id,
@@ -489,7 +489,7 @@ def save_config(config: ServiceConfig, config_path: Optional[str] = None) -> Non
     else:
         # Fall back to legacy format if no destinations but legacy configs exist
         data["audiobookshelf"] = {
-            "server": config.audiobookshelf.server,
+            "url": config.audiobookshelf.url,
             "api_key": config.audiobookshelf.api_key,
             "library_name": config.audiobookshelf.library_name,
             "library_id": config.audiobookshelf.library_id,
@@ -518,7 +518,7 @@ def create_example_config(config_path: Optional[str] = None) -> None:
         try:
             existing_config = load_config(str(config_path))
             existing_abs_config = {
-                "server": existing_config.audiobookshelf.server,
+                "url": existing_config.audiobookshelf.url,
                 "library_name": existing_config.audiobookshelf.library_name,
             }
         except Exception:
@@ -549,16 +549,21 @@ def create_example_config(config_path: Optional[str] = None) -> None:
             ),
         ],
         processing=ProcessingConfig(
-            strategy="condense",
-            condense_ratio=0.5,
-            text_model="gpt-5.1",
-            speech_model="tts-1-hd",
-            voice="nova",
-            audio_format="mp3",
-            vendor="openai",
+            text=TextProcessingConfig(
+                provider="anthropic",
+                model="claude-sonnet-4-5-20250929",
+                strategy="condense",
+                condense_ratio=0.5,
+            ),
+            audio=AudioProcessingConfig(
+                vendor="openai",
+                model="tts-1-hd",
+                voice="nova",
+                format="mp3",
+            ),
         ),
         audiobookshelf=AudiobookshelfConfig(
-            server=existing_abs_config.get("server", ""),
+            url=existing_abs_config.get("url", ""),
             library_name=existing_abs_config.get("library_name", ""),
         ),
         log_level="INFO",

@@ -17,7 +17,7 @@ from .conftest import ARTICLE_URL_HTML, ARTICLE_URL_JS
         (ARTICLE_URL_JS, 0),
     ],
 )
-def test_process_article_openai(url, expected_exit_code, capture_logging):
+def test_process_text_openai(url, expected_exit_code, capture_logging):
     runner = CliRunner()
     result = runner.invoke(
         cli,
@@ -78,7 +78,7 @@ def test_process_article_openai(url, expected_exit_code, capture_logging):
     output_audio_path.unlink()
 
 
-def test_process_article_elevenlabs():
+def test_process_text_elevenlabs():
     runner = CliRunner()
     result = runner.invoke(
         cli,

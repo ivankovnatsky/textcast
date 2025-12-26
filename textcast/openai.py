@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 SILENCE_TIME_MS = 3000
 
 
-def process_article_openai(text, filename, model, voice):
+def process_text_to_audio_openai(text, filename, model, voice):
     logger.info(f"Starting OpenAI processing for file: {filename}")
     logger.debug(f"Model: {model}, Voice: {voice}")
 

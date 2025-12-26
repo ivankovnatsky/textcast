@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 ELEVEN_TEXT_LIMIT_NONSIGNED = 500
 
 
-def process_article_elevenlabs(text, filename, model, voice):
+def process_text_to_audio_elevenlabs(text, filename, model, voice):
     logger.info("Starting ElevenLabs processing")
     logger.debug(f"Text length: {len(text)}, Model: {model}, Voice: {voice}")
 

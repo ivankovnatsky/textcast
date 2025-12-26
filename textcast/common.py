@@ -9,8 +9,8 @@ from typing import List, Optional, Union
 import click
 
 from .audiobookshelf import upload_to_audiobookshelf
-from .elevenlabs import process_article_elevenlabs
-from .openai import process_article_openai
+from .elevenlabs import process_text_to_audio_elevenlabs
+from .openai import process_text_to_audio_openai
 from .podservice import upload_to_podservice
 from .service_config import AudiobookshelfDestination, PodserviceDestination
 
@@ -229,10 +229,10 @@ def process_text_to_audio(
 
     if vendor == "openai":
         logger.info("Processing with OpenAI")
-        process_article_openai(text, filename, model, voice)
+        process_text_to_audio_openai(text, filename, model, voice)
     elif vendor == "elevenlabs":
         logger.info("Processing with ElevenLabs")
-        process_article_elevenlabs(text, filename, model, voice)
+        process_text_to_audio_elevenlabs(text, filename, model, voice)
 
     logger.info(f"Audio processing complete for {title}")
 

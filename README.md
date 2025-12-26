@@ -52,7 +52,7 @@ Options:
   --speech-model TEXT             The model to be used for text-to-speech
                                   conversion.
   --text-model TEXT              The model to be used for text condensing
-                                  (e.g., gpt-4-turbo-preview, gpt-3.5-turbo).
+                                  (e.g., claude-sonnet-4-5-20250929, gpt-5.1).
   --voice TEXT                    OpenIA voices: alloy, echo, fable, onyx,
                                   nova, shimmer; ElevenLabs voices: Sarah.
   --strip INTEGER RANGE           By what number of chars to strip the text to
@@ -74,7 +74,8 @@ export OPENAI_API_KEY="your-api-key"
 textcast \
     --url 'https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers' \
     --speech-model tts-1-hd \
-    --text-model gpt-4-turbo-preview \
+    --text-provider openai \
+    --text-model gpt-5.1 \
     --voice nova \
     --condense \
     --condense-ratio 0.2 \
@@ -104,7 +105,8 @@ export OPENAI_API_KEY="your-api-key"
 python \
     -m textcast \
     --speech-model tts-1-hd \
-    --text-model gpt-4-turbo-preview \
+    --text-provider openai \
+    --text-model gpt-5.1 \
     --voice nova \
     --directory . \
     --url 'https://blog.kubetools.io/kopylot-an-ai-powered-kubernetes-assistant-for-devops-developers' \

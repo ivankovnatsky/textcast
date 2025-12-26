@@ -1,5 +1,5 @@
 class ProcessingError(Exception):
-    """Raised when article processing fails"""
+    """Raised when text processing fails"""
 
     pass
 
