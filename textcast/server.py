@@ -28,6 +28,119 @@ class TextcastServer:
                 return source.file
         raise ValueError("No enabled file source found in configuration")
 
+    def _render_debug_result(
+        self,
+        title: str,
+        original_text: str,
+        processed_text: str,
+        original_word_count: int,
+        processed_word_count: int,
+        ratio: float,
+        model: str,
+        provider: str,
+        strategy: str,
+        target_ratio: float,
+    ) -> str:
+        """Render the debug result page showing condensed text."""
+        import html
+
+        escaped_original = html.escape(original_text)
+        escaped_processed = html.escape(processed_text)
+
+        return f"""
+        <html>
+        <head>
+            <title>Debug Result - {html.escape(title)}</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 1200px; margin: 50px auto; padding: 20px; background-color: #fff; color: #333; }}
+                h1 {{ color: #333; }}
+                h2 {{ color: #333; margin-top: 30px; }}
+                .back-link {{ margin-bottom: 20px; }}
+                .back-link a {{ color: #007bff; text-decoration: none; }}
+                .back-link a:hover {{ text-decoration: underline; }}
+                .stats {{ background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin-bottom: 20px; }}
+                .stats-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }}
+                .stat {{ text-align: center; }}
+                .stat-value {{ font-size: 24px; font-weight: bold; color: #007bff; }}
+                .stat-label {{ font-size: 12px; color: #666; text-transform: uppercase; }}
+                .text-container {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }}
+                .text-box {{ border: 1px solid #ddd; border-radius: 4px; padding: 15px; }}
+                .text-box h3 {{ margin-top: 0; color: #333; }}
+                .text-content {{ white-space: pre-wrap; font-family: inherit; line-height: 1.6; max-height: 500px; overflow-y: auto; background-color: #fafafa; padding: 10px; border-radius: 4px; }}
+                .good {{ color: #28a745; }}
+                .warning {{ color: #ffc107; }}
+                .bad {{ color: #dc3545; }}
+
+                @media (prefers-color-scheme: dark) {{
+                    body {{ background-color: #1a1a1a; color: #e0e0e0; }}
+                    h1, h2 {{ color: #e0e0e0; }}
+                    .text-box h3 {{ color: #e0e0e0; }}
+                    .stats {{ background-color: #2a2a2a; }}
+                    .stat-label {{ color: #999; }}
+                    .text-box {{ border-color: #444; }}
+                    .text-content {{ background-color: #2a2a2a; }}
+                    .back-link a {{ color: #4a9eff; }}
+                }}
+
+                @media (max-width: 768px) {{
+                    .text-container {{ grid-template-columns: 1fr; }}
+                    body {{ margin: 20px auto; padding: 15px; }}
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="back-link"><a href="/">&larr; Back to Textcast</a></div>
+            <h1>Debug Result</h1>
+            <h2>{html.escape(title)}</h2>
+
+            <div class="stats">
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-value">{provider}</div>
+                        <div class="stat-label">Provider</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">{model}</div>
+                        <div class="stat-label">Model</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">{strategy}</div>
+                        <div class="stat-label">Strategy</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">{target_ratio:.0%}</div>
+                        <div class="stat-label">Target Ratio</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">{original_word_count:,}</div>
+                        <div class="stat-label">Original Words</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">{processed_word_count:,}</div>
+                        <div class="stat-label">Processed Words</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value {'good' if abs(ratio - target_ratio) < 0.1 else 'warning' if abs(ratio - target_ratio) < 0.2 else 'bad'}">{ratio:.1%}</div>
+                        <div class="stat-label">Actual Ratio</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-container">
+                <div class="text-box">
+                    <h3>Original Text</h3>
+                    <div class="text-content">{escaped_original}</div>
+                </div>
+                <div class="text-box">
+                    <h3>Processed Text</h3>
+                    <div class="text-content">{escaped_processed}</div>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
     def _setup_routes(self):
         """Setup Flask routes."""
 
@@ -123,6 +236,12 @@ class TextcastServer:
                             <input type="text" name="title" placeholder="Article title (required)" required style="width: 100%; margin-bottom: 10px;">
                             <textarea name="text" placeholder="Paste article text here..." required style="width: 100%; min-height: 200px; font-family: inherit; resize: vertical;"></textarea>
                         </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" name="debug" value="1" style="width: 18px; height: 18px;">
+                                <span>Debug mode (show condensed text, skip audio)</span>
+                            </label>
+                        </div>
                         <button type="submit">Process Text</button>
                     </form>
                 </div>
@@ -168,6 +287,7 @@ class TextcastServer:
             try:
                 text = request.form.get("text", "").strip()
                 title = request.form.get("title", "").strip()
+                debug_mode = request.form.get("debug") == "1"
 
                 if not text:
                     return redirect("/?error=Text is required")
@@ -175,12 +295,47 @@ class TextcastServer:
                 if not title:
                     return redirect("/?error=Title is required")
 
-                logger.info(f"Processing free text via web interface: {title}")
+                logger.info(f"Processing free text via web interface: {title} (debug={debug_mode})")
 
-                # Process in background thread
+                text_config = self.config.processing.text
+
+                # Debug mode: process synchronously and show result
+                if debug_mode:
+                    try:
+                        original_word_count = len(text.split())
+                        processed_text = text
+
+                        if text_config.strategy == "condense":
+                            logger.info(f"Debug: Condensing text for: {title}")
+                            processed_text = condense_text(
+                                text,
+                                text_config.model,
+                                text_config.condense_ratio,
+                                text_config.provider,
+                            )
+
+                        processed_word_count = len(processed_text.split())
+                        ratio = processed_word_count / original_word_count if original_word_count > 0 else 0
+
+                        return self._render_debug_result(
+                            title=title,
+                            original_text=text,
+                            processed_text=processed_text,
+                            original_word_count=original_word_count,
+                            processed_word_count=processed_word_count,
+                            ratio=ratio,
+                            model=text_config.model,
+                            provider=text_config.provider,
+                            strategy=text_config.strategy,
+                            target_ratio=text_config.condense_ratio,
+                        )
+                    except Exception as e:
+                        logger.error(f"Debug processing error: {e}", exc_info=True)
+                        return redirect(f"/?error=Debug processing failed: {str(e)}")
+
+                # Normal mode: process in background thread
                 def process_text_background():
                     try:
-                        text_config = self.config.processing.text
                         audio_config = self.config.processing.audio
                         processed_text = text
 
