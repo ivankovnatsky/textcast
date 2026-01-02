@@ -12,6 +12,12 @@ sources:
     file: /tmp/textcast-elevenlabs/texts.txt
     check_duplicates: true
 
+  - type: upload
+    name: audio_upload
+    enabled: true
+    watch_dir: /tmp/textcast-elevenlabs/audio
+    file_patterns: ["*.mp3"]
+
 processing:
   text:
     provider: anthropic
@@ -29,7 +35,7 @@ processing:
 destinations:
   - type: podservice
     enabled: true
-    url: http://localhost:8083
+    url: http://192.168.50.4:8083
 
 server:
   enabled: true
