@@ -18,10 +18,10 @@ AUDIO_URL_PATTERNS = [
 ]
 
 
-def scrape_audio_url(url: str) -> Optional[str]:
+def scrape_audio_url(url: str) -> tuple[Optional[str], Optional[str]]:
     """
     Render page with Playwright and grep for audio URLs.
-    Returns first audio URL found, or None.
+    Returns tuple of (audio_url, page_title) or (None, None).
     """
     logger.info(f"Attempting Playwright scrape for audio URLs: {url}")
 
@@ -35,6 +35,9 @@ def scrape_audio_url(url: str) -> Optional[str]:
             page = context.new_page()
             page.goto(url, wait_until="networkidle", timeout=30000)
             page.wait_for_timeout(3000)  # Wait for iframes to load
+
+            # Get page title
+            page_title = page.title()
 
             # Get full HTML including iframes
             html = page.content()
@@ -50,13 +53,14 @@ def scrape_audio_url(url: str) -> Optional[str]:
                 if matches:
                     audio_url = matches[0]
                     logger.info(f"Found audio URL via Playwright: {audio_url}")
-                    return audio_url
+                    logger.info(f"Page title: {page_title}")
+                    return audio_url, page_title
 
             logger.debug("No audio URLs found in page content")
-            return None
+            return None, None
         except Exception as e:
             logger.debug(f"Playwright scrape failed: {e}")
-            return None
+            return None, None
         finally:
             browser.close()
 
@@ -96,16 +100,19 @@ def download_audio_url(
         return None
 
 
-def try_scrape_and_download(url: str, output_dir: str) -> Optional[Path]:
+def try_scrape_and_download(
+    url: str, output_dir: str
+) -> tuple[Optional[Path], Optional[str]]:
     """
     Try to scrape audio URL from page and download it.
     Combined convenience function for the processor.
 
     Returns:
-        Path to downloaded audio file, or None if not found/failed.
+        Tuple of (path to downloaded audio file, page title) or (None, None).
     """
-    audio_url = scrape_audio_url(url)
+    audio_url, page_title = scrape_audio_url(url)
     if not audio_url:
-        return None
+        return None, None
 
-    return download_audio_url(audio_url, output_dir)
+    audio_path = download_audio_url(audio_url, output_dir, title=page_title)
+    return audio_path, page_title

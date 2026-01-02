@@ -120,11 +120,11 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
 
             # STEP 2: Try Playwright scraping (for JS-loaded audio players)
             logger.info(f"yt-dlp failed, trying Playwright scrape for: {url}")
-            audio_file = try_scrape_and_download(url, output_dir)
+            audio_file, page_title = try_scrape_and_download(url, output_dir)
 
             if audio_file and audio_file.exists():
                 logger.info(f"Playwright scrape succeeded for: {url}")
-                title = audio_file.stem
+                title = page_title or audio_file.stem
 
                 upload_success = upload_to_destinations(
                     file_path=audio_file,
