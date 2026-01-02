@@ -49,14 +49,18 @@ of {ELEVEN_TEXT_LIMIT_NONSIGNED} characters for non signed in accounts.
             if response.voices:
                 # Use first match
                 voice_id = response.voices[0].voice_id
-                logger.info(f"Resolved voice name '{voice}' to ID '{voice_id}' ({response.voices[0].name})")
+                logger.info(
+                    f"Resolved voice name '{voice}' to ID '{voice_id}' ({response.voices[0].name})"
+                )
             else:
                 raise ValueError(f"Voice '{voice}' not found in ElevenLabs")
         except Exception as e:
             logger.error(f"Failed to look up voice '{voice}': {e}")
             raise
 
-    logger.debug(f"Generating audio with ElevenLabs (model={model}, voice_id={voice_id})")
+    logger.debug(
+        f"Generating audio with ElevenLabs (model={model}, voice_id={voice_id})"
+    )
     audio = client.text_to_speech.convert(
         voice_id=voice_id,
         text=text,

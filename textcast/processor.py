@@ -6,8 +6,8 @@ from typing import List, Optional
 import click
 
 from .aggregator import detect_and_expand_aggregator
-from .audiobookshelf import download_audio
 from .audio_scrape import try_scrape_and_download
+from .audiobookshelf import download_audio
 from .common import process_text_to_audio, upload_to_destinations
 from .condense import condense_text
 from .constants import MIN_CONTENT_LENGTH, SUSPICIOUS_TEXTS
@@ -116,7 +116,9 @@ def process_texts(urls: List[str], **kwargs) -> List[ProcessingResult]:
                             logger.error(f"Failed to update URL file: {e}")
                     continue
                 else:
-                    raise ProcessingError("Failed to upload yt-dlp audio to destinations")
+                    raise ProcessingError(
+                        "Failed to upload yt-dlp audio to destinations"
+                    )
 
             # STEP 2: Try Playwright scraping (for JS-loaded audio players)
             logger.info(f"yt-dlp failed, trying Playwright scrape for: {url}")

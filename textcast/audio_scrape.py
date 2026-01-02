@@ -77,9 +77,9 @@ def download_audio_url(
 
         if title:
             # Sanitize title for filename
-            safe_title = "".join(
-                c for c in title if c.isalnum() or c in " -_"
-            ).strip()[:100]
+            safe_title = "".join(c for c in title if c.isalnum() or c in " -_").strip()[
+                :100
+            ]
             filename = f"{safe_title}.mp3"
         else:
             filename = audio_url.split("/")[-1].split("?")[0]
