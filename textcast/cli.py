@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
     "--speech-model",
     callback=validate_models,
     default=None,
-    help="The model to be used for text-to-speech conversion (e.g., tts-1, eleven_monolingual_v1)",
+    help="The model to be used for text-to-speech conversion (e.g., tts-1, eleven_multilingual_v2)",
 )
 @click.option(
     "--text-model",
@@ -179,7 +179,7 @@ def cli(
 
     # Set model and voice based on the API vendor
     if vendor == "elevenlabs":
-        speech_model = speech_model or "eleven_monolingual_v1"
+        speech_model = speech_model or "eleven_multilingual_v2"
         voice = voice or "Sarah"
     elif vendor == "openai":
         speech_model = speech_model or "tts-1"

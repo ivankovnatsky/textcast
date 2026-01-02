@@ -39,8 +39,30 @@ of {ELEVEN_TEXT_LIMIT_NONSIGNED} characters for non signed in accounts.
             )
             client = ElevenLabs()
 
-    logger.debug("Generating audio with ElevenLabs")
-    audio = client.generate(text=text, voice=voice, model=model)
+    # Resolve voice name to ID if needed (voice IDs are 20 chars alphanumeric)
+    voice_id = voice
+    if not (len(voice) == 20 and voice.isalnum()):
+        # Looks like a voice name, try to resolve it
+        logger.debug(f"Looking up voice ID for name: {voice}")
+        try:
+            response = client.voices.search()
+            for v in response.voices:
+                if v.name.lower() == voice.lower():
+                    voice_id = v.voice_id
+                    logger.debug(f"Resolved voice name '{voice}' to ID '{voice_id}'")
+                    break
+            else:
+                logger.warning(f"Voice '{voice}' not found, using as-is")
+        except Exception as e:
+            logger.warning(f"Failed to look up voice: {e}, using '{voice}' as-is")
+
+    logger.debug(f"Generating audio with ElevenLabs (model={model}, voice_id={voice_id})")
+    audio = client.text_to_speech.convert(
+        voice_id=voice_id,
+        text=text,
+        model_id=model,
+        output_format="mp3_44100_128",
+    )
 
     logger.info(f"Saving audio to file: {filename}")
     save(audio, filename)

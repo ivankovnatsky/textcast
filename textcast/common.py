@@ -35,7 +35,7 @@ def validate_models(ctx, param, value):
         vendor = "openai"
     logger.debug(f"Vendor for model validation: {vendor}")
     if vendor == "elevenlabs":
-        choices = ["eleven_monolingual_v1"]
+        choices = ["eleven_multilingual_v2"]
     else:
         choices = ["tts-1", "tts-1-hd"]
     if value not in choices:
@@ -54,7 +54,9 @@ def validate_voice(ctx, param, value):
         vendor = "openai"
     logger.debug(f"Vendor for voice validation: {vendor}")
     if vendor == "elevenlabs":
-        choices = ["Sarah"]
+        # ElevenLabs accepts voice IDs (e.g., "JBFqnCBsd6RMkjVDRZzb")
+        # No strict validation - users can use any valid voice ID from their account
+        return value
     else:
         choices = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
     if value not in choices:
