@@ -121,7 +121,7 @@ class TextcastServer:
                         <div class="stat-label">Processed Words</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value {'good' if abs(ratio - target_ratio) < 0.1 else 'warning' if abs(ratio - target_ratio) < 0.2 else 'bad'}">{ratio:.1%}</div>
+                        <div class="stat-value {"good" if abs(ratio - target_ratio) < 0.1 else "warning" if abs(ratio - target_ratio) < 0.2 else "bad"}">{ratio:.1%}</div>
                         <div class="stat-label">Actual Ratio</div>
                     </div>
                 </div>
@@ -296,7 +296,9 @@ class TextcastServer:
                 if not title:
                     return redirect("/?error=Title is required")
 
-                logger.info(f"Processing free text via web interface: {title} (debug={debug_mode})")
+                logger.info(
+                    f"Processing free text via web interface: {title} (debug={debug_mode})"
+                )
 
                 text_config = self.config.processing.text
 
@@ -316,7 +318,11 @@ class TextcastServer:
                             )
 
                         processed_word_count = len(processed_text.split())
-                        ratio = processed_word_count / original_word_count if original_word_count > 0 else 0
+                        ratio = (
+                            processed_word_count / original_word_count
+                            if original_word_count > 0
+                            else 0
+                        )
 
                         return self._render_debug_result(
                             title=title,

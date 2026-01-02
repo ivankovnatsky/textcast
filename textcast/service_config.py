@@ -108,10 +108,10 @@ class AudioProcessingConfig:
     """Configuration for audio generation (TTS)."""
 
     vendor: str = "openai"  # openai, elevenlabs
-    model: str = "tts-1-hd"  # openai: tts-1, tts-1-hd; elevenlabs: eleven_multilingual_v2
-    voice: str = (
-        "nova"  # alloy, echo, fable, onyx, nova, shimmer (openai); sarah, rachel, etc (elevenlabs)
+    model: str = (
+        "tts-1-hd"  # openai: tts-1, tts-1-hd; elevenlabs: eleven_multilingual_v2
     )
+    voice: str = "nova"  # alloy, echo, fable, onyx, nova, shimmer (openai); sarah, rachel, etc (elevenlabs)
     format: str = "mp3"  # mp3, opus, aac, flac, pcm
     output_dir: str = "/tmp/textcast-service"
 

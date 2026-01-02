@@ -678,9 +678,7 @@ class TextcastService:
     def _upload_file_to_destinations(self, file_path: Path, source: SourceConfig):
         """Upload audio file to configured destinations."""
         if not self.config.destinations:
-            logger.warning(
-                f"No destinations configured, cannot upload {file_path}"
-            )
+            logger.warning(f"No destinations configured, cannot upload {file_path}")
             return
 
         try:
