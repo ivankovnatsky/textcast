@@ -72,8 +72,8 @@ processing:
   # Audio generation (TTS)
   audio:
     vendor: openai # TTS vendor: openai, elevenlabs
-    model: tts-1-hd # TTS model: tts-1, tts-1-hd (openai); eleven_monolingual_v1 (elevenlabs)
-    voice: nova # TTS voice: alloy, echo, fable, onyx, nova, shimmer (openai); Sarah (elevenlabs)
+    model: tts-1-hd # TTS model: tts-1, tts-1-hd (openai); eleven_multilingual_v2 (elevenlabs)
+    voice: nova # TTS voice: alloy, echo, fable, onyx, nova, shimmer (openai); sarah, rachel, etc (elevenlabs)
     format: mp3 # Output audio format: mp3, opus, aac, flac, pcm
     output_dir: /Volumes/Storage/Data/Textcast/Audio # Permanent audio storage directory
 

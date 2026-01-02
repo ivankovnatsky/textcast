@@ -64,3 +64,7 @@ service-debug:
 .PHONY: service-podservice
 service-podservice:
 	@nix develop --command python -m textcast service daemon --foreground --config configs/podservice.yaml
+
+.PHONY: service-elevenlabs
+service-elevenlabs:
+	@nix develop --command python -m textcast service daemon --foreground --config configs/elevenlabs.yaml
