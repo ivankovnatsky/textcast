@@ -1,0 +1,37 @@
+# ElevenLabs TTS configuration
+# Uses ElevenLabs eleven_multilingual_v2 model for high-quality audio
+
+check_interval: 5m
+log_level: INFO
+log_file: /tmp/textcast-elevenlabs/textcast-service.log
+
+sources:
+  - type: file
+    name: textcast_manual
+    enabled: true
+    file: /tmp/textcast-elevenlabs/texts.txt
+    check_duplicates: true
+
+processing:
+  text:
+    provider: anthropic
+    model: claude-sonnet-4-5-20250929
+    strategy: condense
+    condense_ratio: 0.5
+
+  audio:
+    vendor: elevenlabs
+    model: eleven_multilingual_v2
+    voice: sarah # Voice name (looked up via API) or voice ID
+    format: mp3
+    output_dir: /tmp/textcast-elevenlabs/audio
+
+destinations:
+  - type: podservice
+    enabled: true
+    url: http://localhost:8083
+
+server:
+  enabled: true
+  host: 127.0.0.1
+  port: 8084
