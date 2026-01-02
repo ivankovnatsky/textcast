@@ -219,11 +219,12 @@ class TextcastServer:
                 </div>
 
                 <div class="form-group">
-                    <h2>Add Article URL</h2>
+                    <h2>Add URL</h2>
+                    <p style="color: #666; margin-bottom: 15px;">Process article or newsletter URLs. YouTube URLs are converted directly to audio without text-to-speech.</p>
                     <form method="POST" action="/add-url">
                         <div class="input-wrapper">
-                            <input type="text" name="url" placeholder="Paste article or newsletter URL here..." required>
-                            <button type="submit">Process Article</button>
+                            <input type="text" name="url" placeholder="Paste URL here..." required>
+                            <button type="submit">Process</button>
                         </div>
                     </form>
                 </div>
