@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Dict, List
 
 # from .rss_monitor import NewsletterMonitor, YouTubeMonitor
+from .common import upload_to_destinations
 from .podservice import upload_to_podservice
 from .processor import process_texts
 from .server import TextcastServer
@@ -189,7 +190,7 @@ class TextcastService:
                                     logger.info(
                                         f"File {file_path.name} is stable, proceeding with upload"
                                     )
-                                    self.service._upload_to_audiobookshelf(
+                                    self.service._upload_file_to_destinations(
                                         file_path, self.source
                                     )
 
@@ -674,40 +675,25 @@ class TextcastService:
                 f"Error processing audio queue {source.file}: {e}", exc_info=True
             )
 
-    def _upload_to_audiobookshelf(self, file_path: Path, source: SourceConfig):
-        """Upload audio file to Audiobookshelf."""
-        if not self.config.audiobookshelf.url:
+    def _upload_file_to_destinations(self, file_path: Path, source: SourceConfig):
+        """Upload audio file to configured destinations."""
+        if not self.config.destinations:
             logger.warning(
-                f"Audiobookshelf url not configured, cannot upload {file_path}"
+                f"No destinations configured, cannot upload {file_path}"
             )
             return
 
-        # Use library_name (preferred) or fall back to library_id for backward compatibility
-        # If neither is set, upload_to_audiobookshelf will auto-select first library
-        library = (
-            self.config.audiobookshelf.library_name
-            or self.config.audiobookshelf.library_id
-            or None
-        )
-
         try:
-            # Import audiobookshelf module
-            from .audiobookshelf import upload_to_audiobookshelf
+            logger.info(f"Uploading {file_path.name} to configured destinations...")
 
-            logger.info(f"Uploading {file_path.name} to Audiobookshelf...")
-
-            # Upload the file (API key comes from environment variable)
-            # folder_id is optional - auto-detected when using library_name
-            success = upload_to_audiobookshelf(
-                file_path,  # Pass Path object, not string
-                self.config.audiobookshelf.url,
-                library,  # Can be library name or ID
-                folder_id=self.config.audiobookshelf.folder_id or None,  # Optional
+            success = upload_to_destinations(
+                file_path=file_path,
                 title=file_path.stem,  # Use filename without extension as title
+                destinations=self.config.destinations,
             )
 
             if success:
-                logger.info(f"Successfully uploaded {file_path.name} to Audiobookshelf")
+                logger.info(f"Successfully uploaded {file_path.name}")
 
                 # Delete the file after successful upload
                 if file_path.exists():
@@ -723,13 +709,11 @@ class TextcastService:
                         f"File {file_path.name} already deleted (likely by another handler)"
                     )
             else:
-                logger.error(f"Failed to upload {file_path.name} to Audiobookshelf")
+                logger.error(f"Failed to upload {file_path.name}")
 
-        except ImportError:
-            logger.error("Audiobookshelf module not found. Cannot upload files.")
         except Exception as e:
             logger.error(
-                f"Error uploading {file_path.name} to Audiobookshelf: {e}",
+                f"Error uploading {file_path.name}: {e}",
                 exc_info=True,
             )
 
@@ -758,7 +742,7 @@ class TextcastService:
                 for file_path in existing_files:
                     if file_path.is_file():  # Make sure it's actually a file
                         logger.info(f"Processing existing file: {file_path.name}")
-                        self._upload_to_audiobookshelf(file_path, source)
+                        self._upload_file_to_destinations(file_path, source)
             else:
                 logger.debug(
                     f"No existing files found in {source.name} upload directory"
