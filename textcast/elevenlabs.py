@@ -39,22 +39,22 @@ of {ELEVEN_TEXT_LIMIT_NONSIGNED} characters for non signed in accounts.
             )
             client = ElevenLabs()
 
-    # Resolve voice name to ID if needed (voice IDs are 20 chars alphanumeric)
+    # Resolve voice name to ID if needed (voice IDs are typically 20 chars alphanumeric)
     voice_id = voice
     if not (len(voice) == 20 and voice.isalnum()):
         # Looks like a voice name, try to resolve it
         logger.debug(f"Looking up voice ID for name: {voice}")
         try:
-            response = client.voices.search()
-            for v in response.voices:
-                if v.name.lower() == voice.lower():
-                    voice_id = v.voice_id
-                    logger.debug(f"Resolved voice name '{voice}' to ID '{voice_id}'")
-                    break
+            response = client.voices.search(search=voice)
+            if response.voices:
+                # Use first match
+                voice_id = response.voices[0].voice_id
+                logger.info(f"Resolved voice name '{voice}' to ID '{voice_id}' ({response.voices[0].name})")
             else:
-                logger.warning(f"Voice '{voice}' not found, using as-is")
+                raise ValueError(f"Voice '{voice}' not found in ElevenLabs")
         except Exception as e:
-            logger.warning(f"Failed to look up voice: {e}, using '{voice}' as-is")
+            logger.error(f"Failed to look up voice '{voice}': {e}")
+            raise
 
     logger.debug(f"Generating audio with ElevenLabs (model={model}, voice_id={voice_id})")
     audio = client.text_to_speech.convert(
