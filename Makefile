@@ -27,6 +27,13 @@ re-release:
 	@git push
 	@gh release create v$(NEXT_RELEASE_VERSION) --generate-notes
 
+.PHONY: update
+update:
+	$(eval LATEST_COMMIT := $(shell gh api repos/NixOS/nixpkgs/commits/master --jq '.sha'))
+	@echo "Updating nixpkgs to $(LATEST_COMMIT)"
+	@sed 's|nixpkgs.url = "github:NixOS/nixpkgs/.*"|nixpkgs.url = "github:NixOS/nixpkgs/$(LATEST_COMMIT)"|' flake.nix > flake.nix.tmp
+	@mv flake.nix.tmp flake.nix
+
 .PHONY: cast
 cast:
 	@python -m textcast \
