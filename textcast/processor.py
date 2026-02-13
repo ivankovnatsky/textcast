@@ -8,7 +8,7 @@ import click
 
 from .aggregator import detect_and_expand_aggregator
 from .audio_scrape import try_scrape_and_download
-from .audiobookshelf import download_audio
+from .download import download_audio
 from .common import process_text_to_audio, upload_to_destinations
 from .condense import condense_text
 from .constants import MIN_CONTENT_LENGTH, SUSPICIOUS_TEXTS
