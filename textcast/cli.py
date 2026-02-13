@@ -125,8 +125,8 @@ logger = logging.getLogger(__name__)
 @click.option(
     "--workers",
     type=click.IntRange(1, 20),
-    default=5,
-    help="Number of parallel workers for processing URLs (default: 5)",
+    default=1,
+    help="Number of parallel workers for processing URLs (default: 1)",
 )
 def cli(
     vendor,
