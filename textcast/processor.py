@@ -211,9 +211,7 @@ def _update_source_file(
             result = next(r for r in results if r.url == url)
             entries_to_write.append(f"{url} # {result.error}\n")
         for url, error in failed_urls.items():
-            # Don't write aggregator article failures to Failed.txt
-            if url not in aggregator_sources:
-                entries_to_write.append(f"{url}\n")
+            entries_to_write.append(f"{url}\n")
 
         if entries_to_write:
             with open(failed_file, "a") as f:
