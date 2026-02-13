@@ -343,7 +343,7 @@ def download_audio(url: str, output_dir: Optional[Path] = None) -> Optional[Path
                 logger.warning(msg)
 
             def error(self, msg):
-                logger.error(msg)
+                logger.warning(msg)
 
         ydl_opts = {
             "format": "bestaudio/best",
@@ -382,11 +382,11 @@ def download_audio(url: str, output_dir: Optional[Path] = None) -> Optional[Path
                         logger.info(f"Audio extraction completed. File: {mp3_files[0]}")
                         return mp3_files[0]
 
-        logger.error("No MP3 file was generated.")
+        logger.warning("No MP3 file was generated.")
         return None
 
     except Exception as e:
-        logger.error(f"Error downloading audio: {str(e)}")
+        logger.warning(f"Error downloading audio: {str(e)}")
         return None
 
 
