@@ -122,6 +122,12 @@ logger = logging.getLogger(__name__)
     type=str,
     help="Podservice server URL for uploading audio episodes to podcast feed",
 )
+@click.option(
+    "--workers",
+    type=click.IntRange(1, 20),
+    default=5,
+    help="Number of parallel workers for processing URLs (default: 5)",
+)
 def cli(
     vendor,
     url,
@@ -144,6 +150,7 @@ def cli(
     aggregator,
     auto_detect_aggregator,
     podservice_url,
+    workers,
 ):
     # Set up logging
     log_level = logging.DEBUG if debug else logging.INFO
@@ -296,6 +303,7 @@ def cli(
             "file_url_list": file_url_list,  # Pass the file_url_list to process_texts
             "aggregator_source": aggregator_source,  # Pass aggregator source if any
             "podservice_url": podservice_url,  # Podservice URL for podcast feed upload
+            "workers": workers,
         }
 
         results = process_texts(urls, **kwargs)

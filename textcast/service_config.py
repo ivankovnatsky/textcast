@@ -122,6 +122,7 @@ class ProcessingConfig:
 
     text: TextProcessingConfig = field(default_factory=TextProcessingConfig)
     audio: AudioProcessingConfig = field(default_factory=AudioProcessingConfig)
+    workers: int = 5  # Number of parallel URL processing workers
 
 
 @dataclass
@@ -367,7 +368,11 @@ def load_config(config_path: Optional[str] = None) -> ServiceConfig:
             )
 
         # Create ProcessingConfig with nested text and audio
-        processing = ProcessingConfig(text=text_config, audio=audio_config)
+        processing = ProcessingConfig(
+            text=text_config,
+            audio=audio_config,
+            workers=processing_data.get("workers", 5),
+        )
 
         # Parse destinations (new format with backward compatibility)
         destinations = _parse_destinations(data)

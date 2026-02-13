@@ -416,6 +416,7 @@ class TextcastService:
             "condense_ratio": text_config.condense_ratio,
             "aggregator": False,
             "auto_detect_aggregator": True,
+            "workers": self.config.processing.workers,
         }
 
         # Use destinations list (new format)
@@ -544,6 +545,7 @@ class TextcastService:
                 "condense_ratio": text_config.condense_ratio,
                 "aggregator": False,
                 "auto_detect_aggregator": True,
+                "workers": self.config.processing.workers,
             }
 
             # Use destinations list (new format)
