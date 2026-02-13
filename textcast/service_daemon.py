@@ -5,6 +5,7 @@ Textcast service daemon for continuous content monitoring and processing.
 import logging
 import signal
 import sys
+import threading
 import time
 from datetime import datetime
 from pathlib import Path
@@ -27,9 +28,16 @@ class TextcastService:
         self.config = config
         self.running = False
         self._shutdown_signal = None  # Track signal that triggered shutdown
+        self._active_tasks = 0  # Count of in-progress processing tasks
+        self._active_tasks_lock = threading.Lock()
         self.monitors: Dict[str, object] = {}
         self.file_watchers = []  # Store file watchers
-        self.server = TextcastServer(config)  # Initialize web server
+        self.server = TextcastServer(
+            config,
+            on_task_begin=self._begin_task,
+            on_task_end=self._end_task,
+            is_running=lambda: self.running,
+        )
 
         # Initialize monitors for each source
         for source in config.sources:
@@ -157,6 +165,13 @@ class TextcastService:
                             # or some other neat fix instead of hard-coded delay
                             time.sleep(20)
 
+                            # Skip if service is shutting down
+                            if not self.service.running:
+                                logger.debug(
+                                    f"Service shutting down, skipping upload of {file_path.name}"
+                                )
+                                return
+
                             # Check if file still exists before processing
                             if file_path.exists():
                                 # Check file stability - ensure it hasn't been modified in the last 10 seconds
@@ -225,6 +240,19 @@ class TextcastService:
         logger.info(
             f"Set up upload watcher for {source.name}: {source.watch_dir} (patterns: {source.file_patterns})"
         )
+
+    def _begin_task(self):
+        """Mark that a processing task has started."""
+        with self._active_tasks_lock:
+            self._active_tasks += 1
+
+    def _end_task(self):
+        """Mark that a processing task has finished."""
+        with self._active_tasks_lock:
+            self._active_tasks -= 1
+            if self._active_tasks < 0:
+                logger.warning("_active_tasks went negative, correcting to 0")
+                self._active_tasks = 0
 
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals gracefully.
@@ -345,14 +373,26 @@ class TextcastService:
                     f"Received signal {self._shutdown_signal}, shutting down..."
                 )
 
+            # Stop file watchers first to prevent new work from starting
+            for observer, source_name in self.file_watchers:
+                observer.stop()
+            # Wait for in-progress file watcher callbacks to complete
+            for observer, source_name in self.file_watchers:
+                observer.join()
+                logger.info(f"Stopped file watcher for {source_name}")
+
+            # Wait for any remaining active tasks (e.g., server background threads)
+            if self._active_tasks > 0:
+                logger.info(
+                    f"Waiting for {self._active_tasks} active task(s) to finish..."
+                )
+                while self._active_tasks > 0:
+                    time.sleep(1)
+                logger.info("All active tasks completed")
+
             # Stop web server
             self.server.stop()
 
-            # Stop file watchers
-            for observer, source_name in self.file_watchers:
-                observer.stop()
-                observer.join()
-                logger.info(f"Stopped file watcher for {source_name}")
             logger.info("Textcast service daemon stopped")
 
     def stop(self):
@@ -394,6 +434,14 @@ class TextcastService:
         if not urls:
             return
 
+        self._begin_task()
+        try:
+            self._process_urls_directly_inner(urls, source)
+        finally:
+            self._end_task()
+
+    def _process_urls_directly_inner(self, urls: List[str], source: SourceConfig):
+        """Inner implementation of URL processing."""
         logger.info(f"Processing {len(urls)} URLs from {source.name}")
 
         # Prepare processing arguments from nested config
@@ -458,7 +506,15 @@ class TextcastService:
             logger.debug("Podservice not enabled, skipping orphan upload check")
             return
 
-        output_dir = Path(self.config.processing.output_dir)
+        self._begin_task()
+        try:
+            self._upload_orphan_audio_files_inner()
+        finally:
+            self._end_task()
+
+    def _upload_orphan_audio_files_inner(self):
+        """Inner implementation of orphan audio file upload."""
+        output_dir = Path(self.config.processing.audio.output_dir)
         if not output_dir.exists():
             logger.debug(f"Output directory does not exist: {output_dir}")
             return
@@ -507,6 +563,7 @@ class TextcastService:
             logger.debug(f"Queue file does not exist: {source.file}")
             return
 
+        self._begin_task()
         try:
             # Read URLs from queue
             with open(source.file, "r") as f:
@@ -583,6 +640,8 @@ class TextcastService:
 
         except Exception as e:
             logger.error(f"Error processing queue {source.file}: {e}", exc_info=True)
+        finally:
+            self._end_task()
 
     def _process_audio_file_queue(self, source: SourceConfig):
         """Process URLs from a file queue for audio download and upload to Audiobookshelf."""
@@ -590,6 +649,7 @@ class TextcastService:
             logger.debug(f"Queue file does not exist: {source.file}")
             return
 
+        self._begin_task()
         try:
             # Read URLs from queue
             with open(source.file, "r") as f:
@@ -676,6 +736,8 @@ class TextcastService:
             logger.error(
                 f"Error processing audio queue {source.file}: {e}", exc_info=True
             )
+        finally:
+            self._end_task()
 
     def _upload_file_to_destinations(self, file_path: Path, source: SourceConfig):
         """Upload audio file to configured destinations."""
@@ -683,6 +745,7 @@ class TextcastService:
             logger.warning(f"No destinations configured, cannot upload {file_path}")
             return
 
+        self._begin_task()
         try:
             logger.info(f"Uploading {file_path.name} to configured destinations...")
 
@@ -716,6 +779,8 @@ class TextcastService:
                 f"Error uploading {file_path.name}: {e}",
                 exc_info=True,
             )
+        finally:
+            self._end_task()
 
     def _process_existing_upload_files(self, source: SourceConfig):
         """Process existing files in upload directory on service start."""
