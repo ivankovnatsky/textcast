@@ -3,6 +3,7 @@ import os
 import random
 import re
 import string
+import uuid
 from pathlib import Path
 from typing import List, Optional, Union
 
@@ -226,7 +227,10 @@ def process_text_to_audio(
     os.makedirs(directory, exist_ok=True)
     logger.debug(f"Ensuring directory exists: {directory}")
 
-    filename = Path(directory) / f"{format_filename(title, audio_format)}"
+    short_id = uuid.uuid4().hex[:8]
+    base_name = format_filename(title, audio_format)
+    stem, ext = base_name.rsplit(".", 1)
+    filename = Path(directory) / f"{stem}-{short_id}.{ext}"
     logger.debug(f"Output filename: {filename}")
 
     if vendor == "openai":
