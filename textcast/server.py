@@ -15,8 +15,11 @@ logger = logging.getLogger(__name__)
 class TextcastServer:
     """HTTP server for web-based URL submission."""
 
-    def __init__(self, config: ServiceConfig):
+    def __init__(self, config: ServiceConfig, on_task_begin=None, on_task_end=None, is_running=None):
         self.config = config
+        self._on_task_begin = on_task_begin
+        self._on_task_end = on_task_end
+        self._is_running = is_running
         self.app = Flask(__name__)
         self._setup_routes()
         self.server_thread = None
@@ -342,6 +345,14 @@ class TextcastServer:
 
                 # Normal mode: process in background thread
                 def process_text_background():
+                    # Skip if service is shutting down
+                    if self._is_running and not self._is_running():
+                        logger.warning(
+                            f"Service shutting down, skipping processing of: {title}"
+                        )
+                        return
+                    if self._on_task_begin:
+                        self._on_task_begin()
                     try:
                         audio_config = self.config.processing.audio
                         processed_text = text
@@ -377,6 +388,9 @@ class TextcastServer:
                         logger.error(
                             f"Error processing free text '{title}': {e}", exc_info=True
                         )
+                    finally:
+                        if self._on_task_end:
+                            self._on_task_end()
 
                 threading.Thread(target=process_text_background, daemon=True).start()
 
