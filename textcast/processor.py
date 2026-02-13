@@ -237,17 +237,24 @@ def _update_source_file(
             if url not in aggregator_sources:
                 urls_to_remove.add(url)
 
-        # Remove aggregator URLs whose articles have all been processed
+        # Remove aggregator URLs only when all their articles have been processed
+        all_processed_urls = successful_urls | skipped_urls | set(failed_urls.keys())
         unique_aggregators = set(aggregator_sources.values())
         for aggregator_url in unique_aggregators:
             articles = [
                 u for u, agg in aggregator_sources.items() if agg == aggregator_url
             ]
             successful_count = sum(1 for a in articles if a in successful_urls)
+            all_done = all(a in all_processed_urls for a in articles)
             logger.info(
-                f"Aggregator {aggregator_url}: processed {successful_count}/{len(articles)} articles"
+                f"Aggregator {aggregator_url}: {successful_count}/{len(articles)} articles succeeded"
             )
-            urls_to_remove.add(aggregator_url)
+            if all_done:
+                urls_to_remove.add(aggregator_url)
+            else:
+                logger.warning(
+                    f"Aggregator {aggregator_url}: not all articles processed, keeping in source file"
+                )
 
         # Rewrite the source file once
         if urls_to_remove:
