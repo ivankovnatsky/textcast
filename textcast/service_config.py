@@ -475,14 +475,20 @@ def save_config(config: ServiceConfig, config_path: Optional[str] = None) -> Non
             for s in config.sources
         ],
         "processing": {
-            "strategy": config.processing.strategy,
-            "condense_ratio": config.processing.condense_ratio,
-            "text_model": config.processing.text_model,
-            "speech_model": config.processing.speech_model,
-            "voice": config.processing.voice,
-            "audio_format": config.processing.audio_format,
-            "output_dir": config.processing.output_dir,
-            "vendor": config.processing.vendor,
+            "workers": config.processing.workers,
+            "text": {
+                "provider": config.processing.text.provider,
+                "model": config.processing.text.model,
+                "strategy": config.processing.text.strategy,
+                "condense_ratio": config.processing.text.condense_ratio,
+            },
+            "audio": {
+                "vendor": config.processing.audio.vendor,
+                "model": config.processing.audio.model,
+                "voice": config.processing.audio.voice,
+                "format": config.processing.audio.format,
+                "output_dir": config.processing.audio.output_dir,
+            },
         },
         "log_level": config.log_level,
         "log_file": config.log_file,
