@@ -139,17 +139,21 @@ def status(ctx, config):
                 click.echo(f"    File patterns: {source.file_patterns}")
 
         click.echo("\nProcessing:")
-        click.echo(f"  Strategy: {config.processing.strategy}")
-        click.echo(f"  Vendor: {config.processing.vendor}")
-        click.echo(f"  Model: {config.processing.speech_model}")
-        click.echo(f"  Voice: {config.processing.voice}")
+        click.echo(f"  Workers: {config.processing.workers}")
+        click.echo(f"  Text provider: {config.processing.text.provider}")
+        click.echo(f"  Text model: {config.processing.text.model}")
+        click.echo(f"  Strategy: {config.processing.text.strategy}")
+        click.echo(f"  Condense ratio: {config.processing.text.condense_ratio}")
+        click.echo(f"  Audio vendor: {config.processing.audio.vendor}")
+        click.echo(f"  Audio model: {config.processing.audio.model}")
+        click.echo(f"  Voice: {config.processing.audio.voice}")
 
-        if config.audiobookshelf.server and config.audiobookshelf.api_key:
+        if config.audiobookshelf.url and config.audiobookshelf.api_key:
             click.echo("\nAudiobookshelf:")
-            click.echo(f"  Server: {config.audiobookshelf.server}")
+            click.echo(f"  URL: {config.audiobookshelf.url}")
             click.echo(f"  Library ID: {config.audiobookshelf.library_id}")
         else:
-            click.echo("\nAudiobookshelf: not configured (server/api_key missing)")
+            click.echo("\nAudiobookshelf: not configured (url/api_key missing)")
 
     except Exception as e:
         click.echo(f"Error loading configuration: {e}", err=True)
