@@ -3,13 +3,39 @@
 import logging
 import threading
 
-from flask import Flask, redirect, request
+from flasgger import Swagger
+from flask import Flask, jsonify, redirect, request
 
 from .common import process_text_to_audio
 from .condense import condense_text
 from .service_config import ServiceConfig
 
 logger = logging.getLogger(__name__)
+
+# Swagger configuration
+SWAGGER_CONFIG = {
+    "headers": [],
+    "specs": [
+        {
+            "endpoint": "apispec",
+            "route": "/apispec.json",
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True,
+        }
+    ],
+    "static_url_path": "/flasgger_static",
+    "swagger_ui": True,
+    "specs_route": "/apidocs/",
+}
+
+SWAGGER_TEMPLATE = {
+    "info": {
+        "title": "Textcast API",
+        "description": "API for converting text and URLs to audio podcasts",
+        "version": "0.1.27",
+    },
+    "basePath": "/",
+}
 
 
 class TextcastServer:
@@ -21,6 +47,7 @@ class TextcastServer:
         self._on_task_end = on_task_end
         self._is_running = is_running
         self.app = Flask(__name__)
+        self.swagger = Swagger(self.app, config=SWAGGER_CONFIG, template=SWAGGER_TEMPLATE)
         self._setup_routes()
         self.server_thread = None
 
@@ -30,6 +57,51 @@ class TextcastServer:
             if source.type == "file" and source.enabled and source.file:
                 return source.file
         raise ValueError("No enabled file source found in configuration")
+
+    def _process_text_in_background(self, text: str, title: str, text_config) -> None:
+        """Spawn a background thread to condense text and convert to audio."""
+        def _worker():
+            if self._is_running and not self._is_running():
+                logger.warning(f"Service shutting down, skipping processing of: {title}")
+                return
+            if self._on_task_begin:
+                self._on_task_begin()
+            try:
+                audio_config = self.config.processing.audio
+                processed_text = text
+
+                if text_config.strategy == "condense":
+                    logger.info(f"Condensing text for: {title}")
+                    processed_text = condense_text(
+                        text,
+                        text_config.model,
+                        text_config.condense_ratio,
+                        text_config.provider,
+                    )
+
+                process_text_to_audio(
+                    text=processed_text,
+                    title=title,
+                    vendor=audio_config.vendor,
+                    directory=audio_config.output_dir,
+                    audio_format=audio_config.format,
+                    model=audio_config.model,
+                    voice=audio_config.voice,
+                    strip=None,
+                    destinations=self.config.destinations
+                    if self.config.destinations
+                    else None,
+                )
+
+                logger.info(f"Successfully processed: {title}")
+
+            except Exception as e:
+                logger.error(f"Error processing '{title}': {e}", exc_info=True)
+            finally:
+                if self._on_task_end:
+                    self._on_task_end()
+
+        threading.Thread(target=_worker, daemon=True).start()
 
     def _render_debug_result(
         self,
@@ -160,7 +232,8 @@ class TextcastServer:
             elif success:
                 message = '<div style="padding: 10px; background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; border-radius: 4px; margin-bottom: 20px;">✓ URL added successfully! Processing will start automatically.</div>'
             elif error:
-                message = f'<div style="padding: 10px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 4px; margin-bottom: 20px;">✗ Error: {error}</div>'
+                import html as html_mod
+                message = f'<div style="padding: 10px; background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 4px; margin-bottom: 20px;">✗ Error: {html_mod.escape(error)}</div>'
 
             return f"""
             <html>
@@ -209,6 +282,12 @@ class TextcastServer:
                 <p>Text to Audio Conversion Service</p>
 
                 {message}
+
+                <div class="links" style="margin: 30px 0;">
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin: 15px 0;"><a href="/apidocs/" style="color: #007bff; text-decoration: none; font-size: 18px;">📚 API Docs</a></li>
+                    </ul>
+                </div>
 
                 <div class="info">
                     <h2>What happens when you add a URL:</h2>
@@ -344,61 +423,202 @@ class TextcastServer:
                         return redirect(f"/?error=Debug processing failed: {str(e)}")
 
                 # Normal mode: process in background thread
-                def process_text_background():
-                    # Skip if service is shutting down
-                    if self._is_running and not self._is_running():
-                        logger.warning(
-                            f"Service shutting down, skipping processing of: {title}"
-                        )
-                        return
-                    if self._on_task_begin:
-                        self._on_task_begin()
-                    try:
-                        audio_config = self.config.processing.audio
-                        processed_text = text
-
-                        # Condense if enabled
-                        if text_config.strategy == "condense":
-                            logger.info(f"Condensing text for: {title}")
-                            processed_text = condense_text(
-                                text,
-                                text_config.model,
-                                text_config.condense_ratio,
-                                text_config.provider,
-                            )
-
-                        # Process to audio
-                        process_text_to_audio(
-                            text=processed_text,
-                            title=title,
-                            vendor=audio_config.vendor,
-                            directory=audio_config.output_dir,
-                            audio_format=audio_config.format,
-                            model=audio_config.model,
-                            voice=audio_config.voice,
-                            strip=None,
-                            destinations=self.config.destinations
-                            if self.config.destinations
-                            else None,
-                        )
-
-                        logger.info(f"Successfully processed free text: {title}")
-
-                    except Exception as e:
-                        logger.error(
-                            f"Error processing free text '{title}': {e}", exc_info=True
-                        )
-                    finally:
-                        if self._on_task_end:
-                            self._on_task_end()
-
-                threading.Thread(target=process_text_background, daemon=True).start()
+                self._process_text_in_background(text, title, text_config)
 
                 return redirect("/?success_text=1")
 
             except Exception as e:
                 logger.error(f"Error submitting text: {e}", exc_info=True)
                 return redirect(f"/?error={str(e)}")
+
+        @self.app.route("/api/urls", methods=["POST"])
+        def api_add_url():
+            """
+            Add URL(s) for processing
+            ---
+            tags:
+              - URLs
+            consumes:
+              - application/json
+            parameters:
+              - name: body
+                in: body
+                required: true
+                schema:
+                  type: object
+                  properties:
+                    url:
+                      type: string
+                      description: Single URL to process
+                      example: https://example.com/article
+                    urls:
+                      type: array
+                      items:
+                        type: string
+                      description: Multiple URLs to process
+                      example: ["https://example.com/a", "https://example.com/b"]
+            produces:
+              - application/json
+            responses:
+              202:
+                description: URL(s) accepted for processing
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                    message:
+                      type: string
+                    urls:
+                      type: array
+                      items:
+                        type: string
+                    count:
+                      type: integer
+              400:
+                description: Invalid request
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                    error:
+                      type: string
+              500:
+                description: Server error
+            """
+            try:
+                data = request.get_json(silent=True)
+
+                if not data or not isinstance(data, dict):
+                    return jsonify({"success": False, "error": "Request body must be JSON"}), 400
+
+                # Support both single "url" and multiple "urls"
+                urls = []
+                if "urls" in data and isinstance(data["urls"], list):
+                    urls = [u.strip() for u in data["urls"] if isinstance(u, str) and u.strip()]
+                elif "url" in data and isinstance(data["url"], str) and data["url"].strip():
+                    urls = [data["url"].strip()]
+
+                if not urls:
+                    return jsonify({"success": False, "error": "Missing required field: url or urls"}), 400
+
+                # Validate all URLs
+                invalid_urls = [u for u in urls if not u.startswith("http://") and not u.startswith("https://")]
+                if invalid_urls:
+                    return jsonify({
+                        "success": False,
+                        "error": f"Invalid URL(s) (must start with http:// or https://): {invalid_urls}"
+                    }), 400
+
+                # Append URLs to texts file
+                texts_file = self._get_texts_file()
+                with open(texts_file, "a") as f:
+                    for url in urls:
+                        f.write(f"{url}\n")
+
+                logger.info(f"Added {len(urls)} URL(s) via API")
+                return jsonify({
+                    "success": True,
+                    "message": f"Added {len(urls)} URL(s) for processing",
+                    "urls": urls,
+                    "count": len(urls)
+                }), 202
+
+            except ValueError as e:
+                logger.error(f"Configuration error: {e}")
+                return jsonify({"success": False, "error": f"Configuration error: {str(e)}"}), 400
+            except Exception as e:
+                logger.error(f"Error adding URL via API: {e}", exc_info=True)
+                return jsonify({"success": False, "error": str(e)}), 500
+
+        @self.app.route("/api/text", methods=["POST"])
+        def api_add_text():
+            """
+            Submit free text for audio conversion
+            ---
+            tags:
+              - Text
+            consumes:
+              - application/json
+            parameters:
+              - name: body
+                in: body
+                required: true
+                schema:
+                  type: object
+                  required:
+                    - title
+                    - text
+                  properties:
+                    title:
+                      type: string
+                      description: Episode title
+                      example: My Article
+                    text:
+                      type: string
+                      description: Article text to convert to audio
+                      example: This is the full article text...
+            produces:
+              - application/json
+            responses:
+              202:
+                description: Text accepted for processing
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                    message:
+                      type: string
+                    title:
+                      type: string
+              400:
+                description: Missing required fields
+                schema:
+                  type: object
+                  properties:
+                    success:
+                      type: boolean
+                    error:
+                      type: string
+              500:
+                description: Server error
+            """
+            try:
+                data = request.get_json(silent=True)
+
+                if not data or not isinstance(data, dict):
+                    return jsonify({"success": False, "error": "Request body must be JSON"}), 400
+
+                raw_text = data.get("text", "")
+                raw_title = data.get("title", "")
+
+                if not isinstance(raw_text, str) or not raw_text.strip():
+                    return jsonify({"success": False, "error": "Missing required field: text"}), 400
+
+                if not isinstance(raw_title, str) or not raw_title.strip():
+                    return jsonify({"success": False, "error": "Missing required field: title"}), 400
+
+                text = raw_text.strip()
+                title = raw_title.strip()
+
+                logger.info(f"Processing free text via API: {title}")
+
+                text_config = self.config.processing.text
+
+                # Process in background thread
+                self._process_text_in_background(text, title, text_config)
+
+                return jsonify({
+                    "success": True,
+                    "message": "Text submitted for processing",
+                    "title": title
+                }), 202
+
+            except Exception as e:
+                logger.error(f"Error submitting text via API: {e}", exc_info=True)
+                return jsonify({"success": False, "error": str(e)}), 500
 
     def start(self):
         """Start the server in a separate thread."""
