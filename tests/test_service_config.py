@@ -41,7 +41,7 @@ class TestDestinationsParsing:
                 {
                     "type": "audiobookshelf",
                     "enabled": True,
-                    "server": "http://localhost:13378",
+                    "url": "http://localhost:13378",
                     "api_key": "test-api-key",
                     "library_name": "Podcasts",
                 },
@@ -67,7 +67,7 @@ class TestDestinationsParsing:
         assert isinstance(abs_dest, AudiobookshelfDestination)
         assert abs_dest.type == "audiobookshelf"
         assert abs_dest.enabled is True
-        assert abs_dest.server == "http://localhost:13378"
+        assert abs_dest.url == "http://localhost:13378"
         assert abs_dest.api_key == "test-api-key"
         assert abs_dest.library_name == "Podcasts"
 
@@ -113,7 +113,7 @@ class TestDestinationsParsing:
             "sources": [],
             "processing": {"strategy": "condense"},
             "audiobookshelf": {
-                "server": "http://localhost:13378",
+                "url": "http://localhost:13378",
                 "library_name": "Podcasts",
             },
         }
@@ -128,7 +128,7 @@ class TestDestinationsParsing:
 
         abs_dest = config.destinations[0]
         assert isinstance(abs_dest, AudiobookshelfDestination)
-        assert abs_dest.server == "http://localhost:13378"
+        assert abs_dest.url == "http://localhost:13378"
         assert abs_dest.api_key == "env-api-key"
         assert abs_dest.library_name == "Podcasts"
 
@@ -146,7 +146,7 @@ class TestDestinationsParsing:
                 "url": "http://localhost:8083",
             },
             "audiobookshelf": {
-                "server": "http://localhost:13378",
+                "url": "http://localhost:13378",
                 "library_name": "Podcasts",
             },
         }
@@ -167,7 +167,7 @@ class TestDestinationsParsing:
         # Audiobookshelf should be second
         abs_dest = config.destinations[1]
         assert isinstance(abs_dest, AudiobookshelfDestination)
-        assert abs_dest.server == "http://localhost:13378"
+        assert abs_dest.url == "http://localhost:13378"
 
     def test_destinations_disabled(self, temp_config_dir):
         """Test that disabled destinations are parsed correctly."""
@@ -228,7 +228,7 @@ class TestDestinationsSerialization:
                 AudiobookshelfDestination(
                     type="audiobookshelf",
                     enabled=True,
-                    server="http://localhost:13378",
+                    url="http://localhost:13378",
                     api_key="test-key",
                     library_name="Podcasts",
                 ),
@@ -252,7 +252,7 @@ class TestDestinationsSerialization:
         # Verify audiobookshelf destination
         abs_dest = saved_data["destinations"][1]
         assert abs_dest["type"] == "audiobookshelf"
-        assert abs_dest["server"] == "http://localhost:13378"
+        assert abs_dest["url"] == "http://localhost:13378"
 
     def test_save_empty_destinations_uses_legacy(self, temp_config_dir):
         """Test that saving config without destinations uses legacy format."""
@@ -285,7 +285,7 @@ class TestDestinationsSerialization:
                 AudiobookshelfDestination(
                     type="audiobookshelf",
                     enabled=False,
-                    server="http://localhost:13378",
+                    url="http://localhost:13378",
                     api_key="test-key",
                     library_name="Podcasts",
                     library_id="lib-123",
@@ -306,7 +306,7 @@ class TestDestinationsSerialization:
 
         # Check audiobookshelf
         abs_dest = loaded_config.destinations[1]
-        assert abs_dest.server == "http://localhost:13378"
+        assert abs_dest.url == "http://localhost:13378"
         assert abs_dest.api_key == "test-key"
         assert abs_dest.library_name == "Podcasts"
         assert abs_dest.library_id == "lib-123"

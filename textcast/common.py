@@ -274,13 +274,13 @@ def process_text_to_audio(
                     logger.debug("Podservice destination has no URL, skipping")
 
             elif isinstance(dest, AudiobookshelfDestination):
-                if dest.server:
+                if dest.url:
                     # Use library_name (preferred) or fall back to library_id
                     library = dest.library_name or dest.library_id or None
-                    logger.info(f"Uploading to Audiobookshelf: {dest.server}")
+                    logger.info(f"Uploading to Audiobookshelf: {dest.url}")
                     success = upload_to_audiobookshelf(
                         filename,
-                        dest.server,
+                        dest.url,
                         library,
                         dest.folder_id or None,
                         title,
@@ -293,7 +293,7 @@ def process_text_to_audio(
                             "Failed to upload to Audiobookshelf, but audio file was created"
                         )
                 else:
-                    logger.debug("Audiobookshelf destination has no server, skipping")
+                    logger.debug("Audiobookshelf destination has no URL, skipping")
     else:
         # Fall back to legacy parameters for backward compatibility
         # Handle backward compatibility with old parameter names
