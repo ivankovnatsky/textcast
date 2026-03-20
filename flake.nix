@@ -32,6 +32,7 @@
             click
             elevenlabs
             feedparser
+            flasgger
             flask
             lxml
             openai
@@ -118,7 +119,7 @@
                 # Formatting tools
                 treefmt
                 nodePackages.prettier
-                nixfmt-rfc-style
+                nixfmt
                 ruff
               ];
 
@@ -154,7 +155,7 @@
                 # Formatting tools
                 treefmt
                 nodePackages.prettier
-                nixfmt-rfc-style
+                nixfmt
                 ruff
               ];
 
