@@ -15,6 +15,7 @@ dependencies = [
     "click",
     "elevenlabs",
     "feedparser",
+    "flasgger",
     "flask",
     "lxml[html_clean]",
     "openai>=1.0",
@@ -57,6 +58,7 @@ beautifulsoup4 = "*"
 click = "*"
 elevenlabs = "*"
 feedparser = "*"
+flasgger = "*"
 flask = "*"
 lxml = {extras = ["html_clean"], version = "*"}
 openai = ">=1.0"
