@@ -129,10 +129,6 @@
                 export PLAYWRIGHT_BROWSERS_PATH="${pkgs.playwright-driver.browsers}"
                 export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
 
-                export OPENAI_API_KEY=$(cat .secrets/openai-api-key)
-                export ELEVEN_API_KEY=$(cat .secrets/eleven-api-key)
-                export ABS_API_KEY=$(cat .secrets/abs-api-key)
-                export ABS_URL=$(cat .secrets/abs-url)
               '';
             };
           }
@@ -164,11 +160,6 @@
                 export PATH="${pkgs.coreutils}/bin:${pkgs.ffmpeg}/bin:$PATH"
                 export PLAYWRIGHT_BROWSERS_PATH="${pkgs.playwright-driver.browsers}"
                 export PLAYWRIGHT_SKIP_VALIDATE_HOST_REQUIREMENTS=true
-
-                export OPENAI_API_KEY=$(cat .secrets/openai-api-key)
-                export ELEVEN_API_KEY=$(cat .secrets/eleven-api-key)
-                export ABS_API_KEY=$(cat .secrets/abs-api-key)
-                export ABS_URL=$(cat .secrets/abs-url)
               '';
             };
           }
