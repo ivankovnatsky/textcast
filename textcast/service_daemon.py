@@ -3,6 +3,7 @@ Textcast service daemon for continuous content monitoring and processing.
 """
 
 import logging
+import os
 import signal
 import sys
 import threading
@@ -13,7 +14,6 @@ from typing import Dict, List
 
 # from .rss_monitor import NewsletterMonitor, YouTubeMonitor
 from .common import upload_to_destinations
-from .podservice import upload_to_podservice
 from .processor import process_texts
 from .server import TextcastServer
 from .service_config import ServiceConfig, SourceConfig, load_config
@@ -344,13 +344,21 @@ class TextcastService:
                 if source.enabled and source.type == "upload":
                     self._process_existing_upload_files(source)
 
-            # Main loop (only for external sources if any enabled)
+            # Main loop - periodically retry orphan audio uploads and check external sources
+            orphan_interval = self.config.check_interval * 60  # in seconds
+            next_orphan_check = time.time() + orphan_interval
+
             if external_sources:
                 while self.running:
                     next_check = time.time() + (self.config.check_interval * 60)
 
                     while time.time() < next_check and self.running:
-                        time.sleep(1)  # Check every second if we should stop
+                        time.sleep(1)
+
+                        # Check for orphan audio files periodically
+                        if time.time() >= next_orphan_check:
+                            self._upload_orphan_audio_files()
+                            next_orphan_check = time.time() + orphan_interval
 
                     if self.running:
                         self._check_external_sources()
@@ -358,9 +366,13 @@ class TextcastService:
                 logger.info(
                     "No external sources enabled, entering idle mode (file/upload watchers active)"
                 )
-                # Just wait for file watchers to do their work
                 while self.running:
                     time.sleep(1)
+
+                    # Check for orphan audio files periodically
+                    if time.time() >= next_orphan_check:
+                        self._upload_orphan_audio_files()
+                        next_orphan_check = time.time() + orphan_interval
 
         except KeyboardInterrupt:
             logger.info("Service interrupted by user")
@@ -496,14 +508,45 @@ class TextcastService:
             f"Processing complete for {source.name}: {successful} successful, {failed} failed"
         )
 
+    def _has_any_destination(self) -> bool:
+        """Check if any upload destination is configured."""
+        if self.config.destinations:
+            return any(d.enabled for d in self.config.destinations)
+        # Legacy config
+        return bool(
+            (self.config.podservice.enabled and self.config.podservice.url)
+            or (self.config.audiobookshelf.url and self.config.audiobookshelf.api_key)
+        )
+
+    def _ensure_abs_api_key_env(self):
+        """Set ABS_API_KEY env var from config if not already present.
+
+        upload_to_audiobookshelf() reads the key from the environment.
+        When the key is provided only via config.yaml, it won't be in the
+        environment unless we put it there.
+        """
+        if os.environ.get("ABS_API_KEY"):
+            return
+        # Check new destinations format
+        if self.config.destinations:
+            from .service_config import AudiobookshelfDestination
+
+            for dest in self.config.destinations:
+                if isinstance(dest, AudiobookshelfDestination) and dest.api_key:
+                    os.environ["ABS_API_KEY"] = dest.api_key
+                    return
+        # Check legacy config
+        if self.config.audiobookshelf.api_key:
+            os.environ["ABS_API_KEY"] = self.config.audiobookshelf.api_key
+
     def _upload_orphan_audio_files(self):
         """Upload any orphan audio files that failed to upload previously.
 
-        On startup, scan the output directory for audio files and attempt to upload
-        them to podservice. Files are deleted after successful upload.
+        Scans the output directory for audio files and attempts to upload
+        them to all configured destinations. Files are deleted after successful upload.
         """
-        if not self.config.podservice.enabled or not self.config.podservice.url:
-            logger.debug("Podservice not enabled, skipping orphan upload check")
+        if not self._has_any_destination():
+            logger.debug("No destinations configured, skipping orphan upload check")
             return
 
         self._begin_task()
@@ -519,13 +562,25 @@ class TextcastService:
             logger.debug(f"Output directory does not exist: {output_dir}")
             return
 
-        # Find all audio files (mp3, m4a, wav, etc.)
+        # Find audio files old enough to be considered orphans.
+        # Skip files modified in the last 5 minutes to avoid racing with
+        # in-flight TTS generation or upload attempts.
         audio_extensions = {".mp3", ".m4a", ".wav", ".ogg", ".flac"}
-        audio_files = [
-            f
-            for f in output_dir.iterdir()
-            if f.is_file() and f.suffix.lower() in audio_extensions
-        ]
+        min_age_seconds = 300  # 5 minutes
+        now = time.time()
+        audio_files = []
+        for f in output_dir.iterdir():
+            if not f.is_file() or f.suffix.lower() not in audio_extensions:
+                continue
+            try:
+                if now - f.stat().st_mtime < min_age_seconds:
+                    logger.debug(
+                        f"Skipping recently modified file: {f.name}"
+                    )
+                    continue
+            except OSError:
+                continue
+            audio_files.append(f)
 
         if not audio_files:
             logger.debug("No orphan audio files to upload")
@@ -533,17 +588,42 @@ class TextcastService:
 
         logger.info(f"Found {len(audio_files)} orphan audio file(s) to upload")
 
+        # Ensure ABS_API_KEY is set from config if available
+        self._ensure_abs_api_key_env()
+
         for audio_file in audio_files:
             # Extract title from filename (reverse of format_filename)
             # e.g., "tech-jobs-market-2025-part-3-job-seekers-stories.mp3" -> "tech jobs market 2025 part 3 job seekers stories"
             title = audio_file.stem.replace("-", " ").title()
 
             logger.info(f"Uploading orphan file: {audio_file.name}")
-            success = upload_to_podservice(
-                file_path=audio_file,
-                title=title,
-                podservice_url=self.config.podservice.url,
-            )
+
+            # Build upload kwargs for both new and legacy config formats
+            upload_kwargs = {
+                "file_path": audio_file,
+                "title": title,
+            }
+
+            if self.config.destinations:
+                upload_kwargs["destinations"] = self.config.destinations
+            else:
+                # Legacy config
+                if self.config.podservice.enabled and self.config.podservice.url:
+                    upload_kwargs["podservice_url"] = self.config.podservice.url
+                if (
+                    self.config.audiobookshelf.url
+                    and self.config.audiobookshelf.api_key
+                ):
+                    upload_kwargs["abs_url"] = self.config.audiobookshelf.url
+                    upload_kwargs["abs_library"] = (
+                        self.config.audiobookshelf.library_name
+                        or self.config.audiobookshelf.library_id
+                    )
+                    upload_kwargs["abs_folder_id"] = (
+                        self.config.audiobookshelf.folder_id
+                    )
+
+            success = upload_to_destinations(**upload_kwargs)
 
             if success:
                 # Delete file after successful upload
